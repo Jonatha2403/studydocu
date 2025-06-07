@@ -1,0 +1,20 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Ejecutando análisis de código con ESLint..."
+npm run lint
+
+if [ $? -ne 0 ]; then
+  echo "❌ ESLint encontró errores. Corrígelos antes de hacer push."
+  exit 1
+fi
+
+echo "🚀 Verificando que el proyecto compile correctamente..."
+npm run build
+
+if [ $? -ne 0 ]; then
+  echo "❌ El build falló. No se puede hacer push."
+  exit 1
+fi
+
+echo "✅ Todo limpio. Continuando con el push..."

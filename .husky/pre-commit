@@ -1,0 +1,5 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🧹 Limpiando imports y código no usado antes del commit..."
+npm run clean-unused
