@@ -2,39 +2,39 @@ import type { Metadata } from 'next'
 import type { Viewport as NextViewport } from 'next'
 import localFont from 'next/font/local'
 import './globals.css'
+import { Toaster } from 'sonner'
+
 import ClientWrapper from '@/components/ClientWrapper'
 import Navbar from '@/components/layouts/Navbar'
-import { Toaster } from 'sonner'
 import WhatsappFloat from '@/components/WhatsappFloat'
 
-// ✅ Fuente SF Pro desde src/app/fonts/
+// ✅ Fuente SF Pro desde src/fonts (fuera de /public)
 const sfPro = localFont({
   src: [
-    { path: './fonts/SF-Pro-Display-Thin.otf', weight: '100', style: 'normal' },
-    { path: './fonts/SF-Pro-Display-ThinItalic.otf', weight: '100', style: 'italic' },
-    { path: './fonts/SF-Pro-Display-Light.otf', weight: '300', style: 'normal' },
-    { path: './fonts/SF-Pro-Display-LightItalic.otf', weight: '300', style: 'italic' },
-    { path: './fonts/SF-Pro-Display-Regular.otf', weight: '400', style: 'normal' },
-    { path: './fonts/SF-Pro-Display-RegularItalic.otf', weight: '400', style: 'italic' },
-    { path: './fonts/SF-Pro-Display-Medium.otf', weight: '500', style: 'normal' },
-    { path: './fonts/SF-Pro-Display-MediumItalic.otf', weight: '500', style: 'italic' },
-    { path: './fonts/SF-Pro-Display-Semibold.otf', weight: '600', style: 'normal' },
-    { path: './fonts/SF-Pro-Display-SemiboldItalic.otf', weight: '600', style: 'italic' },
-    { path: './fonts/SF-Pro-Display-Bold.otf', weight: '700', style: 'normal' },
-    { path: './fonts/SF-Pro-Display-BoldItalic.otf', weight: '700', style: 'italic' },
-    { path: './fonts/SF-Pro-Display-Black.otf', weight: '900', style: 'normal' },
-    { path: './fonts/SF-Pro-Display-BlackItalic.otf', weight: '900', style: 'italic' },
-    { path: './fonts/SF-Pro-Display-Ultralight.otf', weight: '200', style: 'normal' },
-    { path: './fonts/SF-Pro-Display-UltralightItalic.otf', weight: '200', style: 'italic' },
-    { path: './fonts/SF-Pro-Display-Heavy.otf', weight: '800', style: 'normal' },
-    { path: './fonts/SF-Pro-Display-HeavyItalic.otf', weight: '800', style: 'italic' },
+    { path: '../fonts/SF-Pro-Display-Thin.otf', weight: '100', style: 'normal' },
+    { path: '../fonts/SF-Pro-Display-ThinItalic.otf', weight: '100', style: 'italic' },
+    { path: '../fonts/SF-Pro-Display-Light.otf', weight: '300', style: 'normal' },
+    { path: '../fonts/SF-Pro-Display-LightItalic.otf', weight: '300', style: 'italic' },
+    { path: '../fonts/SF-Pro-Display-Regular.otf', weight: '400', style: 'normal' },
+    { path: '../fonts/SF-Pro-Display-RegularItalic.otf', weight: '400', style: 'italic' },
+    { path: '../fonts/SF-Pro-Display-Medium.otf', weight: '500', style: 'normal' },
+    { path: '../fonts/SF-Pro-Display-MediumItalic.otf', weight: '500', style: 'italic' },
+    { path: '../fonts/SF-Pro-Display-Semibold.otf', weight: '600', style: 'normal' },
+    { path: '../fonts/SF-Pro-Display-SemiboldItalic.otf', weight: '600', style: 'italic' },
+    { path: '../fonts/SF-Pro-Display-Bold.otf', weight: '700', style: 'normal' },
+    { path: '../fonts/SF-Pro-Display-BoldItalic.otf', weight: '700', style: 'italic' },
+    { path: '../fonts/SF-Pro-Display-Black.otf', weight: '900', style: 'normal' },
+    { path: '../fonts/SF-Pro-Display-BlackItalic.otf', weight: '900', style: 'italic' },
+    { path: '../fonts/SF-Pro-Display-Ultralight.otf', weight: '200', style: 'normal' },
+    { path: '../fonts/SF-Pro-Display-UltralightItalic.otf', weight: '200', style: 'italic' },
+    { path: '../fonts/SF-Pro-Display-Heavy.otf', weight: '800', style: 'normal' },
+    { path: '../fonts/SF-Pro-Display-HeavyItalic.otf', weight: '800', style: 'italic' },
   ],
   variable: '--font-sf',
   display: 'swap',
   preload: true,
 })
 
-// ✅ Metadata global
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'),
   title: {
@@ -90,7 +90,6 @@ export const metadata: Metadata = {
   },
 }
 
-// ✅ Viewport extendido para PWA
 interface ExtendedViewport extends NextViewport {
   appleWebApp?: {
     capable?: boolean | 'yes'
@@ -114,7 +113,6 @@ export const viewport: ExtendedViewport = {
   },
 }
 
-// ✅ Layout raíz
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
