@@ -1,0 +1,29 @@
+# Forzar LF (Unix-style) en todos los archivos de texto
+* text=auto eol=lf
+
+# Archivos de texto
+*.js     text
+*.ts     text
+*.tsx    text
+*.css    text
+*.html   text
+*.json   text
+*.md     text
+*.yml    text
+*.sh     text
+*.toml   text
+*.lock   text
+
+# Archivos binarios (no convertir EOL)
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.webp   binary
+*.svg    text
+*.ttf    binary
+*.woff   binary
+*.woff2  binary
+*.eot    binary
+*.mp4    binary
+*.mp3    binary

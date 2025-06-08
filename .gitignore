@@ -1,0 +1,25 @@
+﻿# 📦 Dependencias
+node_modules/
+.next/
+.turbo/
+out/
+
+# 🔐 Archivos sensibles
+.env*
+.vercel/
+*.key
+
+# 🧹 Archivos temporales
+.DS_Store
+Thumbs.db
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+.eslintcache
+
+# 💅 Editor/IDE
+.vscode/
+.idea/
+
+# 🧪 Test Coverage
+coverage/

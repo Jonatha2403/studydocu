@@ -1,0 +1,95 @@
+/* === Tailwind CSS Base === */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* === Variables Globales === */
+:root {
+  --color-background-light: #ffffff;
+  --color-background-dark: #0b1120;
+  --color-text-light: #111827;
+  --color-text-dark: #f3f4f6;
+  --color-primary: #7b68ee;
+
+  --appBackground-light: var(--color-background-light);
+  --appBackground-dark: var(--color-background-dark);
+  --appForeground-light: var(--color-text-light);
+  --appForeground-dark: var(--color-text-dark);
+}
+
+/* === Tipografía & Scroll === */
+html {
+  font-family:
+    var(--font-sf),
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Safe Area para iOS === */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  background-color: var(--color-background-light);
+  color: var(--color-text-light);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* === Dark Mode === */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: var(--color-background-dark);
+    color: var(--color-text-dark);
+  }
+}
+
+/* === Layout === */
+.container {
+  @apply mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* === Enlaces === */
+a {
+  @apply transition-colors duration-200 hover:text-primary;
+}
+
+/* === Multimedia === */
+img,
+video,
+iframe {
+  @apply rounded-xl shadow-sm;
+}
+
+/* === Formularios === */
+button,
+input,
+select,
+textarea {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary/50 transition duration-150 ease-in-out;
+}
+
+/* === Utilidades iOS === */
+.ios-transition {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity;
+}
+
+/* === Componentes personalizados === */
+.btn-ios {
+  @apply px-4 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-500 shadow-md hover:shadow-lg transition-all;
+}
+
+.card-ios {
+  @apply rounded-2xl p-4 shadow-md bg-white dark:bg-gray-800;
+}

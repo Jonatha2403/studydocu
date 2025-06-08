@@ -1,0 +1,90 @@
+/* ===== StudyDocu CSS Helpers ===== */
+
+/* === 🟣 BOTONES === */
+.btn {
+  @apply inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 active:shadow-inner;
+}
+
+.btn-primary {
+  @apply bg-primary text-white hover:bg-primary-dark focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-white hover:bg-secondary-dark focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-secondary;
+}
+
+.btn-outline {
+  @apply border border-primary text-primary hover:bg-primary hover:text-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary;
+}
+
+.btn-lg {
+  @apply text-base px-5 py-3;
+}
+
+.btn-sm {
+  @apply text-xs px-3 py-1.5;
+}
+
+/* === 🃏 TARJETAS (CARDS) === */
+.card {
+  @apply rounded-2xl shadow-card-hover p-4 transition-all duration-300 bg-white text-slate-800 dark:bg-slate-800 dark:text-slate-100;
+}
+
+/* === 🏷️ ETIQUETAS / TAGS === */
+.tag {
+  @apply inline-block bg-muted text-white text-xs px-2 py-1 rounded-full uppercase tracking-wider;
+}
+
+/* === 🎖 BADGES === */
+.badge {
+  @apply inline-flex items-center text-xs font-semibold px-2 py-1 rounded-full bg-primary text-white;
+}
+
+/* === 🔔 TOASTS === */
+.toast {
+  @apply flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg transition-colors duration-300 bg-white text-slate-800 dark:bg-slate-800 dark:text-slate-100;
+}
+
+.toast-icon {
+  @apply w-5 h-5 text-primary;
+}
+
+.toast-message {
+  @apply text-sm font-medium;
+}
+
+/* === 🌀 ANIMACIONES PERSONALIZADAS === */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out forwards;
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s infinite;
+}
+
+/* === 🌗 MODOS DE COLOR RÁPIDOS === */
+.light-mode {
+  @apply bg-white text-black;
+}
+
+.dark-mode {
+  @apply bg-black text-white;
+}
+
+.classname {
+  @apply px-4 py-2;  /* ✅ Correcto */
+}

@@ -1,0 +1,115 @@
+{
+  "name": "studydocu",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "prepare": "husky install",
+    "clean": "rimraf .next node_modules package-lock.json",
+    "check-unused": "ts-prune",
+    "fix": "eslint . --fix",
+    "clean-unused": "ts-prune && npm run fix",
+    "commit": "cz"
+  },
+  "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
+    "@radix-ui/react-avatar": "^1.1.10",
+    "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/supabase-js": "^2.50.0",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.16",
+    "class-variance-authority": "^0.7.1",
+    "classnames": "^2.5.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "formidable": "^3.5.4",
+    "framer-motion": "^12.16.0",
+    "lucide-react": "^0.511.0",
+    "mammoth": "^1.9.1",
+    "next": "^15.3.3",
+    "next-pwa": "^5.6.0",
+    "openai": "^5.1.1",
+    "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^5.3.31",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hot-toast": "^2.5.2",
+    "react-pdf": "^9.2.1",
+    "recharts": "^2.15.3",
+    "sonner": "^2.0.5",
+    "string-similarity": "^4.0.4",
+    "tailwind-merge": "^3.3.0",
+    "tailwind-variants": "^1.0.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@commitlint/config-conventional": "^19.8.1",
+    "@eslint/eslintrc": "^3.0.0",
+    "@tailwindcss/aspect-ratio": "^0.4.2",
+    "@tailwindcss/postcss": "^4.1.8",
+    "@types/d3-color": "^3.1.3",
+    "@types/d3-path": "^3.1.1",
+    "@types/formidable": "^3.4.5",
+    "@types/minimatch": "^5.1.2",
+    "@types/node": "^22.15.30",
+    "@types/pdf-parse": "^1.1.5",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.6",
+    "autoprefixer": "^10.4.21",
+    "commitizen": "^4.3.1",
+    "commitlint": "^19.8.1",
+    "cz-conventional-changelog": "^3.3.0",
+    "cz-emoji": "^1.3.2-canary.2",
+    "eslint": "^9.28.0",
+    "eslint-config-next": "15.3.3",
+    "file-loader": "^6.2.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^16.1.0",
+    "postcss": "^8.5.4",
+    "postcss-nesting": "^13.0.1",
+    "prettier": "^3.5.3",
+    "rimraf": "^6.0.1",
+    "tailwind-scrollbar": "^4.0.2",
+    "tailwindcss": "^4.1.8",
+    "ts-prune": "^0.10.3",
+    "typescript": "^5.8.3"
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "eslint --fix"
+    ],
+    "*.{js,ts,tsx,css,md,json}": [
+      "prettier --write"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-emoji"
+    },
+    "cz-emoji": {
+      "scopes": [
+        "auth",
+        "navbar",
+        "dashboard",
+        "upload",
+        "api",
+        "ai",
+        "react",
+        "supabase",
+        "documento",
+        "premium",
+        "comentario",
+        "referidos",
+        "ranking",
+        "kanban",
+        "pwa",
+        "perfil"
+      ]
+    }
+  }
+}
