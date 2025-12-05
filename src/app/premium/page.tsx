@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react'
 import {
-  Crown, Sparkles, ShieldCheck, BadgeCheck, Check, ChevronDown, X,
+  Crown, Sparkles, ShieldCheck, BadgeCheck, Check, X,
   CreditCard, Banknote, Copy, CheckCircle2, ExternalLink, PhoneCall
 } from 'lucide-react'
 import { useUserContext } from '@/context/UserContext'
