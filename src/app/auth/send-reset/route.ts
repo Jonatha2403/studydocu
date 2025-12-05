@@ -5,11 +5,16 @@ import { Resend } from 'resend'
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: Request) {
-  const supabase = createClient()
+  // ✅ CREAR EL CLIENTE DE SUPABASE CORRECTAMENTE
+  const supabase = await createClient()
+
   const { email } = await req.json()
 
   if (!email) {
-    return NextResponse.json({ error: 'El correo es obligatorio.' }, { status: 400 })
+    return NextResponse.json(
+      { error: 'El correo es obligatorio.' },
+      { status: 400 }
+    )
   }
 
   try {
@@ -53,6 +58,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true })
   } catch (err) {
     console.error('[SEND_RESET_ERROR]', err)
-    return NextResponse.json({ error: 'Error interno del servidor.' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Error interno del servidor.' },
+      { status: 500 }
+    )
   }
 }
