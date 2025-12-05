@@ -8,11 +8,12 @@ export interface UserProfile {
   role?: 'user' | 'admin' | string
 }
 
+// Perfil completo del usuario usado en el contexto
 export interface PerfilExtendido {
   id: string
   username?: string
-  puntos?: number
-  suscripcion_activa?: boolean
+  puntos?: number // ✅ unificado con UserProfile
+  subscription_active?: boolean
   universidad?: string
   nivel?: string
   medalla?: string
@@ -21,8 +22,13 @@ export interface PerfilExtendido {
   avatar_url?: string
   role?: string
   subscription_status?: 'Activa' | 'Inactiva' | string
+
+  // ✅ Propiedades usadas en el Navbar y otras vistas
+  has_new_rewards?: boolean
+  verificado?: boolean
 }
 
+// Comentarios asociados a un documento, incluye parte del perfil
 export interface Comment {
   id: string
   created_at: string
@@ -32,6 +38,6 @@ export interface Comment {
   profiles?: {
     username?: string
     avatar_url?: string
-    suscripcion_activa?: boolean
+    subscription_active?: boolean
   }
 }

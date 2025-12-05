@@ -1,8 +1,7 @@
-// src/hooks/useUser.ts
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Session, User } from '@supabase/supabase-js'
+import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
 export function useUser() {
@@ -15,7 +14,13 @@ export function useUser() {
 
     const fetchSession = async () => {
       const { data, error } = await supabase.auth.getSession()
-      if (error) console.error('Error getting session:', error)
+
+      if (error) {
+        console.error('❌ Error al obtener sesión:', error.message)
+        setLoading(false)
+        return
+      }
+
       if (mounted) {
         setSession(data.session)
         setUser(data.session?.user ?? null)
@@ -25,19 +30,24 @@ export function useUser() {
 
     fetchSession()
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
       if (mounted) {
-        setSession(session)
-        setUser(session?.user ?? null)
+        console.log('🔄 Cambio en sesión detectado:', _event)
+        setSession(newSession)
+        setUser(newSession?.user ?? null)
         setLoading(false)
       }
     })
 
     return () => {
       mounted = false
-      listener?.subscription?.unsubscribe()
+      subscription?.unsubscribe()
     }
   }, [])
 
-  return { user, session, loading }
+  const isAuthenticated = !!user
+
+  return { user, session, isAuthenticated, loading }
 }

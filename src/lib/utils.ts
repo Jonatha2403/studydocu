@@ -1,9 +1,6 @@
-// src/lib/utils.ts
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
-/**
- * Combina clases condicionales en un solo string, ignorando falsy values.
- * Ejemplo: cn('base', condition && 'activa') => "base activa"
- */
-export default function cn(...classes: Array<string | false | null | undefined>): string {
-  return classes.filter(Boolean).join(' ')
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(...inputs))
 }

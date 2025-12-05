@@ -3,7 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* === Variables Globales === */
+/* ======================================================================
+   Variables Globales
+====================================================================== */
 :root {
   --color-background-light: #ffffff;
   --color-background-dark: #0b1120;
@@ -15,10 +17,21 @@
   --appBackground-dark: var(--color-background-dark);
   --appForeground-light: var(--color-text-light);
   --appForeground-dark: var(--color-text-dark);
+
+  --navbar-height: 128px;
+  /* layout helper */
 }
 
-/* === Tipografía & Scroll === */
-html {
+/* ======================================================================
+   Tipografía & Documento
+====================================================================== */
+html,
+body {
+  min-height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
   font-family:
     var(--font-sf),
     -apple-system,
@@ -28,68 +41,369 @@ html {
     'Helvetica Neue',
     Arial,
     sans-serif;
-  scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: relative;
+  /* para z-index layering */
+  overflow-x: hidden;
+  /* previene scroll lateral con partículas */
+  text-rendering: optimizeLegibility;
 }
 
-/* === Safe Area para iOS === */
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+}
+
+/* Safe Area para iOS */
 body {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
-  background-color: var(--color-background-light);
-  color: var(--color-text-light);
+  background-color: var(--appBackground-light);
+  color: var(--appForeground-light);
   transition:
     background-color 0.3s ease,
     color 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
-/* === Dark Mode === */
+/* Dark Mode base (degradado de fondo sutil) */
 @media (prefers-color-scheme: dark) {
   body {
-    background-color: var(--color-background-dark);
-    color: var(--color-text-dark);
+    background: linear-gradient(to bottom, #0f1114, #1a1f2e);
   }
 }
 
-/* === Layout === */
+/* ======================================================================
+   Layout Helpers
+====================================================================== */
 .container {
-  @apply mx-auto px-4 sm:px-6 lg:px-8;
+  @apply w-full px-6 md:px-12;
+  max-width: 100%;
 }
 
-/* === Enlaces === */
+#__next {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Secciones compactas */
+.hero-auto {
+  min-height: auto !important;
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
+.section-tight {
+  @apply py-12 md:py-24;
+}
+
+/* ======================================================================
+   Enlaces & Multimedia
+====================================================================== */
 a {
-  @apply transition-colors duration-200 hover:text-primary;
+  @apply transition-colors duration-200 hover:text-indigo-500;
 }
 
-/* === Multimedia === */
 img,
 video,
 iframe {
   @apply rounded-xl shadow-sm;
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
-/* === Formularios === */
+/* ======================================================================
+   Formularios / Focus A11y
+====================================================================== */
 button,
 input,
 select,
 textarea {
-  @apply focus:outline-none focus:ring-2 focus:ring-primary/50 transition duration-150 ease-in-out;
+  @apply focus:outline-none focus:ring-2 transition duration-150 ease-in-out;
 }
 
-/* === Utilidades iOS === */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, .6),
+    0 0 0 6px rgba(123, 104, 238, .45);
+  /* color primario */
+  border-radius: 9999px;
+  transition: box-shadow .2s ease;
+}
+
+/* ======================================================================
+   Utilidades iOS / Microinteracciones
+====================================================================== */
 .ios-transition {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform, opacity;
 }
 
-/* === Componentes personalizados === */
-.btn-ios {
-  @apply px-4 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-500 shadow-md hover:shadow-lg transition-all;
+/* ======================================================================
+   Texto con gradiente animado
+====================================================================== */
+.text-gradient {
+  background: linear-gradient(90deg, #7b68ee, #a78bfa, #7b68ee);
+  background-size: 200%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 6s linear infinite;
 }
 
-.card-ios {
-  @apply rounded-2xl p-4 shadow-md bg-white dark:bg-gray-800;
+@keyframes shine {
+  0% {
+    background-position: 0%;
+  }
+
+  100% {
+    background-position: 100%;
+  }
+}
+
+/* ======================================================================
+   Fondo animado (modo claro suave)
+====================================================================== */
+@keyframes gradient-slow {
+
+  0%,
+  100% {
+    background-position: 50% 50%;
+  }
+
+  50% {
+    background-position: 100% 100%;
+  }
+}
+
+.animate-gradient-slow {
+  background: linear-gradient(to bottom, #e0f7ff, #ffffff, #d1fae5);
+  background-size: cover;
+}
+
+/* Transición de color de fondo sutil (para cambios de tema/sección) */
+@keyframes fadeBackground {
+  0% {
+    background-color: #ffffff;
+  }
+
+  100% {
+    background-color: #e0f2ff;
+  }
+
+  /* azul claro */
+}
+
+.animate-bg-transition {
+  animation: fadeBackground 1.5s ease-in-out forwards;
+}
+
+/* ======================================================================
+   Capas Visuales Premium (radiales + grid + ruido + aurora)
+====================================================================== */
+/* Grid sutil superpuesto */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(120, 119, 198, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(120, 119, 198, 0.12) 1px, transparent 1px);
+  background-size: 40px 40%;
+  /* 🔑 ESTA LÍNEA NUEVA */
+  pointer-events: none;
+}
+
+/* Radiales suaves con movimiento */
+.radial-layer {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(900px 600px at 20% 20%, rgba(123, 104, 238, 0.15), transparent 70%),
+    radial-gradient(1000px 700px at 80% 80%, rgba(167, 139, 250, 0.15), transparent 80%);
+  z-index: -5;
+  pointer-events: none;
+  animation: float-bg 16s ease-in-out infinite alternate;
+}
+
+@keyframes float-bg {
+  0% {
+    transform: translateY(0px) scale(1);
+  }
+
+  100% {
+    transform: translateY(-10px) scale(1.05);
+  }
+}
+
+/* Capa de ruido (textura sutil) */
+.noise-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -6;
+  mix-blend-mode: soft-light;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml;utf8,\
+  <svg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'>\
+  <filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='2'/></filter>\
+  <rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* Aurora animada (atmósfera de color) */
+.aurora-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -7;
+  background: linear-gradient(125deg,
+      rgba(123, 104, 238, 0.10),
+      rgba(167, 139, 250, 0.08),
+      rgba(236, 72, 153, 0.12));
+  background-size: 400% 400%;
+  animation: auroraMove 30s ease infinite;
+}
+
+@keyframes auroraMove {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Spotlight opcional (si montas el componente React Spotlight) */
+.spotlight {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -4;
+  background: radial-gradient(180px 180px at var(--x, 50%) var(--y, 50%),
+      rgba(255, 255, 255, 0.12),
+      transparent 60%);
+  transition: background 0.2s ease;
+}
+
+/* ======================================================================
+   Glass / Cards / Botones
+====================================================================== */
+/* Tarjeta translúcida premium */
+.card-glass {
+  backdrop-filter: blur(18px);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  border-radius: 1.5rem;
+  transition: all 0.4s ease;
+}
+
+.card-glass:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(123, 104, 238, 0.25);
+}
+
+.dark .card-glass {
+  background: rgba(17, 24, 39, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Botón con brillo y hover magnético */
+.btn-glow {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  padding: 0.75rem 1.75rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: transform 0.2s ease;
+  box-shadow: 0 4px 25px rgba(99, 102, 241, 0.3);
+}
+
+.btn-glow:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 35px rgba(168, 85, 247, 0.4);
+}
+
+.btn-glow::before {
+  content: '';
+  position: absolute;
+  inset: -100%;
+  background: radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.2), transparent 30%);
+  transition: transform 0.6s ease;
+}
+
+.btn-glow:hover::before {
+  transform: translate(100%, 100%);
+}
+
+/* Botón gradiente utilitario (alternativo) */
+.btn-gradient {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem 1.25rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  color: white;
+  background-image: linear-gradient(90deg, rgb(99 102 241), rgb(168 85 247));
+  box-shadow: 0 8px 30px rgba(99, 102, 241, .35);
+  transition: transform .15s ease, box-shadow .2s ease;
+}
+
+.btn-gradient:hover {
+  transform: scale(1.02);
+  box-shadow: 0 10px 34px rgba(99, 102, 241, .45);
+}
+
+.btn-gradient:active {
+  transform: scale(.98);
+}
+
+/* Card básica con borde sutil */
+.card {
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, .08);
+  background: white;
+  box-shadow: 0 8px 30px rgba(2, 6, 23, 0.06);
+}
+
+.dark .card {
+  background: rgb(2 6 23 / .6);
+}
+
+/* ======================================================================
+   Scrollbar elegante
+====================================================================== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.5) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(99, 102, 241, .6), rgba(236, 72, 153, .6));
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }

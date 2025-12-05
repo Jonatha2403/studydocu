@@ -5,7 +5,7 @@ export async function puedeDescargar(userId: string): Promise<boolean> {
   try {
     const { data: perfil } = await supabase
       .from('profiles')
-      .select('suscripcion_activa')
+      .select('subscription_active')
       .eq('id', userId)
       .single()
 
@@ -15,7 +15,7 @@ export async function puedeDescargar(userId: string): Promise<boolean> {
       .eq('user_id', userId)
       .eq('status', 'aprobado')
 
-    return !!perfil?.suscripcion_activa || (count || 0) > 0
+    return !!perfil?.subscription_active || (count || 0) > 0
   } catch (e) {
     console.error('Error al verificar descarga:', e)
     return false

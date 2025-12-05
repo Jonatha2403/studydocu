@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import UploadForm from '@/components/UploadForm'
-import Auth from '@/components/Auth'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import type { User, Session } from '@supabase/supabase-js'
@@ -11,12 +11,10 @@ import type { User, Session } from '@supabase/supabase-js'
 interface Document {
   id: string
   file_name: string
+  file_path: string
   created_at: string
   category: string
   status?: string
-  version?: number
-  content?: string
-  user_id?: string
 }
 
 interface Notification {
@@ -30,48 +28,70 @@ export default function UploadPage() {
   const [documentsLoading, setDocumentsLoading] = useState(false)
   const [processingUpload, setProcessingUpload] = useState(false)
   const [documents, setDocuments] = useState<Document[]>([])
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({})
   const [notification, setNotification] = useState<Notification | null>(null)
+
+  const router = useRouter()
 
   const displayNotification = (message: string, type: Notification['type'], duration = 4000) => {
     setNotification({ message, type })
     setTimeout(() => setNotification(null), duration)
   }
 
-  const fetchDocuments = useCallback(async (): Promise<Document[]> => {
-    if (!user) return []
-    setDocumentsLoading(true)
-    try {
-      const { data, error } = await supabase
+  // 📌 Traer documentos del usuario
+  const fetchDocuments = useCallback(
+    async (): Promise<Document[]> => {
+      if (!user) return []
+      setDocumentsLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from('documents')
+          .select('id, file_name, file_path, created_at, category, status')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+
+        setDocuments(data ?? [])
+        return data ?? []
+      } catch (error) {
+        console.error('Error fetching documents:', error)
+        displayNotification('Error al cargar documentos', 'error')
+        return []
+      } finally {
+        setDocumentsLoading(false)
+      }
+    },
+    [user],
+  )
+
+  // 📌 Generar URLs firmadas para todos los documentos
+  const generateSignedUrls = useCallback(async (docs: Document[]) => {
+    const urls: Record<string, string> = {}
+
+    for (const doc of docs) {
+      const { data, error } = await supabase.storage
         .from('documents')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+        .createSignedUrl(doc.file_path, 60 * 60) // 1 hora válido
 
-      if (error) throw error
-      const result = data ?? []
-      setDocuments(result)
-      return result
-    } catch (error) {
-      const err = error as Error
-      console.error('Error fetching documents:', err)
-      displayNotification(`Error al cargar documentos: ${err.message}`, 'error')
-      setDocuments([])
-      return []
-    } finally {
-      setDocumentsLoading(false)
+      if (!error && data?.signedUrl) {
+        urls[doc.id] = data.signedUrl
+      }
     }
-  }, [user])
 
+    setSignedUrls(urls)
+  }, [])
+
+  // 📌 Cargar usuario autenticado
   useEffect(() => {
     const cargarUsuario = async () => {
       try {
         const { data } = await supabase.auth.getSession()
         setUser(data?.session?.user ?? null)
       } catch (error) {
-        const err = error as Error
-        console.error('Error getting session:', err)
+        console.error('Error getting session:', error)
         setUser(null)
-        displayNotification(`Error al cargar sesión: ${err.message}`, 'error')
+        displayNotification('Error al cargar sesión', 'error')
       } finally {
         setInitialLoading(false)
       }
@@ -82,7 +102,7 @@ export default function UploadPage() {
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session: Session | null) => {
         setUser(session?.user ?? null)
-      }
+      },
     )
 
     return () => {
@@ -90,73 +110,45 @@ export default function UploadPage() {
     }
   }, [])
 
+  // 📌 Recargar documentos y URLs cuando haya usuario
   useEffect(() => {
     if (user) {
-      void fetchDocuments()
+      fetchDocuments().then((docs) => {
+        if (docs.length > 0) {
+          generateSignedUrls(docs)
+        }
+      })
     } else {
       setDocuments([])
     }
-  }, [user, fetchDocuments])
+  }, [user, fetchDocuments, generateSignedUrls])
 
-  const handleUploadComplete = async () => {
-    setProcessingUpload(true)
-    displayNotification('Procesando documento subido...', 'info', 6000)
-
-    try {
-      const latest = await fetchDocuments()
-      const target = latest[0]
-      if (!target) {
-        displayNotification('⚠️ No se encontró el documento para procesar.', 'error')
-        return
-      }
-
-      const text = target.content || ''
-      const suggestedCategory = text.includes('marketing')
-        ? 'Marketing'
-        : text.includes('contabilidad')
-          ? 'Contabilidad'
-          : text.includes('programación')
-            ? 'Programación'
-            : text.includes('derecho')
-              ? 'Derecho'
-              : 'General'
-
-      const { error: updateError } = await supabase
-        .from('documents')
-        .update({ category: suggestedCategory, status: 'pendiente' })
-        .eq('id', target.id)
-
-      if (updateError) throw updateError
-      displayNotification('✅ Documento procesado y actualizado correctamente.', 'success')
-    } catch (error) {
-      const err = error as Error
-      console.error('Error al procesar:', err)
-      displayNotification(`Error al procesar el documento: ${err.message}`, 'error')
-    } finally {
-      await fetchDocuments()
-      setProcessingUpload(false)
+  // 📌 Redirigir a /iniciar-sesion si ya sabemos que NO hay usuario
+  useEffect(() => {
+    if (!initialLoading && !user) {
+      router.replace('/iniciar-sesion')
     }
-  }
+  }, [initialLoading, user, router])
 
-  if (initialLoading) {
+  // 🌀 Mientras se verifica la sesión, o mientras redirigimos, mostramos loader
+  if (initialLoading || !user) {
     return (
       <div className="flex flex-col items-center justify-center h-screen text-gray-500">
         <Loader2 className="animate-spin w-6 h-6 mb-4" />
-        <p>🔄 Cargando sesión del usuario...</p>
+        <p>🔄 Verificando sesión del usuario...</p>
       </div>
     )
   }
 
-  if (!user) return <Auth />
-
+  // ✅ Usuario autenticado → mostramos la página de subida
   return (
     <main className="max-w-2xl mx-auto mt-10 p-4">
       <h1 className="text-2xl font-bold mb-6 text-center">
         📄 Subir nuevo documento PDF, Word o Excel
       </h1>
       <p className="mb-4 text-gray-600 text-sm text-center">
-        Solo se permiten archivos con texto legible. Archivos vacíos, duplicados o sin categoría
-        serán rechazados.
+        Solo se permiten archivos con texto legible. Archivos vacíos, duplicados o sin categoría serán
+        rechazados.
       </p>
 
       {notification && (
@@ -165,8 +157,8 @@ export default function UploadPage() {
             notification.type === 'success'
               ? 'bg-green-100 text-green-700'
               : notification.type === 'error'
-                ? 'bg-red-100 text-red-700'
-                : 'bg-blue-100 text-blue-700'
+              ? 'bg-red-100 text-red-700'
+              : 'bg-blue-100 text-blue-700'
           }`}
         >
           {notification.message}
@@ -175,7 +167,13 @@ export default function UploadPage() {
 
       <UploadForm
         user={user}
-        onUploadComplete={handleUploadComplete}
+        onUploadComplete={async () => {
+          setProcessingUpload(true)
+          displayNotification('Procesando documento subido...', 'info', 6000)
+          const docs = await fetchDocuments()
+          await generateSignedUrls(docs)
+          setProcessingUpload(false)
+        }}
         disabled={processingUpload || documentsLoading}
       />
 
@@ -192,35 +190,64 @@ export default function UploadPage() {
             📂 Historial de documentos subidos
           </h2>
           <ul className="space-y-2 text-sm text-gray-700">
-            {documents.map((doc) => (
-              <li
-                key={doc.id}
-                className="border p-3 rounded shadow-sm bg-gray-50 hover:shadow-md transition-shadow"
-              >
-                <div className="flex justify-between items-center">
-                  <div className="flex flex-col overflow-hidden mr-2">
-                    <span className="font-medium text-base truncate" title={doc.file_name}>
-                      📄 {doc.file_name}
-                    </span>
-                    <span className="text-xs italic">🏷️ {doc.category || 'Sin categoría'}</span>
-                    <span className="text-gray-400 text-xs">
-                      📅 {new Date(doc.created_at).toLocaleDateString()}
-                    </span>
+            {documents.map((doc) => {
+              const signedUrl = signedUrls[doc.id] || '#'
+
+              return (
+                <li
+                  key={doc.id}
+                  className="border p-3 rounded shadow-sm bg-gray-50 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex flex-col overflow-hidden mr-2">
+                      <span className="font-medium text-base truncate" title={doc.file_name}>
+                        📄 {doc.file_name}
+                      </span>
+                      <span className="text-xs italic">🏷️ {doc.category || 'Sin categoría'}</span>
+                      <span className="text-gray-400 text-xs">
+                        📅 {new Date(doc.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-2">
+                      {/* Estado */}
+                      <div
+                        className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                          doc.status === 'aprobado'
+                            ? 'bg-green-200 text-green-800'
+                            : doc.status === 'rechazado'
+                            ? 'bg-red-200 text-red-800'
+                            : 'bg-yellow-200 text-yellow-800'
+                        }`}
+                      >
+                        {doc.status ?? 'pendiente'}
+                      </div>
+
+                      {/* Botones Ver / Descargar */}
+                      {signedUrl !== '#' && (
+                        <div className="flex gap-2">
+                          <a
+                            href={signedUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
+                          >
+                            👁 Ver
+                          </a>
+                          <a
+                            href={signedUrl}
+                            download={doc.file_name}
+                            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs"
+                          >
+                            ⬇ Descargar
+                          </a>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div
-                    className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                      doc.status === 'aprobado'
-                        ? 'bg-green-200 text-green-800'
-                        : doc.status === 'rechazado'
-                          ? 'bg-red-200 text-red-800'
-                          : 'bg-yellow-200 text-yellow-800'
-                    }`}
-                  >
-                    {doc.status ?? 'pendiente'}
-                  </div>
-                </div>
-              </li>
-            ))}
+                </li>
+              )
+            })}
           </ul>
         </div>
       )}

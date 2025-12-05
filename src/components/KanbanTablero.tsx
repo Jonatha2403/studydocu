@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd"
 import { supabase } from "@/lib/supabase"
-import { Card, CardContent } from "@/components/ui/Card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Loader2 } from "lucide-react"
 
 interface Documento {

@@ -1,3 +1,4 @@
+// /components/FavoriteButton.tsx
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
@@ -8,59 +9,71 @@ import { toast } from 'sonner'
 interface FavoriteButtonProps {
   userId: string | null
   documentId: string
+  className?: string
+  onChange?: (isFav: boolean) => void
+  labelOn?: string
+  labelOff?: string
 }
 
-export default function FavoriteButton({ userId, documentId }: FavoriteButtonProps) {
+export default function FavoriteButton({
+  userId,
+  documentId,
+  className = 'text-sm font-medium flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md transition-all focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800',
+  onChange,
+  labelOn = 'Guardado',
+  labelOff = 'Guardar'
+}: FavoriteButtonProps) {
   const [saved, setSaved] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [isToggling, setIsToggling] = useState(false)
 
   const checkFavoriteStatus = useCallback(async () => {
+    if (!userId) return false
+
     try {
       const { data, error } = await supabase
         .from('favorites')
-        .select('id', { head: false })
-        .eq('user_id', userId!)
+        .select('id')
+        .eq('user_id', userId)
         .eq('document_id', documentId)
         .maybeSingle()
 
       if (error) {
-        if (error.code === 'PGRST116') return false
-        throw error
+        console.error('[FavoriteButton] check error:', error)
+        return false
       }
+
       return !!data
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Error desconocido'
-      console.error('Error checking favorite status:', err)
-      toast.error('❌ Error al verificar si es favorito.', { description: msg })
+    } catch (e) {
+      console.error('[FavoriteButton] unexpected check error:', e)
       return false
     }
   }, [userId, documentId])
 
   useEffect(() => {
-    let isMounted = true
+    let mounted = true
 
-    if (!userId) {
-      if (isMounted) {
-        setInitialLoading(false)
-        setSaved(false)
+    ;(async () => {
+      if (!userId) {
+        if (mounted) {
+          setSaved(false)
+          setInitialLoading(false)
+        }
+        return
       }
-      return
-    }
 
-    const performInitialCheck = async () => {
-      if (!isMounted) return
-      setInitialLoading(true)
-      const currentSavedStatus = await checkFavoriteStatus()
-      if (isMounted) {
-        setSaved(currentSavedStatus)
+      if (mounted) setInitialLoading(true)
+
+      const isFav = await checkFavoriteStatus()
+
+      if (mounted) {
+        setSaved(isFav)
         setInitialLoading(false)
       }
-    }
+    })()
 
-    performInitialCheck()
     return () => {
-      isMounted = false
+      mounted = false
     }
   }, [userId, documentId, checkFavoriteStatus])
 
@@ -71,7 +84,7 @@ export default function FavoriteButton({ userId, documentId }: FavoriteButtonPro
     }
 
     setIsToggling(true)
-    const initiallySaved = saved
+    const prev = saved
 
     try {
       if (saved) {
@@ -82,34 +95,45 @@ export default function FavoriteButton({ userId, documentId }: FavoriteButtonPro
           .eq('document_id', documentId)
 
         if (error) throw error
+
         setSaved(false)
+        onChange?.(false)
         toast.info('🗑️ Eliminado de favoritos.')
       } else {
         const { error } = await supabase
           .from('favorites')
           .insert({ user_id: userId, document_id: documentId })
 
-        if (error) throw error
+        // Manejo de duplicado por unique constraint (ya estaba como favorito)
+        const code = (error as any)?.code
+        if (error && code !== '23505') {
+          throw error
+        }
+
         setSaved(true)
-        toast.success('💖 Guardado en favoritos.')
+        onChange?.(true)
+
+        if (!error) {
+          toast.success('💖 Guardado en favoritos.')
+        } else {
+          // Si era duplicado silencioso, no mostramos error.
+          toast.success('💖 Ya estaba en favoritos.')
+        }
       }
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : 'Error desconocido'
-      console.error('Error toggling favorite:', error)
-      toast.error(`❌ Error al ${initiallySaved ? 'eliminar de' : 'guardar en'} favoritos.`, {
-        description: msg,
-      })
-      setSaved(initiallySaved)
+    } catch (e: any) {
+      console.error('[FavoriteButton] toggle error:', e)
+      setSaved(prev)
+      toast.error(`❌ Error al ${prev ? 'eliminar de' : 'guardar en'} favoritos.`)
     } finally {
       setIsToggling(false)
     }
-  }, [userId, documentId, saved])
+  }, [userId, documentId, saved, onChange])
 
   if (initialLoading) {
     return (
       <button
         disabled
-        className="text-sm text-gray-400 dark:text-gray-500 flex items-center gap-1.5 px-3 py-1.5 rounded-md cursor-default"
+        className={`${className} text-gray-400 dark:text-gray-500 cursor-default`}
         aria-label="Cargando estado de favorito"
       >
         <Loader2 size={16} className="animate-spin" />
@@ -118,18 +142,17 @@ export default function FavoriteButton({ userId, documentId }: FavoriteButtonPro
     )
   }
 
+  const stateClasses = saved
+    ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-500/30 dark:text-indigo-300 dark:hover:bg-indigo-500/40 focus-visible:ring-indigo-500'
+    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus-visible:ring-gray-500'
+
   return (
     <button
       onClick={toggleFavorite}
       disabled={isToggling || !userId}
-      className={`text-sm font-medium flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md transition-all focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800
-        ${
-          saved
-            ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-500/30 dark:text-indigo-300 dark:hover:bg-indigo-500/40 focus-visible:ring-indigo-500'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus-visible:ring-gray-500'
-        }
-        ${isToggling || !userId ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
-      `}
+      className={`${className} ${stateClasses} ${
+        isToggling || !userId ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+      }`}
       aria-pressed={saved}
       aria-label={saved ? 'Quitar de favoritos' : 'Guardar en favoritos'}
     >
@@ -141,7 +164,7 @@ export default function FavoriteButton({ userId, documentId }: FavoriteButtonPro
         <Bookmark size={16} />
       )}
       <span className="whitespace-nowrap">
-        {isToggling ? 'Procesando...' : saved ? 'Guardado' : 'Guardar'}
+        {isToggling ? 'Procesando...' : saved ? labelOn : labelOff}
       </span>
     </button>
   )

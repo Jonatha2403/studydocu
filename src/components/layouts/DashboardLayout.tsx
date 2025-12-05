@@ -1,18 +1,39 @@
-// src/components/layouts/DashboardLayout.tsx
 'use client'
 
-import Sidebar from '@/components/Sidebar'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 interface DashboardLayoutProps {
   children: ReactNode
+  title?: string
+  subtitle?: string
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default function DashboardLayout({
+  children,
+  title,
+  subtitle
+}: DashboardLayoutProps) {
   return (
-    <div className="flex">
-      <Sidebar />
-      <main className="flex-1 min-h-screen p-6 bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-slate-950 text-slate-50">
+      {/* Top bar */}
+      <header className="border-b border-slate-800 bg-slate-900/70 backdrop-blur-md">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-semibold">
+              {title ?? 'Panel StudyDocu'}
+            </h1>
+            {subtitle && (
+              <p className="text-xs text-slate-400">{subtitle}</p>
+            )}
+          </div>
+          <div className="text-xs text-slate-400">
+            StudyDocu · IA Educativa 🤖
+          </div>
+        </div>
+      </header>
+
+      {/* Contenido */}
+      <main className="max-w-6xl mx-auto px-4 py-6">
         {children}
       </main>
     </div>

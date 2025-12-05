@@ -1,0 +1,27 @@
+User-agent: *
+Allow: /
+
+# 🚫 Rutas privadas o protegidas
+Disallow: /admin/
+Disallow: /perfil/
+Disallow: /subir/
+Disallow: /dashboard/
+Disallow: /mi-tablero/
+Disallow: /referidos/
+Disallow: /premium-area/
+Disallow: /subscription/
+Disallow: /documentos-premium/
+Disallow: /asesoria-premium/
+Disallow: /onboarding/
+Disallow: /completar-perfil/
+Disallow: /auth/
+Disallow: /no-autorizado/
+Disallow: /verificado/
+
+# ✅ Rutas públicas permitidas
+Allow: /explorar/
+Allow: /documento/
+
+# 🗺️ Sitemap dinámico desde Supabase
+Sitemap: https://studydocu.ec/sitemap.xml
+Host: https://studydocu.ec

@@ -1,34 +1,35 @@
 {
-  "name": "StudyDocu - Plataforma Académica",
+  "name": "StudyDocu - Plataforma Académica Inteligente",
   "short_name": "StudyDocu",
-  "description": "Sube, organiza, comparte y descubre documentos universitarios.",
+  "description": "Sube, organiza, comparte y descubre documentos universitarios con IA.",
   "lang": "es-EC",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#7C3AED",
   "orientation": "portrait",
+  "background_color": "#FFCE00",
+  "theme_color": "#002B5B",
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/icons/icon-192x192.png",
-      "type": "image/png",
-      "sizes": "192x192"
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
     },
     {
-      "src": "/icons/icon-512x512.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    },
-    {
-      "src": "/icons/apple-touch-icon.png",
-      "type": "image/png",
-      "sizes": "180x180"
-    },
-    {
-      "src": "/icons/maskable-icon.png",
-      "type": "image/png",
+      "src": "/icon.png",
       "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/maskable-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "maskable"
     }
   ]

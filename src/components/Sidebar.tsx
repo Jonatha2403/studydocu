@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   LogOut
 } from 'lucide-react'
-import { useSession } from '@/hooks/useSession'
+import { useUserContext } from '@/context/UserContext' // ✅ FUNCIONAL
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -31,7 +31,7 @@ const adminLinks = [
 ]
 
 export default function Sidebar() {
-  const { user, perfil, loading } = useSession()
+  const { user, perfil, loading } = useUserContext()
   const router = useRouter()
   const pathname = usePathname()
 

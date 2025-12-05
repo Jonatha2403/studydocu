@@ -1,6 +1,10 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { supabase } from '@/lib/supabase'
+import { useUserContext } from '@/context/UserContext'
 import {
   MessageCircle,
   CreditCard,
@@ -17,9 +21,89 @@ interface PaymentOption {
   href: string
   actionText: string
   isExternal: boolean
+  simulateSuccess?: boolean
 }
 
 export default function PaymentOptions() {
+  const router = useRouter()
+  const { user } = useUserContext()
+
+
+  // 🧾 Registro de pago en Supabase
+  const registrarPago = async ({
+    userId,
+    method,
+    amount = 0,
+    status = 'completed',
+    metadata = {},
+  }: {
+    userId: string
+    method: string
+    amount?: number
+    status?: string
+    metadata?: object
+  }) => {
+    const { error } = await supabase.from('payments').insert([
+      {
+        user_id: userId,
+        method,
+        amount,
+        currency: 'USD',
+        status,
+        metadata,
+      },
+    ])
+    if (error) {
+      console.error('❌ Error al registrar el pago:', error.message)
+      toast.error('Error al registrar el pago')
+    } else {
+      toast.success('🧾 Pago registrado con éxito')
+    }
+  }
+
+  // 🌟 Activación automática de membresía
+  const activarMembresia = async (userId: string) => {
+    const expiresAt = new Date()
+    expiresAt.setMonth(expiresAt.getMonth() + 1) // 1 mes
+
+    const { error } = await supabase
+  .from('user_memberships')
+  .upsert({
+    user_id: userId,
+    plan: 'premium',
+    status: 'active',
+    starts_at: new Date(),
+    expires_at: expiresAt, // ✅ aquí es donde debes corregir
+  }, { onConflict: 'user_id' })
+
+
+    if (error) {
+      console.error('❌ Error al activar membresía:', error.message)
+      toast.error('Error al activar membresía')
+    } else {
+      toast.success('🎉 Membresía activada correctamente')
+    }
+  }
+
+  // ✅ Flujo completo tras pago exitoso
+  const handlePaymentSuccess = async () => {
+    if (!user?.id) return toast.error('Usuario no autenticado')
+
+    await registrarPago({
+      userId: user.id,
+      method: 'PayPhone',
+      amount: 9.99,
+      metadata: { simulacion: true },
+    })
+
+    await activarMembresia(user.id)
+
+    toast.success('✅ Pago confirmado. Redirigiendo...')
+    setTimeout(() => {
+      router.push('/suscripcion/exito')
+    }, 1500)
+  }
+
   const paymentOptions: PaymentOption[] = [
     {
       name: 'WhatsApp (Transferencia Bancaria)',
@@ -53,9 +137,10 @@ export default function PaymentOptions() {
       description: 'Paga con tarjeta usando la app PayPhone.',
       icon: CreditCard,
       iconColor: 'text-purple-500 dark:text-purple-400',
-      href: 'https://wa.me/593958757302?text=Hola,%20quiero%20pagar%20con%20PayPhone%20para%20StudyDocu.',
-      actionText: 'Solicitar Link',
-      isExternal: true,
+      href: '#',
+      actionText: 'Simular Pago PayPhone',
+      isExternal: false,
+      simulateSuccess: true,
     },
   ]
 
@@ -75,6 +160,14 @@ export default function PaymentOptions() {
       <ul className="space-y-4">
         {paymentOptions.map((option) => {
           const Icon = option.icon
+
+          const handleClick = (e: React.MouseEvent) => {
+            if (option.simulateSuccess) {
+              e.preventDefault()
+              handlePaymentSuccess()
+            }
+          }
+
           return (
             <li
               key={option.name}
@@ -88,13 +181,16 @@ export default function PaymentOptions() {
                       {option.name}
                     </span>
                     {option.description && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{option.description}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        {option.description}
+                      </p>
                     )}
                   </div>
                 </div>
 
                 <Link
                   href={option.href}
+                  onClick={handleClick}
                   target={option.isExternal ? '_blank' : '_self'}
                   rel={option.isExternal ? 'noopener noreferrer' : undefined}
                   aria-label={`Ir a ${option.name}`}

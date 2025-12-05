@@ -13,19 +13,21 @@ const ACHIEVEMENTS_CATALOG: Achievement[] = [
 
 export async function checkAndGrantAchievements(userId: string): Promise<{ name: string }[]> {
   const grantedAchievements: { name: string }[] = []
-
   if (!userId) return grantedAchievements
 
   try {
-    // Logros ya desbloqueados
+    // 📌 Nombre real de la columna en tu tabla
+    const achievementColumn = 'achievement'
+
+    // 🔍 Logros ya desbloqueados
     const { data: existing, error: existingError } = await supabase
       .from('user_achievements')
-      .select('achievement_key')
+      .select(achievementColumn)
       .eq('user_id', userId)
 
     if (existingError) throw new Error(existingError.message)
 
-    const unlocked = new Set((existing || []).map((a) => a.achievement_key))
+    const unlocked = new Set((existing || []).map((a) => a[achievementColumn]))
     const toGrant: string[] = []
 
     // 📄 Verificar cantidad de documentos
@@ -41,29 +43,36 @@ export async function checkAndGrantAchievements(userId: string): Promise<{ name:
       if (docCount >= 5 && !unlocked.has('five_uploads')) toGrant.push('five_uploads')
     }
 
-    // 🔥 Verificar documento popular
-    const { data: popularDocs, error: popularError } = await supabase
-      .from('documents')
-      .select('id')
-      .eq('user_id', userId)
-      .gte('likes', 10)
-      .limit(1)
+    // 🔥 Verificar documento popular (si existe columna likes)
+    let hasLikesColumn = false
+    try {
+      const { data: testLikes } = await supabase.from('documents').select('likes').limit(1)
+      if (testLikes) hasLikesColumn = true
+    } catch {
+      hasLikesColumn = false
+    }
 
-    if (popularError) throw new Error(popularError.message)
+    if (hasLikesColumn) {
+      const { data: popularDocs } = await supabase
+        .from('documents')
+        .select('id')
+        .eq('user_id', userId)
+        .gte('likes', 10)
+        .limit(1)
 
-    if ((popularDocs?.length || 0) > 0 && !unlocked.has('popular_doc')) {
-      toGrant.push('popular_doc')
+      if ((popularDocs?.length || 0) > 0 && !unlocked.has('popular_doc')) {
+        toGrant.push('popular_doc')
+      }
     }
 
     // 🏆 Insertar nuevos logros
     if (toGrant.length > 0) {
       const inserts = toGrant.map((key) => ({
         user_id: userId,
-        achievement_key: key,
+        [achievementColumn]: key || 'desconocido', // Evita null
       }))
 
       const { error: insertError } = await supabase.from('user_achievements').insert(inserts)
-
       if (insertError) throw new Error(insertError.message)
 
       toGrant.forEach((key) => {

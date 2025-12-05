@@ -1,0 +1,46 @@
+{
+    "fullScreen": {
+        "enable": true,
+        "zIndex": -1
+    },
+    "background": {
+        "color": "#0b1120"
+    },
+    "particles": {
+        "number": {
+            "value": 60
+        },
+        "color": {
+            "value": "#6366f1"
+        },
+        "shape": {
+            "type": "circle"
+        },
+        "opacity": {
+            "value": 0.3
+        },
+        "size": {
+            "value": 2.5
+        },
+        "move": {
+            "enable": true,
+            "speed": 0.7
+        }
+    },
+    "interactivity": {
+        "events": {
+            "onHover": {
+                "enable": true,
+                "mode": "grab"
+            }
+        },
+        "modes": {
+            "grab": {
+                "distance": 100,
+                "links": {
+                    "opacity": 0.5
+                }
+            }
+        }
+    }
+}

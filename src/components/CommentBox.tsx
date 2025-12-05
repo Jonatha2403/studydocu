@@ -8,6 +8,10 @@ import Image from 'next/image'
 import type { User } from '@supabase/supabase-js'
 import { reportarContenido } from '@/lib/report'
 
+// 👇 Usa el mismo componente de tus páginas de perfil/configuración
+import LottieAvatar from '@/components/LottieAvatar'
+
+/** ---------- Tipos ---------- */
 interface CommentProfileInfo {
   username: string | null
   avatar_url: string | null
@@ -19,7 +23,7 @@ interface CommentEntry {
   content: string
   user_id: string
   document_id: string
-  profiles: CommentProfileInfo[] | null
+  profiles: CommentProfileInfo | null
 }
 
 interface CommentBoxProps {
@@ -28,38 +32,53 @@ interface CommentBoxProps {
   onCommentSent?: () => void | Promise<void>
 }
 
+/** ---------- Helpers para avatar ---------- */
+const getCleanUrl = (u?: string | null) => (u ? u.split('?')[0] : '')
+const isLottieUrl = (u?: string | null) => getCleanUrl(u).endsWith('.json')
+
+/** ---------- Componente ---------- */
 export default function CommentBox({ documentId, user, onCommentSent }: CommentBoxProps) {
   const [comments, setComments] = useState<CommentEntry[]>([])
   const [newComment, setNewComment] = useState('')
   const [loadingComments, setLoadingComments] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // cache-buster local solo para imágenes (evita ver avatares viejos)
+  const [avatarVersion] = useState<number>(Date.now())
+
   const fetchComments = useCallback(async () => {
     if (!documentId) return
     setLoadingComments(true)
     try {
+      // Usamos la vista pública: comments_public_v
       const { data, error } = await supabase
-        .from('comments')
-        .select(
-          `
-          id,
-          created_at,
-          content,
-          user_id,
-          document_id,
-          profiles ( username, avatar_url )
-        `
-        )
+        .from('comments_public_v')
+        .select('id, created_at, content, user_id, document_id, username, avatar_url')
         .eq('document_id', documentId)
         .order('created_at', { ascending: false })
-      if (error) throw error
-      setComments(data || [])
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        toast.error('❌ Error al cargar comentarios: ' + error.message)
-      } else {
-        toast.error('❌ Error desconocido al cargar comentarios.')
+
+      if (error) {
+        console.error('[comments_public_v/select]', error)
+        throw error
       }
+
+      const mapped: CommentEntry[] =
+        ((data as any[] | null) ?? []).map((row) => ({
+          id: row.id,
+          created_at: row.created_at,
+          content: row.content,
+          user_id: row.user_id,
+          document_id: row.document_id,
+          profiles: {
+            username: row.username ?? null,
+            avatar_url: row.avatar_url ?? null,
+          },
+        })) || []
+
+      setComments(mapped)
+    } catch (error: any) {
+      console.error('[comments_public_v/select] fatal', error)
+      toast.error(error?.message || '❌ Error al cargar comentarios.')
       setComments([])
     } finally {
       setLoadingComments(false)
@@ -84,17 +103,17 @@ export default function CommentBox({ documentId, user, onCommentSent }: CommentB
           document_id: documentId,
           content: trimmed,
         })
-        if (error) throw error
+        if (error) {
+          console.error('[comments/insert]', error)
+          throw error
+        }
         toast.success('✅ Comentario enviado')
         setNewComment('')
         await fetchComments()
-        if (onCommentSent) await onCommentSent()
-      } catch (e: unknown) {
-        if (e instanceof Error) {
-          toast.error('❌ Error al enviar el comentario: ' + e.message)
-        } else {
-          toast.error('❌ Error desconocido al enviar el comentario.')
-        }
+        await onCommentSent?.()
+      } catch (e: any) {
+        console.error('[comments/insert] fatal', e)
+        toast.error(e?.message || '❌ Error al enviar el comentario.')
       } finally {
         setIsSubmitting(false)
       }
@@ -114,9 +133,14 @@ export default function CommentBox({ documentId, user, onCommentSent }: CommentB
     if (!user) return toast.error('Debes iniciar sesión.')
     const motivo = prompt('¿Por qué deseas reportar este comentario?')
     if (!motivo) return
-    const result = await reportarContenido(user.id, motivo, documentId, commentId)
-    if (result.success) toast.success('✅ Reporte enviado. Gracias por tu aporte.')
-    else toast.error('❌ Error al enviar reporte.')
+    try {
+      const result = await reportarContenido(user.id, motivo, documentId, commentId)
+      if (result.success) toast.success('✅ Reporte enviado. Gracias por tu aporte.')
+      else toast.error('❌ Error al enviar reporte.')
+    } catch (e: any) {
+      console.error('[reportarContenido]', e)
+      toast.error(e?.message || '❌ Error al enviar reporte.')
+    }
   }
 
   return (
@@ -175,7 +199,14 @@ export default function CommentBox({ documentId, user, onCommentSent }: CommentB
       ) : (
         <ul className="space-y-4">
           {comments.map((comment) => {
-            const profile = comment.profiles?.[0]
+            const profile = comment.profiles
+            const cleanUrl = getCleanUrl(profile?.avatar_url || null)
+            const lottie = isLottieUrl(profile?.avatar_url || null)
+            const imgSrc =
+              !lottie && profile?.avatar_url
+                ? `${profile.avatar_url}${profile.avatar_url.includes('?') ? '&' : '?'}v=${avatarVersion}`
+                : undefined
+
             return (
               <li
                 key={comment.id}
@@ -183,16 +214,23 @@ export default function CommentBox({ documentId, user, onCommentSent }: CommentB
               >
                 <div className="flex items-start space-x-3">
                   {profile?.avatar_url ? (
-                    <Image
-                      src={profile.avatar_url}
-                      alt="Avatar"
-                      width={36}
-                      height={36}
-                      className="rounded-full object-cover"
-                    />
+                    lottie ? (
+                      <div className="w-9 h-9 rounded-full overflow-hidden grid place-items-center bg-muted">
+                        <LottieAvatar src={cleanUrl} size={36} />
+                      </div>
+                    ) : (
+                      <Image
+                        src={imgSrc as string}
+                        alt="Avatar"
+                        width={36}
+                        height={36}
+                        className="rounded-full object-cover"
+                      />
+                    )
                   ) : (
                     <UserCircle size={36} className="text-gray-400 dark:text-gray-500" />
                   )}
+
                   <div className="flex-1">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-1">
                       <span className="font-semibold text-blue-700 dark:text-yellow-400 text-sm">

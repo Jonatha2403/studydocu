@@ -1,60 +1,131 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import Link from 'next/link'
 
-interface Props {
-  filePath: string
-  canViewFull?: boolean // Si tiene acceso completo
+function isHttpUrl(s?: string | null) {
+  if (!s) return false
+  return /^https?:\/\//i.test(s.trim())
 }
 
-export default function DocumentPreview({ filePath, canViewFull = false }: Props) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+interface Props {
+  /** Puede ser una URL completa (public/signed) o una key relativa del Storage */
+  filePath: string
+  /** Si lo usas para permitir abrir en pestaña completa */
+  canViewFull?: boolean
+  /** Opcional: si envías key y quieres forzar otro bucket */
+  bucketOverride?: string
+}
+
+/**
+ * DocumentPreview robusto:
+ * - Si `filePath` es URL http(s) => la usa tal cual.
+ * - Si es una key de Storage => la firma con el bucket.
+ */
+export default function DocumentPreview({ filePath, canViewFull, bucketOverride }: Props) {
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchPreviewUrl = async () => {
-      setLoading(true)
-      const { data, error } = await supabase.storage
-        .from('documents')
-        .createSignedUrl(filePath, 120) // 2 minutos
-
-      if (error) {
-        console.error('Error al obtener URL firmada:', error)
-      }
-
-      if (data?.signedUrl) setPreviewUrl(data.signedUrl)
-      setLoading(false)
-    }
-
-    if (filePath) fetchPreviewUrl()
+  const isPdf = useMemo(() => {
+    const s = (filePath || '').toLowerCase()
+    return s.endsWith('.pdf') || /\.pdf(\?|$)/i.test(s)
   }, [filePath])
 
-  if (loading || !previewUrl) {
-    return <p className="text-center text-sm text-muted-foreground py-6">⏳ Cargando vista previa...</p>
+  useEffect(() => {
+    let active = true
+    ;(async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        // Caso 1: ya es URL
+        if (isHttpUrl(filePath)) {
+          if (!active) return
+          setResolvedUrl(filePath)
+          return
+        }
+
+        // Caso 2: key de Storage
+        const bucket = bucketOverride || process.env.NEXT_PUBLIC_SUPABASE_BUCKET || 'documents'
+        const key = filePath.trim().replace(/^\/+/, '')
+
+        const { data, error } = await supabase.storage.from(bucket).createSignedUrl(key, 60 * 60)
+        if (error || !data?.signedUrl) {
+          throw new Error(error?.message || 'No se pudo firmar el archivo en Storage.')
+        }
+        if (!active) return
+        setResolvedUrl(data.signedUrl)
+      } catch (e: any) {
+        if (!active) return
+        setError(e?.message || 'No se pudo cargar el archivo.')
+        setResolvedUrl(null)
+      } finally {
+        if (!active) return
+        setLoading(false)
+      }
+    })()
+    return () => {
+      active = false
+    }
+  }, [filePath, bucketOverride])
+
+  if (loading) {
+    return (
+      <div className="w-full h-[70vh] grid place-items-center text-sm text-muted-foreground">
+        Cargando documento…
+      </div>
+    )
   }
 
-  return (
-    <div className="relative border rounded-2xl overflow-hidden shadow-lg mt-4 max-w-4xl mx-auto">
-      <iframe
-        src={`${previewUrl}#toolbar=0&navpanes=0&scrollbar=0`}
-        className="w-full h-[500px] bg-white dark:bg-slate-900"
-        style={{ pointerEvents: canViewFull ? 'auto' : 'none' }}
-        loading="lazy"
-      ></iframe>
+  if (error || !resolvedUrl) {
+    return (
+      <div className="p-6 text-center text-sm text-red-600">
+        {error || 'No se pudo cargar el documento.'}
+      </div>
+    )
+  }
 
-      {!canViewFull && (
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white dark:to-slate-900 opacity-90 flex flex-col items-center justify-end p-6">
-          <p className="text-gray-800 dark:text-gray-200 text-sm mb-3">
-            🔒 Solo puedes ver una parte del documento
-          </p>
-          <Link
-            href="/suscripcion"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm transition"
+  // Office docs
+  const isOffice = /\.(docx?|xlsx?|pptx?)(?:$|\?)/i.test(resolvedUrl)
+  const officeViewerUrl = isOffice
+    ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(resolvedUrl)}`
+    : null
+
+  return (
+    <div className="w-full">
+      {isPdf && (
+        <iframe src={resolvedUrl} className="w-full h-[80vh]" title="PDF" />
+      )}
+
+      {isOffice && officeViewerUrl && (
+        <iframe src={officeViewerUrl} className="w-full h-[80vh]" title="Office" />
+      )}
+
+      {!isPdf && !isOffice && (
+        <div className="p-6 text-center">
+          <a
+            href={resolvedUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline"
           >
-            Desbloquear vista completa
-          </Link>
+            Abrir archivo
+          </a>
+        </div>
+      )}
+
+      {/* 🔗 Enlace adicional para abrir en pestaña completa */}
+      {canViewFull && resolvedUrl && (
+        <div className="mt-3 text-center">
+          <a
+            href={resolvedUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-blue-600 underline"
+          >
+            Ver en pestaña completa
+          </a>
         </div>
       )}
     </div>

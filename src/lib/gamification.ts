@@ -1,9 +1,17 @@
+// src/lib/gamification.ts
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
-// 🧠 Calcula el nivel y medalla según puntos
-// src/lib/gamification.ts
+declare const window: any
+function lanzarConfeti() {
+  if (typeof window !== 'undefined' && typeof window?.launchConfetti === 'function') {
+    window.launchConfetti()
+  }
+}
 
+/* ────────────────────────────────────────────────
+ 🧠 Nivel y medalla según puntos
+──────────────────────────────────────────────── */
 export function obtenerNivelYMedalla(puntos: number) {
   if (puntos >= 500) {
     return {
@@ -13,10 +21,10 @@ export function obtenerNivelYMedalla(puntos: number) {
       next: null,
       progreso: 100,
       siguiente: null,
-    };
+    }
   }
   if (puntos >= 200) {
-    const progreso = Math.round(((puntos - 200) / (500 - 200)) * 100);
+    const progreso = Math.round(((puntos - 200) / 300) * 100)
     return {
       nivel: 'Avanzado',
       medalla: '🥈 Plata',
@@ -24,10 +32,10 @@ export function obtenerNivelYMedalla(puntos: number) {
       next: 500,
       progreso,
       siguiente: 500,
-    };
+    }
   }
   if (puntos >= 50) {
-    const progreso = Math.round(((puntos - 50) / (200 - 50)) * 100);
+    const progreso = Math.round(((puntos - 50) / 150) * 100)
     return {
       nivel: 'Explorador',
       medalla: '🥉 Bronce',
@@ -35,10 +43,9 @@ export function obtenerNivelYMedalla(puntos: number) {
       next: 200,
       progreso,
       siguiente: 200,
-    };
+    }
   }
-
-  const progreso = Math.round((puntos / 50) * 100);
+  const progreso = Math.round((puntos / 50) * 100)
   return {
     nivel: 'Nuevo',
     medalla: '🎓 Principiante',
@@ -46,135 +53,182 @@ export function obtenerNivelYMedalla(puntos: number) {
     next: 50,
     progreso,
     siguiente: 50,
-  };
+  }
 }
 
-
-// ✅ Suma puntos al usuario y registra la acción
+/* ────────────────────────────────────────────────
+ ✅ Suma puntos de forma atómica (RPC) y registra log (opcional)
+   - Usa public.profiles_public.points
+   - Evita romperse si audit_logs no existe
+──────────────────────────────────────────────── */
 export async function sumarPuntos(userId: string, cantidad: number, motivo: string) {
   try {
-    const { data: perfil, error } = await supabase
-      .from('profiles')
-      .select('puntos')
+    if (!userId) throw new Error('ID de usuario no definido')
+    if (!Number.isFinite(cantidad)) throw new Error('Cantidad inválida')
+
+    // 1) Suma atómica (bypass RLS con SECURITY DEFINER)
+    const { error: rpcError } = await supabase.rpc('add_points', {
+      p_user: userId,
+      p_delta: cantidad,
+    })
+    if (rpcError) throw new Error(rpcError.message || 'No se pudo sumar puntos')
+
+    // 2) Obtener puntos actuales
+    const { data: perfil, error: fetchError } = await supabase
+      .from('profiles_public')
+      .select('points')
       .eq('id', userId)
       .single()
+    if (fetchError) throw new Error(fetchError.message || 'No se pudo leer el perfil')
 
-    if (error || !perfil) throw error
+    const nuevosPuntos = perfil?.points ?? null
 
-    const nuevosPuntos = (perfil.puntos || 0) + cantidad
-
-    await supabase.from('profiles').update({ puntos: nuevosPuntos }).eq('id', userId)
-
-    await supabase.from('audit_logs').insert([{
-      user_id: userId,
-      action: motivo,
-      points_changed: cantidad,
-      created_at: new Date().toISOString(),
-    }])
+    // 3) Registrar log (si existe la tabla). Si no existe, se ignora.
+    try {
+      // Intento rápido de insertar; si la tabla no existe (42P01) o columnas no calzan, no romper.
+      const logRow: Record<string, any> = {
+        user_id: userId,
+        action: motivo || 'sumar_puntos',
+        created_at: new Date().toISOString(),
+        points_changed: cantidad, // si no existe la columna, el insert fallará y lo ignoramos
+      }
+      await supabase.from('audit_logs').insert([logRow])
+    } catch {
+      // Ignorar silenciosamente: tabla/columnas pueden no existir en este proyecto
+    }
 
     return nuevosPuntos
-  } catch (e) {
-    console.error('❌ Error al sumar puntos:', e)
+  } catch (e: any) {
+    console.error('❌ Error al sumar puntos:', e?.message || e)
     return null
   }
 }
 
-// 🏅 Registra un logro si no existe ya
+/* ────────────────────────────────────────────────
+ 🏅 Registra un logro si no existe (tolerante a esquema)
+──────────────────────────────────────────────── */
 export async function registrarLogro(userId: string, tipo: string) {
   try {
+    if (!userId || !tipo) return false
+
+    // Si la tabla no existe, esto puede fallar; lo manejamos
     const { data: existente } = await supabase
       .from('user_achievements')
       .select('*')
       .eq('user_id', userId)
       .eq('achievement', tipo)
-      .single()
+      .maybeSingle()
 
     if (existente) return false
 
-    await supabase.from('user_achievements').insert([{
-      user_id: userId,
-      achievement: tipo,
-      created_at: new Date().toISOString(),
-    }])
+    const { error } = await supabase.from('user_achievements').insert([
+      {
+        user_id: userId,
+        achievement: tipo,
+        created_at: new Date().toISOString(),
+      },
+    ])
+    if (error) throw error
 
+    toast.success(`🏅 Logro desbloqueado: ${tipo}`)
+    lanzarConfeti()
     return true
-  } catch (e) {
-    console.error('⚠️ Error al registrar logro:', e)
+  } catch (e: any) {
+    // Si la tabla no existe o RLS no permite, no rompas la app
+    console.warn('⚠️ registrarLogro (no crítico):', e?.message || e)
     return false
   }
 }
 
-// 🧩 Verifica si el usuario completó alguna misión
+/* ────────────────────────────────────────────────
+ 🧩 Verifica misiones y otorga recompensa
+   - Suma puntos con RPC add_points
+   - Tolera ausencia de tablas
+──────────────────────────────────────────────── */
 export async function checkMissions(userId: string) {
   try {
+    if (!userId) return
+
+    // 1) Misiones activas
     const { data: missions, error: missionsError } = await supabase
       .from('missions')
       .select('*')
       .eq('active', true)
+    if (missionsError || !missions) return
 
-    if (missionsError || !missions) throw missionsError
-
-    const { data: completed, error: completedError } = await supabase
+    // 2) Logros ya completados (por mission_id)
+    const { data: completed } = await supabase
       .from('user_achievements')
       .select('mission_id')
       .eq('user_id', userId)
 
-    if (completedError || !completed) throw completedError
+    const completedIds = (completed || [])
+      .map((ach: any) => ach?.mission_id)
+      .filter(Boolean)
 
-    const completedIds = completed.map((ach) => ach.mission_id)
-
-    const { data: logs, error: logsError } = await supabase
+    // 3) Logs de acciones del usuario
+    const { data: logs } = await supabase
       .from('audit_logs')
       .select('action, created_at')
       .eq('user_id', userId)
 
-    if (logsError || !logs) throw logsError
-
     const actionCount: Record<string, number> = {}
-    logs.forEach((log) => {
+    ;(logs || []).forEach((log: any) => {
+      if (!log?.action) return
       actionCount[log.action] = (actionCount[log.action] || 0) + 1
     })
 
-    const uniqueDays = Array.from(new Set(logs.map(log => new Date(log.created_at).toDateString())))
+    const uniqueDays = Array.from(
+      new Set(
+        (logs || []).map((log: any) => new Date(log.created_at).toDateString())
+      )
+    )
 
+    // 4) Evaluar condiciones
     for (const mission of missions) {
+      if (!mission) continue
       if (completedIds.includes(mission.id)) continue
 
       const condition = mission.condition || {}
       const countCond = condition.action_count || {}
-      const streakCond = condition.login_streak || 0
+      const streakCond = Number(condition.login_streak || 0)
 
       let cumple = true
-
       for (const [action, required] of Object.entries(countCond)) {
         if ((actionCount[action] || 0) < Number(required)) {
           cumple = false
           break
         }
       }
-
       if (streakCond > 0 && uniqueDays.length < streakCond) {
         cumple = false
       }
 
-      if (cumple) {
+      if (!cumple) continue
+
+      // 5) Registrar logro y sumar recompensa
+      try {
         const { error: insertError } = await supabase
           .from('user_achievements')
           .insert({
             user_id: userId,
-            mission_id: mission.id
+            mission_id: mission.id,
+            created_at: new Date().toISOString(),
           })
 
         if (!insertError) {
-          await supabase.rpc('increment_user_points', {
-            uid: userId,
-            points: mission.reward
-          })
-          toast.success(`🏆 Logro desbloqueado: ${mission.title}`)
+          const reward = Number(mission.reward || 0)
+          if (reward > 0) {
+            await supabase.rpc('add_points', { p_user: userId, p_delta: reward })
+          }
+          toast.success(`🏆 Logro desbloqueado: ${mission.title || 'Misión completada'}`)
+          lanzarConfeti()
         }
+      } catch (e) {
+        console.warn('⚠️ checkMissions logro/reward:', (e as any)?.message || e)
       }
     }
-  } catch (e) {
-    console.error('❌ Error al verificar misiones:', e)
+  } catch (e: any) {
+    console.error('❌ Error al verificar misiones:', e?.message || e)
   }
 }

@@ -1,23 +1,24 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import Lottie from 'lottie-react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import '@/styles/helpers.css'
+import { toast } from 'sonner'
 import { motion } from 'framer-motion'
+
+import HeroAI from '@/components/HeroAI'
+import Footer from '@/components/Footer'
+import AnimatedServices from '@/components/AnimatedServices'
+import AnimatedTestimonials from '@/components/AnimatedTestimonials'
+import AnimatedAsesores from '@/components/AnimatedAsesores'
+import { useUserContext } from '@/context/UserContext'
+import confettiAnimation from '@/assets/lotties/confetti.json'
 import { Button } from '@/components/ui/button'
 import {
-  ArrowRight,
-  CheckCircle,
-  LayoutDashboard,
-  MessageSquare,
-  Brain,
-  CalendarDays,
-  Goal,
-  FileText,
-  CreditCard,
-  Star,
-  ShieldCheck,
-  Eye,
-  Gift,
+  CheckCircle, LayoutDashboard, MessageSquare, Brain,
+  CalendarDays, Goal, FileText, CreditCard, ShieldCheck,
+  Eye, Gift, UserCheck, BookOpenCheck
 } from 'lucide-react'
 
 const featureItems = [
@@ -29,169 +30,146 @@ const featureItems = [
   { name: 'Metas', icon: Goal, description: 'Define y sigue tus objetivos.' },
   { name: 'Suscripciones', icon: CreditCard, description: 'Accede a funciones premium.' },
   { name: 'Dashboards', icon: LayoutDashboard, description: 'Visualiza tus datos clave.' },
+  { name: 'Asesores verificados', icon: UserCheck, description: 'Encuentra ayuda profesional validada.' },
+  { name: 'Referidos', icon: Gift, description: 'Invita amigos y gana recompensas.' },
+  { name: 'Blog educativo', icon: BookOpenCheck, description: 'Consejos de estudio y más.' },
+  { name: 'Modo universidad segura', icon: ShieldCheck, description: 'Privacidad según tu institución.' }
 ]
 
-const advancedFeatures = [
-  {
-    name: 'Resumen automático',
-    icon: Brain,
-    description: 'IA que resume tus documentos al subirlos.',
-  },
+const extraItems = [
+  { name: 'Resumen automático', icon: Brain, description: 'IA que resume tus documentos al subirlos.' },
   { name: 'Vista previa inteligente', icon: Eye, description: 'Explora documentos sin abrirlos.' },
   { name: 'Moderación automática', icon: ShieldCheck, description: 'IA revisa contenido por ti.' },
-  {
-    name: 'Sistema de recompensas',
-    icon: Gift,
-    description: 'Gana puntos y premios por participar.',
-  },
+  { name: 'Sistema de recompensas', icon: Gift, description: 'Gana puntos y premios por participar.' }
 ]
 
 export default function HomePage() {
-  return (
-    <main className="relative overflow-hidden min-h-screen bg-background text-text selection:bg-primary/20">
-      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-indigo-100 via-white to-purple-100 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900" />
+  const [showConfetti, setShowConfetti] = useState(false)
+  const { user } = useUserContext()
+  const router = useRouter()
 
-      {/* Hero principal */}
-      <section className="w-full pt-28 pb-20 px-4 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="max-w-3xl mx-auto"
-        >
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight">
-            🌟 Bienvenido a StudyDocu
-          </h1>
-          <p className="mt-6 text-lg text-muted-foreground">
-            Organiza tus documentos, tareas, apuntes y metas en un solo lugar. Hecho para
-            estudiantes como tú.
-          </p>
-          <div className="mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
-            <Link href="/subir">
-              <Button
-                size="lg"
-                className="text-base shadow-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:brightness-110"
-              >
-                Empezar ahora <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-            <Link href="/suscripcion">
-              <Button variant="secondary" size="lg" className="text-base">
-                Ver planes
-              </Button>
-            </Link>
-          </div>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Funciones gratuitas disponibles. Desbloquea más con Premium.
-          </p>
-        </motion.div>
+  useEffect(() => {
+    const isDark = localStorage.getItem('theme') === 'dark'
+    document.documentElement.classList.toggle('dark', isDark)
+
+    if (!localStorage.getItem('visited')) {
+      toast.success('🎉 ¡Logro desbloqueado! Primer ingreso a StudyDocu')
+      setShowConfetti(true)
+      localStorage.setItem('visited', 'true')
+
+      setTimeout(() => {
+        setShowConfetti(false)
+      }, 5000)
+    }
+  }, [])
+
+  const handleStart = () => {
+    router.push(user ? '/dashboard' : '/registrarse')
+  }
+
+  return (
+    <main className="relative z-10 w-full min-h-screen flex flex-col justify-start items-center text-text bg-transparent">
+      {showConfetti && (
+        <div className="fixed inset-0 z-40 pointer-events-none">
+          <Lottie animationData={confettiAnimation} loop={false} autoplay className="w-full h-full" />
+        </div>
+      )}
+
+      {/* Onda decorativa inferior */}
+      <div className="absolute bottom-0 w-full overflow-hidden leading-none z-0">
+        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-[100px]">
+          <path d="M0,0 C600,100 600,0 1200,100 L1200,0 L0,0 Z" fill="#ffffff" opacity="0.1">
+            <animate attributeName="d" dur="10s" repeatCount="indefinite"
+              values="M0,0 C600,100 600,0 1200,100 L1200,0 L0,0 Z;
+                      M0,0 C600,0 600,100 1200,0 L1200,0 L0,0 Z;
+                      M0,0 C600,100 600,0 1200,100 L1200,0 L0,0 Z" />
+          </path>
+        </svg>
+      </div>
+
+      <HeroAI />
+
+      <section className="text-center mt-10 px-4 bg-transparent dark:bg-transparent">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Bienvenido a StudyDocu</h1>
+        <AnimatedServices />
       </section>
 
-      {/* Funcionalidades destacadas */}
-      <section className="py-16 px-4 bg-white dark:bg-gray-900 border-t border-border">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
+      <section className="max-w-screen-xl mx-auto pt-10 pb-10 px-6 text-center bg-transparent dark:bg-transparent">
+        <h2 className="text-4xl font-bold mb-10">Lo que dicen nuestros usuarios</h2>
+        <AnimatedTestimonials />
+      </section>
+
+      <AnimatedAsesores />
+
+      <motion.section
+        id="funcionalidades"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-screen-2xl mx-auto py-12 px-6 md:px-12 bg-transparent dark:bg-transparent"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8 text-left">
           {featureItems.map((item, i) => (
+            <motion.div
+              key={item.name}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="group bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-white/20 dark:border-gray-700/30 rounded-2xl p-8 shadow hover:shadow-xl hover:scale-[1.03] hover:-translate-y-1 transition-all duration-300 ease-out text-center"
+            >
+              <item.icon className="w-14 h-14 mx-auto mb-4 text-primary group-hover:rotate-6 group-hover:scale-110 transition-transform duration-300" strokeWidth={1.5} />
+              <h3 className="text-2xl font-bold mb-2 text-foreground">{item.name}</h3>
+              <p className="text-base text-muted-foreground leading-relaxed">{item.description}</p>
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
+
+      <section className="text-center px-6 py-10 md:py-14">
+        <h2 className="text-4xl font-bold mb-4">¿Listo para comenzar?</h2>
+        <p className="text-lg text-muted-foreground mb-6">Únete gratis y explora todas las funciones de StudyDocu.</p>
+        <Button
+          onClick={handleStart}
+          className="px-10 py-4 text-lg sm:text-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full shadow hover:scale-105 transition-all"
+        >
+          🚀 Empezar gratis
+        </Button>
+      </section>
+
+      <motion.section
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-screen-2xl mx-auto px-6 md:px-12 mt-10 pb-20"
+      >
+        <h2 className="text-4xl sm:text-5xl font-bold text-center mb-12">Más herramientas útiles</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8">
+          {extraItems.map((item, i) => (
             <motion.div
               key={item.name}
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="bg-background border border-muted rounded-xl p-6 shadow-sm text-center"
+              transition={{ delay: i * 0.08 }}
+              className="group bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-white/20 dark:border-gray-700/30 rounded-2xl p-8 text-center shadow hover:shadow-xl hover:scale-[1.03] transition-all duration-300 ease-out"
             >
-              <item.icon className="w-8 h-8 mx-auto mb-3 text-primary" strokeWidth={1.5} />
-              <h3 className="text-sm font-semibold mb-1 text-foreground">{item.name}</h3>
-              <p className="text-xs text-muted-foreground">{item.description}</p>
+              <item.icon className="w-14 h-14 mx-auto mb-4 text-primary group-hover:rotate-3 group-hover:scale-110 transition-all duration-300" strokeWidth={1.5} />
+              <h3 className="text-2xl font-bold text-foreground mb-2">{item.name}</h3>
+              <p className="text-base text-muted-foreground leading-relaxed">{item.description}</p>
             </motion.div>
           ))}
         </div>
-        <div className="text-center mt-8">
-          <Link href="/caracteristicas">
-            <Button variant="link">
-              Y mucho más <ArrowRight className="ml-1 h-4 w-4" />
+        <div className="mt-16 flex justify-center">
+          <Link href="/herramientas">
+            <Button className="text-lg bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-white/30 dark:border-gray-700/30 text-gray-700 dark:text-white font-medium px-8 py-4 rounded-full shadow hover:bg-white/80 dark:hover:bg-gray-700/80 transition-all">
+              Ver todas las herramientas →
             </Button>
           </Link>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Testimonios + universidades */}
-      <section className="py-20 px-4 bg-muted dark:bg-muted/10 border-t border-border">
-        <div className="max-w-6xl mx-auto grid gap-12 lg:grid-cols-2 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl font-bold mb-4">Estudiantes que confían en StudyDocu</h2>
-            <p className="text-muted-foreground mb-6">
-              Miles de estudiantes de distintas universidades ya están mejorando su organización y
-              desempeño académico.
-            </p>
-            <ul className="space-y-4">
-              {[
-                ['Maria P.', '“Subí todos mis resúmenes y ahora los tengo siempre a mano.”'],
-                ['Carlos R.', '“Lo uso para organizar mi tesis, ¡me salvó la vida!”'],
-                ['Sofía L.', '“Mucho mejor que tener mis documentos sueltos en el Drive.”'],
-              ].map(([name, quote]) => (
-                <li key={name} className="flex items-start gap-3">
-                  <Star className="w-5 h-5 text-yellow-400 mt-1" />
-                  <span>
-                    <strong>{name}</strong>: {quote}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="grid grid-cols-2 sm:grid-cols-3 gap-6 justify-center"
-          >
-            {['ESPOL', 'PUCE', 'UDLA', 'UTPL', 'USFQ', 'Universidad Central'].map((uni) => (
-              <div
-                key={uni}
-                className="bg-white dark:bg-background border border-border rounded-lg py-3 px-4 text-center text-sm font-medium text-foreground shadow"
-              >
-                🎓 {uni}
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Funciones con IA */}
-      <section className="py-20 px-4 bg-white dark:bg-slate-950 border-t border-border">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-10">Funciones avanzadas con IA</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {advancedFeatures.map((item, i) => (
-              <motion.div
-                key={item.name}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-muted border border-border rounded-xl p-6 text-center shadow"
-              >
-                <item.icon className="w-8 h-8 mx-auto mb-3 text-primary" strokeWidth={1.5} />
-                <h3 className="text-sm font-semibold text-foreground mb-1">{item.name}</h3>
-                <p className="text-xs text-muted-foreground">{item.description}</p>
-              </motion.div>
-            ))}
-          </div>
-          <div className="text-center mt-10">
-            <Link href="/explorar">
-              <Button size="lg" className="text-base shadow">
-                Explorar documentos públicos <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+      <Footer />
     </main>
   )
 }
