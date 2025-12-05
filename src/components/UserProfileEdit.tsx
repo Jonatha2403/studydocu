@@ -18,6 +18,7 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 
+// Perfil completo que tenemos en la tabla (extendido)
 interface ProfileData {
   id: string
   email?: string
@@ -25,13 +26,27 @@ interface ProfileData {
   points?: number | null
   subscription_?: boolean | null
   username?: string | null
+  // Campos usados en /subir/documentos/page.tsx para UserProfile
+  nombre?: string | null
+  carrera?: string | null
+  universidad?: string | null
+}
+
+// Tipo que espera el page.tsx (id, nombre, carrera, universidad)
+export interface BasicUserProfile {
+  id: string
+  nombre: string | null
+  carrera: string | null
+  universidad: string | null
 }
 
 interface UserProfileEditProps {
   user: SupabaseUser
+  // ⬅️ callback opcional para notificar al padre
+  onProfileUpdate?: (updatedProfile: BasicUserProfile | null) => void
 }
 
-export default function UserProfileEdit({ user }: UserProfileEditProps) {
+export default function UserProfileEdit({ user, onProfileUpdate }: UserProfileEditProps) {
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [originalProfileData, setOriginalProfileData] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -51,19 +66,29 @@ export default function UserProfileEdit({ user }: UserProfileEditProps) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, role, points, subscription_, username')
+        .select(
+          // incluimos también nombre, carrera, universidad por si se usan
+          'id, role, points, subscription_, username, nombre, carrera, universidad'
+        )
         .eq('id', user.id)
         .single()
 
       if (error) {
         if (error.code === 'PGRST116') {
+          // No existe el perfil, creamos uno "base"
           const baseProfile: ProfileData = {
             id: user.id,
             email: user.email,
             role: 'user',
             points: 0,
             subscription_: false,
-            username: user.user_metadata?.username || user.email?.split('@')[0] || 'Usuario',
+            username:
+              (user.user_metadata as any)?.username ||
+              user.email?.split('@')[0] ||
+              'Usuario',
+            nombre: null,
+            carrera: null,
+            universidad: null,
           }
           setProfile(baseProfile)
           setOriginalProfileData(baseProfile)
@@ -71,7 +96,11 @@ export default function UserProfileEdit({ user }: UserProfileEditProps) {
           throw error
         }
       } else {
-        const fullProfileData: ProfileData = { ...data, email: user.email, id: user.id }
+        const fullProfileData: ProfileData = {
+          ...data,
+          email: user.email,
+          id: user.id,
+        }
         setProfile(fullProfileData)
         setOriginalProfileData(fullProfileData)
       }
@@ -131,15 +160,30 @@ export default function UserProfileEdit({ user }: UserProfileEditProps) {
         toast.success('✅ Suscripción actualizada correctamente.')
         setEditing(false)
         setOriginalProfileData(profile)
+
+        // 🔔 Avisamos al padre (UploadPage) si quiere reaccionar
+        if (onProfileUpdate) {
+          const basicProfile: BasicUserProfile = {
+            id: profile.id,
+            nombre: profile.nombre ?? null,
+            carrera: profile.carrera ?? null,
+            universidad: profile.universidad ?? null,
+          }
+          onProfileUpdate(basicProfile)
+        }
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Error desconocido'
         console.error('Error updating profile:', err)
         toast.error('❌ Error al actualizar la suscripción.', { description: message })
+        // Si quieres notificar error al padre:
+        if (onProfileUpdate) {
+          onProfileUpdate(null)
+        }
       } finally {
         setIsSaving(false)
       }
     },
-    [profile, user]
+    [profile, user, onProfileUpdate]
   )
 
   if (loading) {
@@ -226,7 +270,9 @@ export default function UserProfileEdit({ user }: UserProfileEditProps) {
               onChange={handleSubscriptionChange}
               disabled={isSaving}
             />
-            <span className="font-medium text-gray-700 dark:text-gray-300">Suscripción Activa</span>
+            <span className="font-medium text-gray-700 dark:text-gray-300">
+              Suscripción Activa
+            </span>
             {profile.subscription_ ? (
               <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400" />
             ) : (
