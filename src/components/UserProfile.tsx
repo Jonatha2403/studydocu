@@ -24,11 +24,19 @@ interface ProfileData {
   username?: string | null
 }
 
+/**
+ * Nota importante:
+ * - `initialProfile` y `onProfileUpdate` se hacen opcionales y flexibles (`any`)
+ *   para que este componente pueda usarse también desde `/subir/documentos/page.tsx`
+ *   sin romper tipos.
+ */
 interface UserProfileEditProps {
   user: SupabaseUser
+  onProfileUpdate?: (updatedProfile: any | null) => void
 }
 
-export default function UserProfileEdit({ user }: UserProfileEditProps) {
+
+export default function UserProfileEdit({ user, onProfileUpdate }: UserProfileEditProps) {
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -60,7 +68,11 @@ export default function UserProfileEdit({ user }: UserProfileEditProps) {
           throw fetchError
         }
       } else {
-        const fullProfileData = { ...data, email: user.email, id: user.id }
+        const fullProfileData: ProfileData = {
+          ...data,
+          email: user.email ?? undefined,
+          id: user.id,
+        }
         setProfile(fullProfileData)
         setOriginalProfileData(fullProfileData)
       }
@@ -122,6 +134,11 @@ export default function UserProfileEdit({ user }: UserProfileEditProps) {
         toast.success('✅ Perfil actualizado correctamente.')
         setEditing(false)
         setOriginalProfileData(profile)
+
+        // Notificar al padre si envió un callback (por ejemplo, /subir/documentos/page.tsx)
+        if (onProfileUpdate) {
+          onProfileUpdate(profile)
+        }
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Error desconocido'
         console.error('Error updating profile:', err)
@@ -130,8 +147,8 @@ export default function UserProfileEdit({ user }: UserProfileEditProps) {
         setIsSaving(false)
       }
     },
-    [profile, user]
-  ) // ✅ originalProfileData eliminado
+    [profile, user, onProfileUpdate]
+  )
 
   if (loading) {
     return (
@@ -205,7 +222,9 @@ export default function UserProfileEdit({ user }: UserProfileEditProps) {
               className="w-full mt-1 p-2 border rounded-md bg-white dark:bg-gray-700 dark:text-white"
             />
           ) : (
-            <p className="text-gray-800 dark:text-gray-200">{profile.username || 'No asignado'}</p>
+            <p className="text-gray-800 dark:text-gray-200">
+              {profile.username || 'No asignado'}
+            </p>
           )}
         </div>
 
