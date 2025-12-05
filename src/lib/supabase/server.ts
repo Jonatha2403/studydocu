@@ -22,6 +22,11 @@ async function createSupabaseServerClient() {
   })
 }
 
+// ⭐ AGREGADO: ESTA FUNCIÓN ES LA QUE TUS RUTAS NECESITAN
+export async function createClient() {
+  return createSupabaseServerClient()
+}
+
 export async function getServerClient() {
   return createSupabaseServerClient()
 }
