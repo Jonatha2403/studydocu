@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url)
   const code = url.searchParams.get('code')
 
+  // next viene desde el email -> /reset-password
   const rawNext = url.searchParams.get('next') ?? '/reset-password'
   const decodedNext = decodeURIComponent(rawNext)
   const next = decodedNext.startsWith('/') ? decodedNext : '/reset-password'
@@ -17,6 +18,7 @@ export async function GET(req: NextRequest) {
   const origin = url.origin
   const response = NextResponse.redirect(new URL(next, origin))
 
+  // Necesario para que Supabase maneje cookies correctamente
   const cookieStore = await cookies()
 
   const supabase = createServerClient(
@@ -46,29 +48,32 @@ export async function GET(req: NextRequest) {
           response.cookies.set({
             name,
             value: '',
-            ...options,
-            path: '/',
             maxAge: 0,
+            path: '/',
+            ...options,
           })
         },
       },
     }
   )
 
+  // Si no viene un código, error
   if (!code) {
     return NextResponse.redirect(
       new URL('/reset-password?error=no_code', origin)
     )
   }
 
+  // Intercambiar el código por una sesión temporal
   const { error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
-    console.error('[AUTH_CALLBACK] Error exchangeCodeForSession:', error)
+    console.error('[AUTH_CALLBACK] Error al crear la sesión:', error)
     return NextResponse.redirect(
       new URL('/reset-password?error=no_session_after_exchange', origin)
     )
   }
 
+  // Si todo salió bien, redirige a /reset-password
   return response
 }
