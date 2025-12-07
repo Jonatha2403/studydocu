@@ -17,25 +17,31 @@ export default function PasswordResetForm() {
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isValid) { toast.error('Ingresa un correo válido'); return }
+    if (!isValid) {
+      toast.error('Ingresa un correo válido')
+      return
+    }
     if (loading) return
 
     setLoading(true)
     try {
-      const origin =
-        typeof window !== 'undefined'
-          ? window.location.origin
-          : (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000')
+      // URL FIJA PARA PRODUCCIÓN
+      const siteUrl =
+        process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
       const next = encodeURIComponent('/restablecer')
-      const redirectTo = `${origin}/auth/callback?next=${next}`
+      const redirectTo = `${siteUrl}/auth/callback?next=${next}`
 
       const value = email.trim().toLowerCase()
-      const { error } = await supabase.auth.resetPasswordForEmail(value, { redirectTo })
+      const { error } = await supabase.auth.resetPasswordForEmail(value, {
+        redirectTo,
+      })
 
       if (error) {
         if (/spam|rate|too many/i.test(error.message)) {
-          toast.error('Has solicitado demasiados enlaces. Intenta nuevamente en unos minutos.')
+          toast.error(
+            'Has solicitado demasiados enlaces. Intenta nuevamente en unos minutos.'
+          )
         } else if (/not found/i.test(error.message)) {
           toast.error('No encontramos ese correo. Verifica y vuelve a intentar.')
         } else {
@@ -72,7 +78,11 @@ export default function PasswordResetForm() {
         disabled={loading || !isValid}
         className="w-full py-3 rounded-xl bg-indigo-600 text-white disabled:opacity-60"
       >
-        {loading ? <Loader2 className="h-5 w-5 animate-spin inline-block" /> : 'Enviar enlace'}
+        {loading ? (
+          <Loader2 className="h-5 w-5 animate-spin inline-block" />
+        ) : (
+          'Enviar enlace'
+        )}
       </button>
     </form>
   )
