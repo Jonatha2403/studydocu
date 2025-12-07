@@ -1,9 +1,17 @@
+// src/utils/sendEmailConfirmation.ts
 import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-export async function sendEmailConfirmation(email: string, token: string, name?: string) {
-  const confirmLink = `https://studydocu.ec/confirmar?token=${token}`
+export async function sendEmailConfirmation(
+  email: string,
+  token: string,
+  name?: string
+) {
+  // ✅ Usar el callback de Supabase, no /confirmar directo
+  // type=signup para que tu /auth/callback lo trate como alta/confirmación
+  // next=%2Fverificado → luego de crear sesión, va a /verificado
+  const confirmLink = `https://studydocu.ec/auth/callback?type=signup&code=${token}&next=%2Fverificado`
   const userName = name || 'Estudiante'
 
   const html = `
