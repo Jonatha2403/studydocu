@@ -1,7 +1,7 @@
 // src/app/admin/usuarios/page.tsx
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
   Users,
@@ -27,10 +27,14 @@ interface AdminUser {
   is_blocked: boolean
 }
 
+interface ApiErrorResponse {
+  error?: string
+}
+
 export default function UsuariosAdminPage() {
   const { perfil, loading: loadingPerfil } = useUserContext()
-  const roleActual = (perfil as any)?.role
-  const adminId = (perfil as any)?.id
+  const roleActual = perfil?.role
+  const adminId = perfil?.id
 
   const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
@@ -100,56 +104,55 @@ export default function UsuariosAdminPage() {
   }
 
   // 🗑 Eliminar usuario COMPLETO vía API admin
-    const deleteUserProfile = async (user: AdminUser) => {
-  if (user.id === adminId) {
-    toast.error('No puedes eliminar tu propio perfil de admin.')
-    return
-  }
-
-  const ok = window.confirm(
-    `¿Seguro que quieres eliminar COMPLETAMENTE a ${user.nombre_completo}? Esta acción no se puede deshacer.`
-  )
-  if (!ok) return
-
-  setActionUserId(user.id)
-
-  try {
-    const res = await fetch('/api/admin/delete-user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.id }),
-    })
-
-    let data: any = null
-    try {
-      data = await res.json()
-    } catch {
-      data = null
-    }
-
-    if (!res.ok) {
-      console.warn('[ADMIN_DELETE_USER_API_ERROR_RESPONSE]', {
-        status: res.status,
-        data,
-      })
-
-      toast.error(
-        data?.error ||
-          `No se pudo eliminar el usuario. Código ${res.status}.`
-      )
+  const deleteUserProfile = async (user: AdminUser) => {
+    if (user.id === adminId) {
+      toast.error('No puedes eliminar tu propio perfil de admin.')
       return
     }
 
-    setUsers((prev) => prev.filter((u) => u.id !== user.id))
-    toast.success('Usuario eliminado por completo.')
-  } catch (err) {
-    console.error('[ADMIN_USERS_DELETE_FATAL]', err)
-    toast.error('Error inesperado al eliminar el usuario.')
-  } finally {
-    setActionUserId(null)
-  }
-}
+    const ok = window.confirm(
+      `¿Seguro que quieres eliminar COMPLETAMENTE a ${user.nombre_completo}? Esta acción no se puede deshacer.`
+    )
+    if (!ok) return
 
+    setActionUserId(user.id)
+
+    try {
+      const res = await fetch('/api/admin/delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id }),
+      })
+
+      let data: ApiErrorResponse | null = null
+      try {
+        data = (await res.json()) as ApiErrorResponse
+      } catch {
+        data = null
+      }
+
+      if (!res.ok) {
+        console.warn('[ADMIN_DELETE_USER_API_ERROR_RESPONSE]', {
+          status: res.status,
+          data,
+        })
+
+        toast.error(
+          data?.error ||
+            `No se pudo eliminar el usuario. Código ${res.status}.`
+        )
+        return
+      }
+
+      setUsers((prev) => prev.filter((u) => u.id !== user.id))
+      toast.success('Usuario eliminado por completo.')
+    } catch (err) {
+      console.error('[ADMIN_USERS_DELETE_FATAL]', err)
+      toast.error('Error inesperado al eliminar el usuario.')
+    } finally {
+      setActionUserId(null)
+    }
+  }
 
   // Estados de carga / permisos
   if (loadingPerfil || loading) {
