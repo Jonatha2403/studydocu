@@ -21,51 +21,91 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
-  // 1) Revisar si viene un code de Supabase (link del correo)
+  // 1) Revisar si venimos desde el link del correo
   useEffect(() => {
-    const code = searchParams?.get('code') ?? null
-    const type = searchParams?.get('type') ?? null
-    const error = searchParams?.get('error') ?? null
+    const run = async () => {
+      const code = searchParams?.get('code') ?? null
+      const type = searchParams?.get('type') ?? null
+      const error = searchParams?.get('error') ?? null
 
-
-    // Si viene error en la URL (no_session_after_exchange, etc.)
-    if (error) {
-      setStep('error')
-      if (error === 'no_session_after_exchange') {
-        setErrorMsg('Token inválido o expirado. Solicita un nuevo correo de recuperación.')
-      } else {
-        setErrorMsg('Ocurrió un problema al validar el enlace. Solicita un nuevo correo.')
-      }
-      return
-    }
-
-    // Si no hay code ni type=recovery, es la vista normal para pedir el correo
-    if (!code || type !== 'recovery') {
-      setStep('request')
-      return
-    }
-
-    // 2) Intercambiar el code por una sesión de recuperación
-    const exchange = async () => {
-      try {
-        setLoading(true)
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-
-        if (error) {
-          console.error('Error exchangeCodeForSession:', error)
-          setStep('error')
-          setErrorMsg('Token inválido o expirado. Solicita un nuevo correo de recuperación.')
-          return
+      // Si viene error en la URL (no_session_after_exchange, etc.)
+      if (error) {
+        setStep('error')
+        if (error === 'no_session_after_exchange') {
+          setErrorMsg(
+            'Token inválido o expirado. Solicita un nuevo correo de recuperación.'
+          )
+        } else {
+          setErrorMsg(
+            'Ocurrió un problema al validar el enlace. Solicita un nuevo correo.'
+          )
         }
-
-        // Sesión de recuperación creada correctamente → permitir cambiar la contraseña
-        setStep('update')
-      } finally {
-        setLoading(false)
+        return
       }
+
+      // 1️⃣ Flujo nuevo: ?code=...&type=recovery (PKCE)
+      if (code && type === 'recovery') {
+        try {
+          setLoading(true)
+          const { error: exError } = await supabase.auth.exchangeCodeForSession(
+            code
+          )
+
+          if (exError) {
+            console.error('Error exchangeCodeForSession:', exError)
+            setStep('error')
+            setErrorMsg(
+              'Token inválido o expirado. Solicita un nuevo correo de recuperación.'
+            )
+            return
+          }
+
+          // Sesión de recuperación creada correctamente → permitir cambiar la contraseña
+          setStep('update')
+          return
+        } finally {
+          setLoading(false)
+        }
+      }
+
+      // 2️⃣ Flujo clásico: tokens en el hash (#access_token=...)
+      if (typeof window !== 'undefined' && window.location.hash) {
+        const hash = window.location.hash
+        const params = new URLSearchParams(hash.replace('#', '?'))
+        const access_token = params.get('access_token')
+        const refresh_token = params.get('refresh_token')
+        const hashType = params.get('type')
+
+        if (access_token && refresh_token && hashType === 'recovery') {
+          try {
+            setLoading(true)
+            const { error: setError } = await supabase.auth.setSession({
+              access_token,
+              refresh_token,
+            })
+
+            if (setError) {
+              console.error('Error setSession (hash):', setError)
+              setStep('error')
+              setErrorMsg(
+                'No se pudo validar el enlace de recuperación. Solicita uno nuevo.'
+              )
+              return
+            }
+
+            setStep('update')
+            return
+          } finally {
+            setLoading(false)
+          }
+        }
+      }
+
+      // 3️⃣ Si no hay ni code ni hash de recuperación → solo mostrar formulario de correo
+      setStep('request')
     }
 
-    exchange()
+    run()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
@@ -90,12 +130,15 @@ export default function ResetPasswordPage() {
 
       if (error) {
         console.error('Error updateUser:', error)
-        setErrorMsg('No se pudo actualizar la contraseña. Inténtalo nuevamente.')
+        setErrorMsg(
+          'No se pudo actualizar la contraseña. Inténtalo nuevamente.'
+        )
         return
       }
 
-      setSuccessMsg('¡Contraseña actualizada correctamente! Ahora puedes iniciar sesión.')
-      // Opcional: limpiar campos y redirigir tras unos segundos
+      setSuccessMsg(
+        '¡Contraseña actualizada correctamente! Ahora puedes iniciar sesión.'
+      )
       setPassword('')
       setConfirmPassword('')
       setTimeout(() => {
@@ -118,7 +161,8 @@ export default function ResetPasswordPage() {
 
         {step === 'request' && (
           <p className="text-muted-foreground text-base">
-            Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.
+            Ingresa tu correo y te enviaremos un enlace para restablecer tu
+            contraseña.
           </p>
         )}
 
@@ -152,17 +196,21 @@ export default function ResetPasswordPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
+                disabled={loading}
               />
             </div>
 
             <div className="space-y-2 text-left">
-              <label className="text-sm font-medium">Confirmar contraseña</label>
+              <label className="text-sm font-medium">
+                Confirmar contraseña
+              </label>
               <input
                 type="password"
                 className="w-full rounded-md border px-3 py-2 text-sm bg-background"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
+                disabled={loading}
               />
             </div>
 
