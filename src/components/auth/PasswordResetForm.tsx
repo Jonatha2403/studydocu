@@ -26,14 +26,11 @@ export default function PasswordResetForm() {
     setLoading(true)
 
     try {
-      // Dominio real de producción
       const siteUrl =
         process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
-      // 🔥 Ruta correcta → /reset-password (NO /restablecer)
-      const next = encodeURIComponent('/reset-password')
-
-      const redirectTo = `${siteUrl}/auth/callback?next=${next}`
+      // 🚀 Ruta correcta: ir directo a /auth/reset-password
+      const redirectTo = `${siteUrl}/auth/reset-password`
 
       const value = email.trim().toLowerCase()
 
