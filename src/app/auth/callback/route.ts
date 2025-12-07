@@ -13,9 +13,8 @@ export async function GET(req: NextRequest) {
   const code = url.searchParams.get('code')
   const type = url.searchParams.get('type')
 
-  // 1) ENLACES DE RECUPERACIÓN DE CONTRASEÑA (type=recovery)
-  // Si por error Supabase envía el link a /auth/callback en vez de /auth/reset-password,
-  // lo redirigimos manualmente a la página correcta, conservando el code.
+  // ⚠️ 1) LINK DE RECUPERACIÓN DE CONTRASEÑA
+  // NO debemos intercambiar sesión aquí.
   if (type === 'recovery') {
     const redirectUrl = new URL('/auth/reset-password', origin)
 
@@ -27,20 +26,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  // 2) FLUJO NORMAL DE OAUTH (Google, GitHub, etc.)
+  // ⚠️ 2) FLUJO NORMAL DE OAUTH (Google/GitHub, etc.)
   const rawNext = url.searchParams.get('next') ?? '/'
   const decodedNext = decodeURIComponent(rawNext)
   const next = decodedNext.startsWith('/') ? decodedNext : '/'
 
-  // Redirección base a donde queramos llevar al usuario después del login
   const response = NextResponse.redirect(new URL(next, origin))
 
-  // Si no viene código, no hay nada que intercambiar: solo redirigimos a "next"
+  // Si no hay code → no es OAuth → redirigir normal
   if (!code) {
     return response
   }
 
-  // Necesario para que Supabase maneje las cookies de sesión correctamente
+  // Manejo normal de cookies para OAuth login
   const cookieStore = await cookies()
 
   const supabase = createServerClient(
@@ -79,17 +77,15 @@ export async function GET(req: NextRequest) {
     }
   )
 
-  // Intercambiamos el código por una sesión (solo para OAuth, NO para recovery)
+  // INTERCAMBIAR SESIÓN SOLO PARA OAUTH
   const { error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
-    console.error('[AUTH_CALLBACK] Error al crear la sesión:', error)
-    // Si falla, lo mandamos al login con un mensaje genérico
+    console.error('[AUTH_CALLBACK] Error al crear sesión OAuth:', error)
     return NextResponse.redirect(
       new URL('/iniciar-sesion?error=auth_callback', origin)
     )
   }
 
-  // Si todo salió bien, usamos la redirección a "next"
   return response
 }
