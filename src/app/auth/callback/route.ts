@@ -10,17 +10,13 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url)
   const code = url.searchParams.get('code')
 
-  // next viene URL-encoded desde el frontend: encodeURIComponent('/restablecer')
-  const rawNext = url.searchParams.get('next') ?? '/restablecer'
+  const rawNext = url.searchParams.get('next') ?? '/reset-password'
   const decodedNext = decodeURIComponent(rawNext)
-  const next = decodedNext.startsWith('/') ? decodedNext : '/restablecer'
+  const next = decodedNext.startsWith('/') ? decodedNext : '/reset-password'
 
   const origin = url.origin
-
-  // Redirección por defecto (después de crear la sesión)
   const response = NextResponse.redirect(new URL(next, origin))
 
-  // 👇 En tu setup, cookies() devuelve una Promise → usar await
   const cookieStore = await cookies()
 
   const supabase = createServerClient(
@@ -61,19 +57,18 @@ export async function GET(req: NextRequest) {
 
   if (!code) {
     return NextResponse.redirect(
-      new URL('/restablecer?error=no_code', origin)
+      new URL('/reset-password?error=no_code', origin)
     )
   }
 
   const { error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
-    console.error('[AUTH_CALLBACK] Error al hacer exchangeCodeForSession:', error)
+    console.error('[AUTH_CALLBACK] Error exchangeCodeForSession:', error)
     return NextResponse.redirect(
-      new URL('/restablecer?error=no_session_after_exchange', origin)
+      new URL('/reset-password?error=no_session_after_exchange', origin)
     )
   }
 
-  // Si todo va bien, ya hay sesión válida y se redirige a /restablecer (o al next que mandaste)
   return response
 }

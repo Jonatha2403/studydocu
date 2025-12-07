@@ -6,9 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Loader2, User } from 'lucide-react'
 import Lottie from 'lottie-react'
-import { supabase } from '@/lib/supabase' // ⬅️ ajusta si usas otra ruta
+import { supabase } from '@/lib/supabase' // ajusta si usas otra ruta
 
-// Quita/ajusta estas animaciones si no existen en tu proyecto
 import unlockAnim from '@/assets/animations/unlock.json'
 import successAnim from '@/assets/animations/success.json'
 
@@ -25,7 +24,7 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
 
-  // Muestra mensaje si venimos con ?error=...
+  // Mensajes de error desde el callback
   useEffect(() => {
     if (!errorParam) return
     const messages: Record<string, string> = {
@@ -34,10 +33,13 @@ export default function ResetPasswordPage() {
       missing_code: 'Falta el código del enlace. Solicita uno nuevo.',
       exchange_failed: 'Falló el intercambio del código. Intenta otra vez.',
     }
-    toast.error(messages[errorParam] ?? 'Hubo un problema con el enlace de recuperación.')
+    toast.error(
+      messages[errorParam] ??
+        'Hubo un problema con el enlace de recuperación.'
+    )
   }, [errorParam])
 
-  // Espera a que Supabase cree la sesión desde el hash (#access_token&type=recovery)
+  // Esperar a que Supabase tenga la sesión activa
   useEffect(() => {
     let mounted = true
 
@@ -52,16 +54,17 @@ export default function ResetPasswordPage() {
         return
       }
 
-      const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (!mounted) return
-        if (session) {
-          setUserEmail(session.user.email ?? '')
-          setSessionLoaded(true)
-          setChecking(false)
+      const { data: listener } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          if (!mounted) return
+          if (session) {
+            setUserEmail(session.user.email ?? '')
+            setSessionLoaded(true)
+            setChecking(false)
+          }
         }
-      })
+      )
 
-      // Fallback por si nunca llega el evento (token inválido/expirado)
       const t = setTimeout(() => {
         if (!mounted) return
         if (!sessionLoaded) {
@@ -81,7 +84,6 @@ export default function ResetPasswordPage() {
     }
   }, [sessionLoaded])
 
-  // Indicador de fortaleza (simple)
   const strength = useMemo(() => {
     const pwd = password
     if (pwd.length < 8) return 'Débil'
@@ -100,7 +102,11 @@ export default function ResetPasswordPage() {
       toast.error('❌ Las contraseñas no coinciden')
       return
     }
-    if (password.length < 8 || !/[A-Z]/.test(password) || !/\d/.test(password)) {
+    if (
+      password.length < 8 ||
+      !/[A-Z]/.test(password) ||
+      !/\d/.test(password)
+    ) {
       toast.error('❌ Mínimo 8 caracteres, 1 mayúscula y 1 número.')
       return
     }
@@ -109,11 +115,13 @@ export default function ResetPasswordPage() {
     try {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) {
-        toast.error(error.message || '❌ No se pudo actualizar la contraseña')
+        toast.error(
+          error.message || '❌ No se pudo actualizar la contraseña'
+        )
         return
       }
 
-      // Log no bloqueante (opcional)
+      // (Opcional) log de auditoría
       ;(async () => {
         try {
           await fetch('/api/logs', {
@@ -128,9 +136,14 @@ export default function ResetPasswordPage() {
         } catch {}
       })()
 
+      // 🔥 CERRAR SESIÓN DESPUÉS DEL CAMBIO
+      await supabase.auth.signOut()
+
       setShowSuccess(true)
       toast.success('¡Contraseña actualizada!')
-      setTimeout(() => router.push('/login'), 1800) // ⬅️ ajusta a tu ruta de login
+
+      // Redirigir al login (ajusta la ruta si usas /ingresar)
+      setTimeout(() => router.push('/login'), 1800)
     } finally {
       setLoading(false)
     }
@@ -169,7 +182,9 @@ export default function ResetPasswordPage() {
 
             {!sessionLoaded ? (
               <div className="text-center text-gray-500 dark:text-gray-400">
-                {checking ? 'Verificando token de seguridad...' : 'Token inválido o expirado.'}
+                {checking
+                  ? 'Verificando token de seguridad...'
+                  : 'Token inválido o expirado.'}
               </div>
             ) : (
               <>
@@ -190,7 +205,8 @@ export default function ResetPasswordPage() {
                 />
 
                 <div className="text-sm mb-4 text-right text-gray-500 dark:text-gray-400">
-                  Fortaleza: <span className="font-semibold">{strength}</span>
+                  Fortaleza:{' '}
+                  <span className="font-semibold">{strength}</span>
                 </div>
 
                 <button
