@@ -27,8 +27,18 @@ export default function PasswordResetForm() {
     setLoading(true)
 
     try {
-      // 🚀 URL 100% EXACTA (sin envs, sin variaciones)
-      const redirectTo = 'https://studydocu.ec/auth/reset-password'
+      // 👇 Ahora mandamos al callback, NO directo a /auth/reset-password
+      // Supabase, después de verificar el token, llamará a esta URL:
+      //   /auth/callback?next=/auth/reset-password
+      // y tu callback redirige a /auth/reset-password?code=...&type=recovery
+      const origin =
+        typeof window !== 'undefined'
+          ? window.location.origin
+          : 'https://studydocu.ec'
+
+      const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(
+        '/auth/reset-password'
+      )}`
 
       const value = email.trim().toLowerCase()
 
