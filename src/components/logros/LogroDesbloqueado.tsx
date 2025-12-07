@@ -1,6 +1,6 @@
+// src/components/logros/LogroDesbloqueado.tsx
 'use client'
 
-import * as React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -90,8 +90,8 @@ export default function LogroDesbloqueado({
     let timer: ReturnType<typeof setTimeout> | undefined
     if (visible) {
       setShow(true)
-      if (withConfetti && !reducedMotion) triggerConfetti()
-      if (!mute && soundUrl) playSound(soundUrl)
+      if (withConfetti && !reducedMotion) void triggerConfetti()
+      if (!mute && soundUrl) void playSound(soundUrl)
       if (duration > 0) {
         timer = setTimeout(() => {
           setShow(false)
@@ -142,8 +142,10 @@ export default function LogroDesbloqueado({
             <div className="absolute inset-0 blur-2xl rounded-3xl bg-gradient-to-r from-yellow-300/20 to-indigo-400/20" />
           </div>
 
-          <div className="w-[340px] max-w-[92vw] rounded-2xl border bg-white/90 dark:bg-gray-900/90 backdrop-blur-md
-                          border-gray-200 dark:border-gray-700 shadow-2xl overflow-hidden">
+          <div
+            className="w-[340px] max-w-[92vw] rounded-2xl border bg-white/90 dark:bg-gray-900/90 backdrop-blur-md
+                          border-gray-200 dark:border-gray-700 shadow-2xl overflow-hidden"
+          >
             {/* Header con botón cerrar */}
             <div className="flex items-center justify-between px-5 pt-4">
               <p className="text-xs font-medium text-muted-foreground">{title}</p>
@@ -187,16 +189,20 @@ export default function LogroDesbloqueado({
               <div className="mt-4 flex items-center justify-end gap-2">
                 <button
                   onClick={() => {
-                    // compartir o copiar
                     const url = typeof window !== 'undefined' ? window.location.href : ''
                     if (navigator.share) {
-                      navigator.share({
-                        title: 'Logro desbloqueado',
-                        text: logro,
-                        url,
-                      }).catch(() => {})
+                      navigator
+                        .share({
+                          title: 'Logro desbloqueado',
+                          text: logro,
+                          url,
+                        })
+                        .catch(() => {})
                     } else {
-                      navigator.clipboard?.writeText(url).then(() => {}).catch(() => {})
+                      navigator.clipboard
+                        ?.writeText(url)
+                        .then(() => {})
+                        .catch(() => {})
                     }
                   }}
                   className="text-xs rounded-md px-3 py-1.5 border bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800
@@ -260,13 +266,15 @@ export default function LogroDesbloqueado({
 /** Hook: respeta prefers-reduced-motion */
 function usePrefersReducedMotion() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const set = () => setPrefersReducedMotion(mediaQuery.matches)
-    set()
-    mediaQuery.addEventListener?.('change', set)
-    return () => mediaQuery.removeEventListener?.('change', set)
+    const update = () => setPrefersReducedMotion(mediaQuery.matches)
+    update()
+    mediaQuery.addEventListener?.('change', update)
+    return () => mediaQuery.removeEventListener?.('change', update)
   }, [])
+
   return prefersReducedMotion
 }
