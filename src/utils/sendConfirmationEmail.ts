@@ -1,53 +1,59 @@
-// File: src/utils/sendConfirmationEmail.ts
+// File: src/utils/sendPasswordResetEmail.ts
 import { Resend } from 'resend'
 
-// ✅ Verificación de API key
-const resendApiKey = process.env.RESEND_API_KEY
-if (!resendApiKey) {
-  throw new Error('❌ Falta la variable de entorno RESEND_API_KEY')
-}
-
-// ✅ Inicializa cliente Resend
-const resend = new Resend(resendApiKey)
+const resend = new Resend(process.env.RESEND_API_KEY!)
 
 /**
- * Envía un correo de confirmación de cuenta usando Resend.
- * @param email - Correo del usuario.
- * @param actionLink - Enlace generado por Supabase (con access_token corregido).
+ * Envía un correo personalizado de restablecimiento de contraseña
+ * usando el flujo CORRECTO de Supabase (PKCE + callback).
+ *
+ * @param email - Correo del usuario
+ * @param token - Token PKCE generado por Supabase
  */
-export async function sendConfirmationEmail(email: string, actionLink: string): Promise<void> {
+export async function sendPasswordResetEmail(email: string, token: string) {
+  // 👇 Enlace CORRECTO: pasa por /auth/callback y luego a /auth/reset-password
+  const resetLink = `https://studydocu.ec/auth/callback?type=recovery&code=${token}&next=%2Fauth%2Freset-password`
+
   const htmlContent = `
-    <div style="font-family: 'Poppins', sans-serif; background: #f9f9fb; padding: 40px; border-radius: 16px; max-width: 520px; margin: auto;">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <img src="https://studydocu.ec/logo-email.png" alt="StudyDocu" width="60" style="margin-bottom: 12px;" />
-        <h1 style="margin: 0; font-size: 24px; color: #4f46e5;">¡Bienvenido a StudyDocu!</h1>
-      </div>
-      <p style="color: #333; font-size: 16px; text-align: center; line-height: 1.5;">
-        Gracias por registrarte en <strong>StudyDocu</strong> 🎓<br />
-        Para activar tu cuenta y comenzar a disfrutar de la plataforma, haz clic en el botón de abajo:
-      </p>
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="${actionLink}" target="_blank" style="display: inline-block; padding: 14px 32px; background: linear-gradient(to right, #50c9ff, #f149ff); color: #fff; text-decoration: none; font-weight: 600; border-radius: 12px; font-size: 16px;">
-          Confirmar cuenta
+    <div style="font-family:'Poppins',sans-serif;padding:32px;background:#f9f9fb;">
+      <div style="max-width:520px;margin:auto;background:white;border-radius:16px;padding:40px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.06)">
+        <img src="https://studydocu.ec/logo-email.png" alt="StudyDocu" width="42" style="margin-bottom:16px" />
+        <h2 style="color:#4f46e5;margin-bottom:8px;">Restablecer contraseña</h2>
+
+        <p style="color:#555;font-size:15px;margin-bottom:24px;">
+          Haz clic en el botón de abajo para crear una nueva contraseña.<br />
+          Este enlace expira pronto por tu seguridad.
+        </p>
+
+        <a href="${resetLink}"
+          style="display:inline-block;margin-top:12px;padding:12px 24px;
+          background:linear-gradient(to right,#50c9ff,#f149ff);color:white;
+          border-radius:12px;text-decoration:none;font-weight:500">
+          Restablecer contraseña
         </a>
+
+        <p style="font-size:13px;color:#999;margin-top:32px;">
+          Si no solicitaste esto, puedes ignorar este mensaje.<br/>
+          Soporte: <a href="mailto:soporte@studydocu.ec" style="color:#6366f1;">soporte@studydocu.ec</a>
+        </p>
       </div>
-      <p style="font-size: 14px; color: #888; text-align: center;">
-        Si no solicitaste este correo, puedes ignorar este mensaje.
-      </p>
     </div>
   `
 
   try {
-    const result = await resend.emails.send({
-      from: 'StudyDocu <noreply@studydocu.ec>',
-      to: [email],
-      subject: 'Confirma tu cuenta en StudyDocu',
+    const { error } = await resend.emails.send({
+      from: 'StudyDocu <notificaciones@studydocu.ec>',
+      to: email,
+      subject: '🔐 Restablece tu contraseña de StudyDocu',
       html: htmlContent,
     })
 
-    console.log('[✅ Correo enviado con Resend]', result)
-  } catch (error: any) {
-    console.error('[❌ Error al enviar correo con Resend]', error)
-    throw new Error('No se pudo enviar el correo de confirmación.')
+    if (error) {
+      console.error('❌ Error al enviar correo de restablecimiento:', error)
+    } else {
+      console.log('✅ Correo de restablecimiento enviado a', email)
+    }
+  } catch (err) {
+    console.error('❌ Error general:', err)
   }
 }
