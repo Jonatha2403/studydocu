@@ -1,9 +1,11 @@
+// src/utils/sendPasswordResetEmail.ts
 import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const resetLink = `https://studydocu.ec/restablecer?token=${token}`
+  // 👇 LINK CORREGIDO: usa el callback de Supabase
+  const resetLink = `https://studydocu.ec/auth/callback?type=recovery&code=${token}&next=%2Fauth%2Freset-password`
 
   const htmlContent = `
     <div style="font-family:'Poppins',sans-serif;padding:32px;background:#f9f9fb;">
