@@ -6,23 +6,25 @@ import CaseSensitivePathsPlugin from 'case-sensitive-paths-webpack-plugin'
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
-  eslint: {
-    // Puedes dejarlo en true si no quieres bloquear el build por lint.
-    ignoreDuringBuilds: true,
-  },
+  // Nueva ubicación de typedRoutes en Next 16
+  typedRoutes: true,
 
   images: {
-    // Si luego usas más buckets/dominos, agrégalos aquí.
-    domains: ['abcxyz.supabase.co', 'cdn.studydocu.ec'],
-    // Alternativa si necesitas patrones:
-    // remotePatterns: [
-    //   { protocol: 'https', hostname: '*.supabase.co' },
-    //   { protocol: 'https', hostname: 'cdn.studydocu.ec' },
-    // ],
+    // Uso de remotePatterns en lugar de images.domains (recomendado en Next 16)
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'abcxyz.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.studydocu.ec',
+      },
+    ],
   },
 
   experimental: {
-    typedRoutes: true,
+    // typedRoutes ya no va aquí, solo webVitalsAttribution
     webVitalsAttribution: ['CLS', 'FCP', 'FID', 'LCP', 'TTFB'],
   },
 
@@ -47,7 +49,7 @@ const nextConfig: NextConfig = {
       },
     })
 
-    // 🔒 Enforce case‑sensitive paths (evita bugs entre Windows y Linux)
+    // 🔒 Enforce case-sensitive paths (evita bugs entre Windows y Linux)
     if (config.plugins) {
       config.plugins.push(new CaseSensitivePathsPlugin())
     }
