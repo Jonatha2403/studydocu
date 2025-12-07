@@ -31,7 +31,6 @@ export default function PasswordResetModal({ onClose }: Props) {
           ? window.location.origin
           : 'https://studydocu.ec'
 
-      // 👇 Igual que en PasswordResetForm: usamos el callback
       const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(
         '/auth/reset-password'
       )}`
@@ -51,7 +50,6 @@ export default function PasswordResetModal({ onClose }: Props) {
       toast.success('📩 Revisa tu correo para restablecer tu contraseña')
       onClose()
 
-      // Auditoría no bloqueante (opcional)
       fetch('/api/logs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
