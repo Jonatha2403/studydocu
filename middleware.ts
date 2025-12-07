@@ -4,7 +4,7 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 
 // Rutas públicas (NO poner '/' aquí; se chequea aparte)
 const PUBLIC_ROUTES = new Set([
-  '/iniciar-sesion',   // 👈 login actual
+  '/iniciar-sesion',   // login
   '/registrarse',
   '/verificado',
   '/verificado-oauth',
@@ -14,6 +14,7 @@ const PUBLIC_ROUTES = new Set([
   '/upgrade',
   '/favicon.ico',
   '/manifest.json',
+  '/reset-password',   // 🔥 PÚBLICA: pantalla de cambio de contraseña
 ])
 
 // Rutas protegidas (requieren sesión)
@@ -24,18 +25,16 @@ const PROTECTED_PREFIXES = [
   '/mi-tablero',
   '/documento',
   '/favoritos',
-  '/vista-previa', // 👈 protegida
-  '/admin',        // 👈 AHORA /admin también pasa por el middleware
+  '/vista-previa',
+  '/admin',        // /admin también pasa por el middleware
 ]
 
 // Endpoints de API protegidos
 const PROTECTED_API_PREFIXES = ['/api/download', '/api/admin']
 
-
 // Rutas excluidas del bloqueo de onboarding
 const ONBOARDING_SAFE_ROUTES = new Set(['/onboarding'])
 
-// Helper
 const pathStartsWithAny = (path: string, prefixes: string[]) =>
   prefixes.some((p) => path === p || path.startsWith(p + '/'))
 
@@ -57,7 +56,7 @@ export async function middleware(req: NextRequest) {
     return res
   }
 
-  // 3) Obtener usuario desde cookies (sin validar JWT a mano)
+  // 3) Obtener usuario desde cookies
   const supabase = createMiddlewareClient({ req, res })
   const {
     data: { user },
@@ -66,7 +65,6 @@ export async function middleware(req: NextRequest) {
   // 4) Si no hay sesión → redirigir a iniciar-sesion con callback
   if (!user) {
     const loginUrl = new URL('/iniciar-sesion', req.url)
-    // conservar a dónde iba (path + query)
     const callback = pathname + (url.search || '')
     loginUrl.searchParams.set('callbackUrl', callback)
     return NextResponse.redirect(loginUrl)
@@ -74,9 +72,8 @@ export async function middleware(req: NextRequest) {
 
   // 5) Reglas adicionales (admin / premium / onboarding)
 
-  // Traemos perfil para role, subscription_status y onboarding_complete
+  // Traer perfil para role, subscription_status y onboarding_complete
   const profileUrl = new URL(
-    // 👇 usamos 'perfiles' para que coincida con tu tabla en Supabase
     `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/perfiles?select=role,subscription_status,onboarding_complete&id=eq.${user.id}`,
   )
 
