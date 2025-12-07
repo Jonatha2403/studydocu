@@ -1,3 +1,4 @@
+// src/components/auth/PasswordResetModal.tsx
 'use client'
 
 import { useState } from 'react'
@@ -17,7 +18,7 @@ export default function PasswordResetModal({ onClose }: Props) {
   const [loading, setLoading] = useState(false)
 
   const handleSendReset = async () => {
-    if (!email) {
+    if (!email.trim()) {
       toast.error('Ingresa tu correo electrónico')
       return
     }
@@ -25,38 +26,34 @@ export default function PasswordResetModal({ onClose }: Props) {
     setLoading(true)
 
     try {
-      const origin =
-        process.env.NEXT_PUBLIC_SITE_URL || 'https://studydocu.ec'
-
-      // 🚀 Redirección correcta
-      const redirectTo = `${origin}/auth/reset-password`
+      // 🚀 URL EXACTA QUE SUPABASE SÍ ACEPTA (sin envs)
+      const redirectTo = 'https://studydocu.ec/auth/reset-password'
 
       const { error } = await supabase.auth.resetPasswordForEmail(
         email.trim().toLowerCase(),
-        {
-          redirectTo,
-        }
+        { redirectTo }
       )
 
       if (error) {
         toast.error(
           error.message || '❌ No se pudo enviar el correo de recuperación'
         )
-      } else {
-        toast.success('📩 Revisa tu correo para restablecer tu contraseña')
-        onClose()
-
-        // Auditoría no bloqueante
-        fetch('/api/logs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'Recuperación de contraseña solicitada',
-            details: { email },
-            page: '/auth/reset-password',
-          }),
-        }).catch(() => {})
+        return
       }
+
+      toast.success('📩 Revisa tu correo para restablecer tu contraseña')
+      onClose()
+
+      // Auditoría no bloqueante (opcional)
+      fetch('/api/logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'Recuperación de contraseña solicitada',
+          details: { email },
+          page: '/auth/reset-password',
+        }),
+      }).catch(() => {})
     } finally {
       setLoading(false)
     }
@@ -69,7 +66,11 @@ export default function PasswordResetModal({ onClose }: Props) {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 dark:border-gray-700 relative"
       >
-        <Lottie animationData={emailAnim} className="h-24 mx-auto mb-2" loop={false} />
+        <Lottie
+          animationData={emailAnim}
+          className="h-24 mx-auto mb-2"
+          loop={false}
+        />
 
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
