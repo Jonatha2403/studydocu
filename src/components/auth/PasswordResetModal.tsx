@@ -26,8 +26,15 @@ export default function PasswordResetModal({ onClose }: Props) {
     setLoading(true)
 
     try {
-      // 🚀 URL EXACTA QUE SUPABASE SÍ ACEPTA (sin envs)
-      const redirectTo = 'https://studydocu.ec/auth/reset-password'
+      const origin =
+        typeof window !== 'undefined'
+          ? window.location.origin
+          : 'https://studydocu.ec'
+
+      // 👇 Igual que en PasswordResetForm: usamos el callback
+      const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(
+        '/auth/reset-password'
+      )}`
 
       const { error } = await supabase.auth.resetPasswordForEmail(
         email.trim().toLowerCase(),
