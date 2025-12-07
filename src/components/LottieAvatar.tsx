@@ -1,7 +1,7 @@
 // src/components/LottieAvatar.tsx
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Lottie from 'lottie-react'
 
 type Props = {
@@ -20,7 +20,7 @@ export default function LottieAvatar({
   autoplay = true,
   className = '',
 }: Props) {
-  const [data, setData] = useState<any | null>(null)
+  const [data, setData] = useState<unknown | null>(null)
   const [error, setError] = useState(false)
 
   useEffect(() => {
@@ -37,21 +37,33 @@ export default function LottieAvatar({
       .then((json) => {
         if (!cancelled) setData(json)
       })
-      .catch(() => !cancelled && setError(true))
+      .catch(() => {
+        if (!cancelled) setError(true)
+      })
 
     return () => {
       cancelled = true
     }
   }, [src])
 
+  const containerStyle: React.CSSProperties = {
+    width: size,
+    height: size,
+  }
+
   return (
     <div
-      style={{ width: size, height: size }}
+      style={containerStyle}
       className={`rounded-full overflow-hidden ring-2 ring-primary/20 flex items-center justify-center bg-background ${className}`}
       aria-label="Avatar animado"
     >
       {data && !error ? (
-        <Lottie animationData={data} loop={loop} autoplay={autoplay} style={{ width: '100%', height: '100%' }} />
+        <Lottie
+          animationData={data as object}
+          loop={loop}
+          autoplay={autoplay}
+          style={{ width: '100%', height: '100%' }}
+        />
       ) : (
         // Fallback/skeleton mientras carga o si falla
         <div className="w-full h-full animate-pulse" />
