@@ -12,9 +12,14 @@ export async function GET(req: NextRequest) {
 
   const code = url.searchParams.get('code')
   const type = url.searchParams.get('type')
+  const error = url.searchParams.get('error') // posible error desde Supabase
+  const rawNext = url.searchParams.get('next') ?? '/'
+  const decodedNext = decodeURIComponent(rawNext)
+  const next = decodedNext.startsWith('/') ? decodedNext : '/'
 
   // ⚠️ 1) LINK DE RECUPERACIÓN DE CONTRASEÑA
-  // NO debemos intercambiar sesión aquí.
+  // Aquí NO intercambiamos sesión. Solo redirigimos a /auth/reset-password,
+  // pasándole el code, type=recovery y cualquier error.
   if (type === 'recovery') {
     const redirectUrl = new URL('/auth/reset-password', origin)
 
@@ -23,22 +28,27 @@ export async function GET(req: NextRequest) {
       redirectUrl.searchParams.set('type', 'recovery')
     }
 
+    if (error) {
+      redirectUrl.searchParams.set('error', error)
+    }
+
+    // Si el link de Supabase vino con "next", lo reenviamos también (opcional)
+    if (rawNext) {
+      redirectUrl.searchParams.set('next', encodeURIComponent(next))
+    }
+
     return NextResponse.redirect(redirectUrl)
   }
 
   // ⚠️ 2) FLUJO NORMAL DE OAUTH (Google/GitHub, etc.)
-  const rawNext = url.searchParams.get('next') ?? '/'
-  const decodedNext = decodeURIComponent(rawNext)
-  const next = decodedNext.startsWith('/') ? decodedNext : '/'
-
   const response = NextResponse.redirect(new URL(next, origin))
 
-  // Si no hay code → no es OAuth → redirigir normal
+  // Si no hay code → no es OAuth → redirigimos tal cual
   if (!code) {
     return response
   }
 
-  // Manejo normal de cookies para OAuth login
+  // Manejo de cookies para crear la sesión OAuth
   const cookieStore = await cookies()
 
   const supabase = createServerClient(
@@ -78,10 +88,12 @@ export async function GET(req: NextRequest) {
   )
 
   // INTERCAMBIAR SESIÓN SOLO PARA OAUTH
-  const { error } = await supabase.auth.exchangeCodeForSession(code)
+  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(
+    code
+  )
 
-  if (error) {
-    console.error('[AUTH_CALLBACK] Error al crear sesión OAuth:', error)
+  if (exchangeError) {
+    console.error('[AUTH_CALLBACK] Error al crear sesión OAuth:', exchangeError)
     return NextResponse.redirect(
       new URL('/iniciar-sesion?error=auth_callback', origin)
     )

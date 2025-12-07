@@ -4,7 +4,7 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 
 // Rutas públicas (NO poner '/' aquí; se chequea aparte)
 const PUBLIC_ROUTES = new Set([
-  '/iniciar-sesion',   // login
+  '/iniciar-sesion', // login
   '/registrarse',
   '/verificado',
   '/verificado-oauth',
@@ -14,7 +14,10 @@ const PUBLIC_ROUTES = new Set([
   '/upgrade',
   '/favicon.ico',
   '/manifest.json',
-  '/reset-password',   // 🔥 PÚBLICA: pantalla de cambio de contraseña
+
+  // 🔐 Recuperación de contraseña
+  '/auth/reset-password', // ruta actual (src/app/auth/reset-password/page.tsx)
+  '/reset-password', // ruta antigua (por si algún enlace viejo aún la usa)
 ])
 
 // Rutas protegidas (requieren sesión)
@@ -26,7 +29,7 @@ const PROTECTED_PREFIXES = [
   '/documento',
   '/favoritos',
   '/vista-previa',
-  '/admin',        // /admin también pasa por el middleware
+  '/admin', // /admin también pasa por el middleware
 ]
 
 // Endpoints de API protegidos
@@ -80,7 +83,9 @@ export async function middleware(req: NextRequest) {
   const profileRes = await fetch(profileUrl, {
     headers: {
       apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-      Authorization: `Bearer ${req.cookies.get('sb-access-token')?.value || ''}`,
+      Authorization: `Bearer ${
+        req.cookies.get('sb-access-token')?.value || ''
+      }`,
     },
   })
 
@@ -89,7 +94,8 @@ export async function middleware(req: NextRequest) {
   const role: string | undefined = profile.role || user.user_metadata?.role
   const subscription_status: string | undefined =
     profile.subscription_status || user.user_metadata?.subscription_status
-  const onboarding_complete: boolean | undefined = profile.onboarding_complete
+  const onboarding_complete: boolean | undefined =
+    profile.onboarding_complete
 
   // 5a) Admin gate
   if (pathname.startsWith('/admin') && role !== 'admin') {
@@ -103,7 +109,11 @@ export async function middleware(req: NextRequest) {
     (subscription_status || '').toLowerCase() === 'premium'
 
   if (
-    pathStartsWithAny(pathname, ['/premium', '/documentos-premium', '/asesoria-premium']) &&
+    pathStartsWithAny(pathname, [
+      '/premium',
+      '/documentos-premium',
+      '/asesoria-premium',
+    ]) &&
     !isPremium
   ) {
     const upgrade = new URL('/upgrade', req.url)
