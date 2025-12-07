@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Loader2, User } from 'lucide-react'
 import Lottie from 'lottie-react'
-import { supabase } from '@/lib/supabase' // ajusta si usas otra ruta
+import { supabase } from '@/lib/supabase'
 
 import unlockAnim from '@/assets/animations/unlock.json'
 import successAnim from '@/assets/animations/success.json'
@@ -24,22 +24,19 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
 
-  // Mensajes de error desde el callback
+  // 📌 Errores recibidos del callback
   useEffect(() => {
     if (!errorParam) return
     const messages: Record<string, string> = {
-      no_code: 'Falta el código del enlace. Solicita uno nuevo.',
-      no_session_after_exchange: 'No pudimos crear la sesión. Solicita un nuevo enlace.',
-      missing_code: 'Falta el código del enlace. Solicita uno nuevo.',
-      exchange_failed: 'Falló el intercambio del código. Intenta otra vez.',
+      no_code: 'Falta el código del enlace.',
+      no_session_after_exchange: 'No pudimos crear la sesión.',
+      missing_code: 'Falta el código.',
+      exchange_failed: 'Falló el intercambio del código.',
     }
-    toast.error(
-      messages[errorParam] ??
-        'Hubo un problema con el enlace de recuperación.'
-    )
+    toast.error(messages[errorParam] ?? 'Hubo un problema con el enlace.')
   }, [errorParam])
 
-  // Esperar a que Supabase tenga la sesión activa
+  // 📌 Esperar a que Supabase cree la sesión del link
   useEffect(() => {
     let mounted = true
 
@@ -65,16 +62,14 @@ export default function ResetPasswordPage() {
         }
       )
 
-      const t = setTimeout(() => {
+      const timeout = setTimeout(() => {
         if (!mounted) return
-        if (!sessionLoaded) {
-          toast.error('Token inválido o expirado. Solicita uno nuevo.')
-          setChecking(false)
-        }
+        toast.error('Token inválido o expirado.')
+        setChecking(false)
       }, 3000)
 
       return () => {
-        clearTimeout(t)
+        clearTimeout(timeout)
         listener.subscription.unsubscribe()
       }
     })()
@@ -82,67 +77,46 @@ export default function ResetPasswordPage() {
     return () => {
       mounted = false
     }
-  }, [sessionLoaded])
+  }, [])
 
+  // 📌 Verificación simple de fortaleza
   const strength = useMemo(() => {
-    const pwd = password
-    if (pwd.length < 8) return 'Débil'
-    const hasUpper = /[A-Z]/.test(pwd)
-    const hasNumber = /\d/.test(pwd)
-    if (hasUpper && hasNumber) return 'Segura'
+    if (password.length < 8) return 'Débil'
+    if (/[A-Z]/.test(password) && /\d/.test(password)) return 'Segura'
     return 'Aceptable'
   }, [password])
 
+  // 📌 Acción para actualizar contraseña
   const handlePasswordUpdate = async () => {
     if (!sessionLoaded) {
-      toast.error('No hay una sesión de recuperación activa.')
+      toast.error('No hay sesión de recuperación activa.')
       return
     }
     if (password !== confirmPassword) {
-      toast.error('❌ Las contraseñas no coinciden')
+      toast.error('Las contraseñas no coinciden.')
       return
     }
-    if (
-      password.length < 8 ||
-      !/[A-Z]/.test(password) ||
-      !/\d/.test(password)
-    ) {
-      toast.error('❌ Mínimo 8 caracteres, 1 mayúscula y 1 número.')
+    if (!/[A-Z]/.test(password) || !/\d/.test(password) || password.length < 8) {
+      toast.error('Contraseña inválida. Requiere 8 caracteres, 1 mayúscula y 1 número.')
       return
     }
 
     setLoading(true)
+
     try {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) {
-        toast.error(
-          error.message || '❌ No se pudo actualizar la contraseña'
-        )
+        toast.error(error.message)
+        setLoading(false)
         return
       }
 
-      // (Opcional) log de auditoría
-      ;(async () => {
-        try {
-          await fetch('/api/logs', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'Cambio de contraseña (recovery link)',
-              details: { email: userEmail },
-              page: '/reset-password',
-            }),
-          })
-        } catch {}
-      })()
-
-      // 🔥 CERRAR SESIÓN DESPUÉS DEL CAMBIO
+      // Cerrar sesión para obligar a iniciar con la nueva clave
       await supabase.auth.signOut()
 
       setShowSuccess(true)
-      toast.success('¡Contraseña actualizada!')
+      toast.success('Contraseña actualizada correctamente.')
 
-      // Redirigir al login (ajusta la ruta si usas /ingresar)
       setTimeout(() => router.push('/login'), 1800)
     } finally {
       setLoading(false)
@@ -161,7 +135,7 @@ export default function ResetPasswordPage() {
               Contraseña actualizada
             </h2>
             <p className="text-gray-600 dark:text-gray-300">
-              Serás redirigido al inicio de sesión en unos segundos...
+              Serás redirigido al inicio de sesión...
             </p>
           </div>
         ) : (
@@ -182,9 +156,7 @@ export default function ResetPasswordPage() {
 
             {!sessionLoaded ? (
               <div className="text-center text-gray-500 dark:text-gray-400">
-                {checking
-                  ? 'Verificando token de seguridad...'
-                  : 'Token inválido o expirado.'}
+                {checking ? 'Verificando token...' : 'Token inválido o expirado.'}
               </div>
             ) : (
               <>
@@ -193,7 +165,7 @@ export default function ResetPasswordPage() {
                   placeholder="Nueva contraseña"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2 mb-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 mb-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
                 />
 
                 <input
@@ -201,7 +173,7 @@ export default function ResetPasswordPage() {
                   placeholder="Confirmar contraseña"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-2 mb-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 mb-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
                 />
 
                 <div className="text-sm mb-4 text-right text-gray-500 dark:text-gray-400">
