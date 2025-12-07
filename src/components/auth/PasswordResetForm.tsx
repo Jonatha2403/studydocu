@@ -24,15 +24,19 @@ export default function PasswordResetForm() {
     if (loading) return
 
     setLoading(true)
+
     try {
-      // URL FIJA PARA PRODUCCIÓN
+      // Dominio real de producción
       const siteUrl =
         process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
-      const next = encodeURIComponent('/restablecer')
+      // 🔥 Ruta correcta → /reset-password (NO /restablecer)
+      const next = encodeURIComponent('/reset-password')
+
       const redirectTo = `${siteUrl}/auth/callback?next=${next}`
 
       const value = email.trim().toLowerCase()
+
       const { error } = await supabase.auth.resetPasswordForEmail(value, {
         redirectTo,
       })
@@ -73,6 +77,7 @@ export default function PasswordResetForm() {
           className="pl-10 w-full p-3 rounded-xl border"
         />
       </div>
+
       <button
         type="submit"
         disabled={loading || !isValid}
