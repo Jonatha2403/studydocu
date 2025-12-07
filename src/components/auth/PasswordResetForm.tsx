@@ -27,7 +27,8 @@ export default function PasswordResetForm() {
 
     try {
       const siteUrl =
-        process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+        process.env.NEXT_PUBLIC_SITE_URL || 'https://www.studydocu.ec'
+      // 👆 usamos tu dominio real como respaldo
 
       // 🚀 Ruta correcta: ir directo a /auth/reset-password
       const redirectTo = `${siteUrl}/auth/reset-password`
