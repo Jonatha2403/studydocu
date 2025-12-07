@@ -1,7 +1,7 @@
 // src/app/dashboard/configuracion/page.tsx
 'use client'
 
-import React, { useEffect, useRef, useState, ChangeEvent } from 'react'
+import { useEffect, useRef, useState, ChangeEvent } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useUserContext } from '@/context/UserContext'
 import { toast } from 'sonner'
@@ -21,7 +21,7 @@ const LOTTIE_PRESETS = [
   '/avatars/lottie/avatar5.json',
   '/avatars/lottie/avatar6.json',
   '/avatars/lottie/avatar7.json',
-  '/avatars/lottie/avatar8.json'
+  '/avatars/lottie/avatar8.json',
 ]
 
 export default function ConfiguracionPage() {
@@ -178,12 +178,12 @@ export default function ConfiguracionPage() {
       const payloadInsert: Record<string, any> = {
         id: user.id,
         avatar_url: url,
-        username: perfil?.username ?? ((username?.trim() || '') || 'usuario'),
+        username: (perfil?.username ?? username?.trim()) ?? 'usuario',
         nombre_completo: (perfil as any)?.nombre_completo ?? 'Sin nombre',
         role: (perfil as any)?.role ?? 'user',
         email: user.email ?? null,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       }
 
       const { error: insErr } = await supabase.from('profiles').insert(payloadInsert)
@@ -236,7 +236,7 @@ export default function ConfiguracionPage() {
         .update({
           username: (username ?? '').trim() || null,
           avatar_url: avatarUrl ? avatarUrl.split('?v=')[0] : null,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', user.id)
 
@@ -377,7 +377,11 @@ export default function ConfiguracionPage() {
         <h2 className="text-lg font-semibold">Notificaciones</h2>
         <div className="flex items-center justify-between">
           <Label htmlFor="notifications">Activar notificaciones</Label>
-          <Switch id="notifications" checked={notifications} onCheckedChange={setNotifications} />
+          <Switch
+            id="notifications"
+            checked={notifications}
+            onCheckedChange={setNotifications}
+          />
         </div>
       </section>
 
