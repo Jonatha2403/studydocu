@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase/client' // ✅ cliente de componentes
+import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 import { Mail, X } from 'lucide-react'
@@ -22,30 +22,36 @@ export default function PasswordResetModal({ onClose }: Props) {
       return
     }
     setLoading(true)
+
     try {
       const origin =
-        typeof window !== 'undefined'
-          ? window.location.origin
-          : process.env.NEXT_PUBLIC_SITE_URL
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        (typeof window !== 'undefined' ? window.location.origin : '')
 
-      // ✅ pasar SIEMPRE por el callback
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${origin}/auth/callback?next=/restablecer`,
-      })
+      // 🚀 Ruta correcta: ir DIRECTO a /auth/reset-password
+      const redirectTo = `${origin}/auth/reset-password`
+
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email.trim().toLowerCase(),
+        {
+          redirectTo,
+        }
+      )
 
       if (error) {
         toast.error(error.message || '❌ No se pudo enviar el correo de recuperación')
       } else {
         toast.success('📩 Revisa tu correo para restablecer tu contraseña')
         onClose()
-        // Auditoría (no bloqueante)
+
+        // Auditoría no bloqueante
         fetch('/api/logs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'Recuperación de contraseña solicitada',
             details: { email },
-            page: '/auth/reset',
+            page: '/auth/reset-password',
           }),
         }).catch(() => {})
       }
@@ -67,7 +73,10 @@ export default function PasswordResetModal({ onClose }: Props) {
             <Mail className="text-purple-500" size={22} />
             Recuperar contraseña
           </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:hover:text-white text-sm">
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 dark:hover:text-white text-sm"
+          >
             <X size={20} />
           </button>
         </div>
