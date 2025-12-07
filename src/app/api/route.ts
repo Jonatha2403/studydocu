@@ -2,9 +2,10 @@
 export const runtime = 'nodejs'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { IncomingMessage } from 'http'
+import type { IncomingMessage } from 'http'
 import formidable, { File as FormidableFile, Files, Fields } from 'formidable'
-import pdfParse from 'pdf-parse'
+// 👇 OJO: quitamos el import top-level de pdf-parse
+// import pdfParse from 'pdf-parse'
 import mammoth from 'mammoth'
 import * as XLSX from 'xlsx'
 import { createHash } from 'crypto'
@@ -80,6 +81,9 @@ export async function POST(req: NextRequest) {
     let text = ''
 
     if (mimetype === 'application/pdf') {
+      // IMPORT DINÁMICO tipado para evitar usar "any"
+      const pdfModule = await import('pdf-parse')
+      const pdfParse = pdfModule.default as (data: Buffer) => Promise<{ text: string }>
       const pdfData = await pdfParse(buffer)
       text = pdfData.text
     } else if (
@@ -116,7 +120,10 @@ export async function POST(req: NextRequest) {
     const category = suggestCategory(text)
 
     console.log(
-      `✅ Archivo procesado: ${originalFilename}, Categoría: ${category}, Hash: ${hash.substring(0, 10)}...`
+      `✅ Archivo procesado: ${originalFilename}, Categoría: ${category}, Hash: ${hash.substring(
+        0,
+        10
+      )}...`
     )
 
     return NextResponse.json({ text, hash, category, originalFilename })
