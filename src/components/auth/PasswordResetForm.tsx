@@ -17,21 +17,18 @@ export default function PasswordResetForm() {
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (!isValid) {
       toast.error('Ingresa un correo válido')
       return
     }
-    if (loading) return
 
+    if (loading) return
     setLoading(true)
 
     try {
-      const siteUrl =
-        process.env.NEXT_PUBLIC_SITE_URL || 'https://www.studydocu.ec'
-      // 👆 usamos tu dominio real como respaldo
-
-      // 🚀 Ruta correcta: ir directo a /auth/reset-password
-      const redirectTo = `${siteUrl}/auth/reset-password`
+      // 🚀 URL 100% EXACTA (sin envs, sin variaciones)
+      const redirectTo = 'https://studydocu.ec/auth/reset-password'
 
       const value = email.trim().toLowerCase()
 
