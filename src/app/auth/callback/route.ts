@@ -11,31 +11,37 @@ export async function GET(req: NextRequest) {
   const origin = url.origin
 
   const code = url.searchParams.get('code')
-  const type = url.searchParams.get('type') // p.ej. 'recovery', 'signup', 'magiclink', 'oauth'
+  const type = url.searchParams.get('type')
+  const error = url.searchParams.get('error') ?? null
   const rawNext = url.searchParams.get('next') ?? '/'
   const decodedNext = decodeURIComponent(rawNext)
   const next = decodedNext.startsWith('/') ? decodedNext : '/'
 
-  // Si no viene "code"
-  if (!code) {
-    // En recuperación sin code → mandamos a pedir nuevo correo
-    if (type === 'recovery') {
-      return NextResponse.redirect(
-        new URL('/auth/reset-password?error=missing_code', origin)
-      )
+  // 1️⃣ RECUPERACIÓN DE CONTRASEÑA
+  // Aquí SOLO redirigimos a /auth/reset-password pasando el code,
+  // sin hacer exchangeCodeForSession en el servidor.
+  if (type === 'recovery') {
+    const redirectUrl = new URL('/auth/reset-password', origin)
+
+    if (code) {
+      redirectUrl.searchParams.set('code', code)
+      redirectUrl.searchParams.set('type', 'recovery')
     }
 
-    // En otros casos, simplemente vamos a "next"
-    return NextResponse.redirect(new URL(next, origin))
+    if (error) {
+      redirectUrl.searchParams.set('error', error)
+    }
+
+    return NextResponse.redirect(redirectUrl)
   }
 
-  // 👉 A dónde redirigimos DESPUÉS de crear la sesión
-  const redirectPath =
-    type === 'recovery'
-      ? '/auth/reset-password' // siempre aquí para cambiar contraseña
-      : next
+  // 2️⃣ RESTO DE FLUJOS (OAuth, etc.) → aquí sí hacemos exchange en el servidor
+  const response = NextResponse.redirect(new URL(next, origin))
 
-  const response = NextResponse.redirect(new URL(redirectPath, origin))
+  // Si no hay code, simplemente redirigimos
+  if (!code) {
+    return response
+  }
 
   const cookieStore = await cookies()
 
@@ -75,27 +81,16 @@ export async function GET(req: NextRequest) {
     }
   )
 
-  // 🔑 Aquí SÍ intercambiamos el código por sesión
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(
     code
   )
 
   if (exchangeError) {
-    console.error('[AUTH_CALLBACK] Error en exchangeCodeForSession:', exchangeError)
-
-    // Si falla en modo recuperación
-    if (type === 'recovery') {
-      return NextResponse.redirect(
-        new URL('/auth/reset-password?error=token', origin)
-      )
-    }
-
-    // Si falla en OAuth / otros
+    console.error('[AUTH_CALLBACK] Error al crear sesión OAuth:', exchangeError)
     return NextResponse.redirect(
       new URL('/iniciar-sesion?error=auth_callback', origin)
     )
   }
 
-  // Si todo va bien, ya hay cookies de sesión y redirigimos
   return response
 }
