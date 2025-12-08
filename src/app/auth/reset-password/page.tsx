@@ -21,19 +21,17 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
-  // 1) Revisar si venimos desde el link del correo
+  // 1) Revisar si hay error en la URL o si ya existe una sesión de recuperación
   useEffect(() => {
     const run = async () => {
-      const code = searchParams?.get('code') ?? null
-      const type = searchParams?.get('type') ?? null
       const error = searchParams?.get('error') ?? null
 
-      // Si viene error en la URL (no_session_after_exchange, etc.)
+      // Si el callback nos mandó con error
       if (error) {
         setStep('error')
-        if (error === 'no_session_after_exchange') {
+        if (error === 'token') {
           setErrorMsg(
-            'Token inválido o expirado. Solicita un nuevo correo de recuperación.'
+            'El enlace de recuperación es inválido o ha expirado. Solicita un nuevo correo.'
           )
         } else {
           setErrorMsg(
@@ -43,73 +41,28 @@ export default function ResetPasswordPage() {
         return
       }
 
-      // 1️⃣ Flujo nuevo: ?code=...&type=recovery (PKCE)
-      if (code && type === 'recovery') {
-        try {
-          setLoading(true)
-          const { error: exError } = await supabase.auth.exchangeCodeForSession(
-            code
-          )
+      // Si no hay error, revisamos si YA hay usuario (sesión de recuperación)
+      try {
+        setLoading(true)
+        const { data, error: userError } = await supabase.auth.getUser()
 
-          if (exError) {
-            console.error('Error exchangeCodeForSession:', exError)
-            setStep('error')
-            setErrorMsg(
-              'Token inválido o expirado. Solicita un nuevo correo de recuperación.'
-            )
-            return
-          }
-
-          // Sesión de recuperación creada correctamente → permitir cambiar la contraseña
+        if (!userError && data.user) {
+          // ✅ Venimos del enlace del correo, sesión de recuperación activa
           setStep('update')
-          return
-        } finally {
-          setLoading(false)
+        } else {
+          // No hay sesión -> solo mostrar formulario para pedir enlace
+          setStep('request')
         }
+      } finally {
+        setLoading(false)
       }
-
-      // 2️⃣ Flujo clásico: tokens en el hash (#access_token=...)
-      if (typeof window !== 'undefined' && window.location.hash) {
-        const hash = window.location.hash
-        const params = new URLSearchParams(hash.replace('#', '?'))
-        const access_token = params.get('access_token')
-        const refresh_token = params.get('refresh_token')
-        const hashType = params.get('type')
-
-        if (access_token && refresh_token && hashType === 'recovery') {
-          try {
-            setLoading(true)
-            const { error: setError } = await supabase.auth.setSession({
-              access_token,
-              refresh_token,
-            })
-
-            if (setError) {
-              console.error('Error setSession (hash):', setError)
-              setStep('error')
-              setErrorMsg(
-                'No se pudo validar el enlace de recuperación. Solicita uno nuevo.'
-              )
-              return
-            }
-
-            setStep('update')
-            return
-          } finally {
-            setLoading(false)
-          }
-        }
-      }
-
-      // 3️⃣ Si no hay ni code ni hash de recuperación → solo mostrar formulario de correo
-      setStep('request')
     }
 
     run()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
-  // 3) Actualizar la contraseña una vez que ya hay sesión de recuperación
+  // 2) Actualizar la contraseña una vez que ya hay sesión de recuperación
   const handleUpdatePassword = async (e: FormEvent) => {
     e.preventDefault()
     setErrorMsg(null)

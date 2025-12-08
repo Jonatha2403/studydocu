@@ -1,9 +1,19 @@
+// src/components/auth/PasswordResetForm.tsx
 'use client'
 
 import { useMemo, useState } from 'react'
 import { Mail, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase/client'
+
+// Función helper para obtener la URL base del sitio
+function getSiteUrl() {
+  if (typeof window !== 'undefined') {
+    return window.location.origin
+  }
+  // Fallback para build / ambientes donde no hay window
+  return process.env.NEXT_PUBLIC_SITE_URL || 'https://studydocu.ec'
+}
 
 export default function PasswordResetForm() {
   const [email, setEmail] = useState('')
@@ -26,9 +36,8 @@ export default function PasswordResetForm() {
     setLoading(true)
 
     try {
-      // 👇 AQUÍ FORZAMOS EL CALLBACK CORRECTO
-      const redirectTo =
-        'https://studydocu.ec/auth/callback?type=recovery&next=/auth/reset-password'
+      const origin = getSiteUrl()
+      const redirectTo = `${origin}/auth/callback?type=recovery&next=/auth/reset-password`
 
       const value = email.trim().toLowerCase()
 
@@ -69,14 +78,14 @@ export default function PasswordResetForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="pl-10 w-full p-3 rounded-xl border"
+          className="pl-10 w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading || !isValid}
-        className="w-full py-3 rounded-xl bg-indigo-600 text-white disabled:opacity-60"
+        className="w-full py-3 rounded-xl bg-indigo-600 text-white font-medium disabled:opacity-60 disabled:cursor-not-allowed hover:bg-indigo-700 transition-colors"
       >
         {loading ? (
           <Loader2 className="h-5 w-5 animate-spin inline-block" />
