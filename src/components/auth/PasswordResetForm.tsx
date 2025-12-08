@@ -1,4 +1,3 @@
-// src/components/auth/PasswordResetForm.tsx
 'use client'
 
 import { useMemo, useState } from 'react'
@@ -22,20 +21,14 @@ export default function PasswordResetForm() {
       toast.error('Ingresa un correo válido')
       return
     }
-
     if (loading) return
+
     setLoading(true)
 
     try {
-      const origin =
-        typeof window !== 'undefined'
-          ? window.location.origin
-          : 'https://studydocu.ec'
-
-      // 👇 IMPORTANTE: usamos /auth/callback, no /auth/reset-password directo
-      const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(
-        '/auth/reset-password'
-      )}`
+      // 👇 AQUÍ FORZAMOS EL CALLBACK CORRECTO
+      const redirectTo =
+        'https://studydocu.ec/auth/callback?type=recovery&next=/auth/reset-password'
 
       const value = email.trim().toLowerCase()
 
