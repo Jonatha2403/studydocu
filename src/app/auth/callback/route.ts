@@ -11,44 +11,32 @@ export async function GET(req: NextRequest) {
   const origin = url.origin
 
   const code = url.searchParams.get('code')
-  const type = url.searchParams.get('type')
-  const error = url.searchParams.get('error') // posible error desde Supabase
+  const type = url.searchParams.get('type') // p.ej. 'recovery', 'signup', 'magiclink', 'oauth'
   const rawNext = url.searchParams.get('next') ?? '/'
   const decodedNext = decodeURIComponent(rawNext)
   const next = decodedNext.startsWith('/') ? decodedNext : '/'
 
-  // ⚠️ 1) LINK DE RECUPERACIÓN DE CONTRASEÑA
-  // Aquí NO intercambiamos sesión. Solo redirigimos a /auth/reset-password,
-  // pasándole el code, type=recovery y cualquier error.
-  if (type === 'recovery') {
-    const redirectUrl = new URL('/auth/reset-password', origin)
-
-    if (code) {
-      redirectUrl.searchParams.set('code', code)
-      redirectUrl.searchParams.set('type', 'recovery')
-    }
-
-    if (error) {
-      redirectUrl.searchParams.set('error', error)
-    }
-
-    // Si el link de Supabase vino con "next", lo reenviamos también (opcional)
-    if (rawNext) {
-      redirectUrl.searchParams.set('next', encodeURIComponent(next))
-    }
-
-    return NextResponse.redirect(redirectUrl)
-  }
-
-  // ⚠️ 2) FLUJO NORMAL DE OAUTH (Google/GitHub, etc.)
-  const response = NextResponse.redirect(new URL(next, origin))
-
-  // Si no hay code → no es OAuth → redirigimos tal cual
+  // Si no viene "code"
   if (!code) {
-    return response
+    // En recuperación sin code → mandamos a pedir nuevo correo
+    if (type === 'recovery') {
+      return NextResponse.redirect(
+        new URL('/auth/reset-password?error=missing_code', origin)
+      )
+    }
+
+    // En otros casos, simplemente vamos a "next"
+    return NextResponse.redirect(new URL(next, origin))
   }
 
-  // Manejo de cookies para crear la sesión OAuth
+  // 👉 A dónde redirigimos DESPUÉS de crear la sesión
+  const redirectPath =
+    type === 'recovery'
+      ? '/auth/reset-password' // siempre aquí para cambiar contraseña
+      : next
+
+  const response = NextResponse.redirect(new URL(redirectPath, origin))
+
   const cookieStore = await cookies()
 
   const supabase = createServerClient(
@@ -87,17 +75,27 @@ export async function GET(req: NextRequest) {
     }
   )
 
-  // INTERCAMBIAR SESIÓN SOLO PARA OAUTH
+  // 🔑 Aquí SÍ intercambiamos el código por sesión
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(
     code
   )
 
   if (exchangeError) {
-    console.error('[AUTH_CALLBACK] Error al crear sesión OAuth:', exchangeError)
+    console.error('[AUTH_CALLBACK] Error en exchangeCodeForSession:', exchangeError)
+
+    // Si falla en modo recuperación
+    if (type === 'recovery') {
+      return NextResponse.redirect(
+        new URL('/auth/reset-password?error=token', origin)
+      )
+    }
+
+    // Si falla en OAuth / otros
     return NextResponse.redirect(
       new URL('/iniciar-sesion?error=auth_callback', origin)
     )
   }
 
+  // Si todo va bien, ya hay cookies de sesión y redirigimos
   return response
 }
