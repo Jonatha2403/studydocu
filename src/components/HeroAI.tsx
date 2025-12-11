@@ -140,9 +140,9 @@ export default function HeroAI() {
       className="
         relative overflow-hidden
         min-h-[calc(100vh-80px)]
-        pt-20 pb-16
-        md:pt-24 md:pb-20
-        lg:pt-28 lg:pb-24
+        pt-10 pb-16 
+        md:pt-20 md:pb-20
+        lg:pt-24 lg:pb-24
         flex flex-col items-center
         justify-start md:justify-center
         px-4
