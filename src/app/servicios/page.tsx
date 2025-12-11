@@ -14,16 +14,40 @@ const allServicios = [
   { titulo: '💻 Programación Python – UTPL', categoria: 'Plataformas' },
   { titulo: '📚 Revisión de normas APA', categoria: 'Normas' },
   { titulo: '🧩 Mapas conceptuales estructurados', categoria: 'Diseño' },
-  { titulo: '🎓 Aprobamos plataformas universitarias de todas las carreras', categoria: 'Plataformas' },
+  {
+    titulo: '🎓 Aprobamos plataformas universitarias de todas las carreras',
+    categoria: 'Plataformas',
+  },
   { titulo: '⚖️ Plataforma completa de Derecho', categoria: 'Plataformas' },
-  { titulo: '📊 Plataforma completa de Administración de Empresas', categoria: 'Plataformas' },
-  { titulo: '📒 Plataforma completa de Contabilidad y Auditoría', categoria: 'Plataformas' },
+  {
+    titulo: '📊 Plataforma completa de Administración de Empresas',
+    categoria: 'Plataformas',
+  },
+  {
+    titulo: '📒 Plataforma completa de Contabilidad y Auditoría',
+    categoria: 'Plataformas',
+  },
   { titulo: '🧠 Plataforma completa de Psicología', categoria: 'Plataformas' },
-  { titulo: '📄 Ensayos en formato APA con fuentes confiables', categoria: 'Ensayos' },
-  { titulo: '✍️ Resúmenes académicos claros y estructurados', categoria: 'Ensayos' },
-  { titulo: '📝 Asistencia en quices y exámenes online', categoria: 'Exámenes' },
-  { titulo: '📌 Tareas o deberes personalizados explicados paso a paso', categoria: 'Ensayos' },
-  { titulo: '📊 Presentaciones PowerPoint profesionales', categoria: 'Diseño' },
+  {
+    titulo: '📄 Ensayos en formato APA con fuentes confiables',
+    categoria: 'Ensayos',
+  },
+  {
+    titulo: '✍️ Resúmenes académicos claros y estructurados',
+    categoria: 'Ensayos',
+  },
+  {
+    titulo: '📝 Asistencia en quices y exámenes online',
+    categoria: 'Exámenes',
+  },
+  {
+    titulo: '📌 Tareas o deberes personalizados explicados paso a paso',
+    categoria: 'Ensayos',
+  },
+  {
+    titulo: '📊 Presentaciones PowerPoint profesionales',
+    categoria: 'Diseño',
+  },
   { titulo: '🧾 Asesorías por Zoom en tiempo real', categoria: 'Asesorías' },
 ]
 
@@ -39,7 +63,7 @@ export default function ServiciosPage() {
     toast.success('Redirigiendo a WhatsApp...')
     window.open(
       'https://wa.me/593958757302?text=Hola%20StudyDocu,%20deseo%20contratar%20un%20servicio%20acad%C3%A9mico',
-      '_blank'
+      '_blank',
     )
   }
 
@@ -111,9 +135,10 @@ export default function ServiciosPage() {
           ¿Por qué contratar los servicios académicos de StudyDocu?
         </h2>
         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">
-          En StudyDocu trabajamos con estudiantes de la UTPL y de diversas universidades del Ecuador,
-          brindando apoyo académico responsable y orientado al aprendizaje. Nuestros servicios están
-          pensados para que entiendas mejor tus materias y optimices tu tiempo de estudio.
+          En StudyDocu trabajamos con estudiantes de la UTPL y de diversas universidades del
+          Ecuador, brindando apoyo académico responsable y orientado al aprendizaje. Nuestros
+          servicios están pensados para que entiendas mejor tus materias y optimices tu tiempo de
+          estudio.
         </p>
         <ul className="grid gap-3 sm:grid-cols-2 text-sm text-gray-700 dark:text-gray-300">
           <li>✅ Ensayos académicos en formato APA con fuentes confiables.</li>
@@ -138,8 +163,7 @@ export default function ServiciosPage() {
         </p>
       </div>
 
-      {/* ❌ Quitamos FloatingButtonsGroup aquí para evitar duplicado.
-          Si ya lo tienes en el layout o en otra parte global, no hace falta repetirlo. */}
+      {/* FloatingButtonsGroup NO se incluye aquí para evitar duplicado */}
     </main>
   )
 }
