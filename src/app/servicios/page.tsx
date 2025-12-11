@@ -131,6 +131,23 @@ const categorias: Categoria[] = [
   'Asesorías',
 ]
 
+export const metadata = {
+  title: "Servicios Académicos UTPL – Ensayos, Exámenes y Asesorías | StudyDocu",
+  description:
+    "Servicios académicos profesionales: ensayos en formato APA, exámenes, plataformas UTPL, resúmenes, asesorías y más. Atención para estudiantes de Ecuador.",
+  keywords: [
+    "servicios académicos",
+    "UTPL",
+    "ensayos APA",
+    "exámenes UTPL",
+    "plataformas universitarias",
+    "tareas universitarias",
+    "asesorías académicas",
+  ],
+  alternates: {
+    canonical: "https://studydocu.ec/servicios",
+  }
+}
 export default function ServiciosPage() {
   const [visibleCount, setVisibleCount] = useState(8)
   const [filtroCategoria, setFiltroCategoria] = useState<Categoria>('Todos')
