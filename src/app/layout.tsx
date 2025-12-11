@@ -24,14 +24,38 @@ const sfPro = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL('https://studydocu.ec'),
   title: {
-    default: 'StudyDocu',
+    default:
+      'StudyDocu – Apuntes, resúmenes y documentos académicos con IA',
     template: '%s | StudyDocu',
   },
-  description: 'Plataforma académica inteligente',
+  description:
+    'StudyDocu es una plataforma académica inteligente para subir, compartir y encontrar apuntes universitarios, resúmenes, ensayos y documentos de estudio. IA integrada para resumir al subir tus archivos y estudiar más rápido.',
+  applicationName: 'StudyDocu',
+  keywords: [
+    'StudyDocu',
+    'UTPL',
+    'apuntes universitarios',
+    'resúmenes académicos',
+    'documentos académicos',
+    'ejemplos de ensayos',
+    'UTPL apuntes',
+    'universidad Ecuador',
+    'resúmenes de estudio',
+    'plataforma para estudiantes',
+    'material de estudio',
+  ],
+  authors: [{ name: 'StudyDocu', url: 'https://studydocu.ec' }],
+  creator: 'StudyDocu',
+  publisher: 'StudyDocu',
+  category: 'education',
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
-    title: 'StudyDocu — Plataforma académica inteligente',
+    title:
+      'StudyDocu – Apuntes, resúmenes y documentos académicos con IA',
     description:
-      'Comparte apuntes, optimiza tu estudio y conecta con tu comunidad.',
+      'Sube y comparte apuntes, resúmenes, ensayos y material académico. Descubre documentos de tu universidad y potencia tu estudio con inteligencia artificial.',
     url: 'https://studydocu.ec',
     siteName: 'StudyDocu',
     images: [
@@ -39,21 +63,39 @@ export const metadata: Metadata = {
         url: '/og-image.png', // asegúrate de tener este archivo en /public
         width: 1200,
         height: 630,
+        alt: 'StudyDocu – Plataforma académica inteligente',
       },
     ],
     type: 'website',
+    locale: 'es_EC',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'StudyDocu — Plataforma académica inteligente',
+    title:
+      'StudyDocu – Apuntes, resúmenes y documentos académicos con IA',
     description:
-      'Comparte apuntes, optimiza tu estudio y conecta con tu comunidad.',
+      'Encuentra apuntes, resúmenes y ensayos de tu carrera. Sube documentos y deja que la IA de StudyDocu los resuma por ti.',
     images: ['/og-image.png'],
+    // creator: '@studydocu', // descomenta si tienes usuario en X/Twitter
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
   },
   icons: {
-    icon: '/favicon.png',      // 👈 tu logo en /public
-    shortcut: '/favicon.png',
-    apple: '/favicon.png',
+    icon: [
+      { url: '/favicon.ico', type: 'image/x-icon' },
+      { url: '/favicon.png', type: 'image/png' },
+    ],
+    shortcut: ['/favicon.ico'],
+    apple: ['/favicon.png'],
   },
 }
 
