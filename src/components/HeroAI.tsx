@@ -140,10 +140,12 @@ export default function HeroAI() {
       className="
         relative overflow-hidden
         min-h-[calc(100vh-80px)]
-        pt-28 pb-16
-        md:pt-32 md:pb-20
-        lg:pt-36 lg:pb-24
-        flex flex-col items-center justify-center px-4
+        pt-20 pb-16
+        md:pt-24 md:pb-20
+        lg:pt-28 lg:pb-24
+        flex flex-col items-center
+        justify-start md:justify-center
+        px-4
       "
     >
       {/* Capa de luz interactiva */}
