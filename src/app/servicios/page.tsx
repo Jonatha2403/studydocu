@@ -156,7 +156,7 @@ export default function ServiciosPage() {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-12 lg:py-16">
+    <main className="max-w-7xl mx-auto px-4 pt-4 pb-12 lg:pt-8 lg:pb-16">
       {/* Hero / Intro */}
       <motion.section
         className="grid gap-8 lg:grid-cols-[1.7fr,1.1fr] items-center mb-12 lg:mb-16"
