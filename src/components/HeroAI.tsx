@@ -27,7 +27,7 @@ export default function HeroAI() {
   const [isHover, setIsHover] = useState(false)
   const [engineReady, setEngineReady] = useState(false)
 
-  // 🔆 Efecto de luz que sigue al mouse (estilo Apple Vision Pro)
+  // 🔆 Efecto de luz que sigue al mouse
   useEffect(() => {
     const el = document.getElementById('hero-light')
     if (!el) return
@@ -136,7 +136,16 @@ export default function HeroAI() {
   }
 
   return (
-    <section className="relative overflow-hidden min-h-screen -mt-10 flex flex-col items-center justify-center px-4">
+    <section
+      className="
+        relative overflow-hidden
+        min-h-[calc(100vh-80px)]
+        pt-28 pb-16
+        md:pt-32 md:pb-20
+        lg:pt-36 lg:pb-24
+        flex flex-col items-center justify-center px-4
+      "
+    >
       {/* Capa de luz interactiva */}
       <div
         id="hero-light"
