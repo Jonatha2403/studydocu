@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
+import Script from 'next/script' // ⬅️ IMPORTANTE: para el JSON-LD
 
 import HeroAI from '@/components/HeroAI'
 import Footer from '@/components/Footer'
@@ -90,212 +91,234 @@ export default function HomePage() {
   }
 
   return (
-    <main className="relative z-10 w-full min-h-screen flex flex-col items-center text-text bg-transparent">
-      {/* Confetti de bienvenida */}
-      {showConfetti && (
-        <div className="fixed inset-0 z-40 pointer-events-none">
-          <Lottie animationData={confettiAnimation} loop={false} autoplay className="w-full h-full" />
-        </div>
-      )}
+    <>
+      {/* 🔍 Schema Markup para que Google detecte tu logo y organización */}
+      <Script
+        id="studydocu-organization-schema"
+        type="application/ld+json"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'StudyDocu',
+            url: 'https://www.studydocu.ec',
+            logo: 'https://www.studydocu.ec/logo.png', // ⬅️ ASEGÚRATE QUE ESTE ARCHIVO EXISTA
+            sameAs: [
+              'https://www.facebook.com/StudyDocu', // cambia si tienes otra URL
+              'https://wa.me/593958757302',
+            ],
+          }),
+        }}
+      />
 
-      {/* Onda decorativa inferior */}
-      <div className="absolute bottom-0 w-full overflow-hidden leading-none z-0">
-        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-[100px]">
-          <path
-            d="M0,0 C600,100 600,0 1200,100 L1200,0 L0,0 Z"
-            fill="#ffffff"
-            opacity="0.1"
-          >
-            <animate
-              attributeName="d"
-              dur="10s"
-              repeatCount="indefinite"
-              values="
+      <main className="relative z-10 w-full min-h-screen flex flex-col items-center text-text bg-transparent">
+        {/* Confetti de bienvenida */}
+        {showConfetti && (
+          <div className="fixed inset-0 z-40 pointer-events-none">
+            <Lottie animationData={confettiAnimation} loop={false} autoplay className="w-full h-full" />
+          </div>
+        )}
+
+        {/* Onda decorativa inferior */}
+        <div className="absolute bottom-0 w-full overflow-hidden leading-none z-0">
+          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-[100px]">
+            <path
+              d="M0,0 C600,100 600,0 1200,100 L1200,0 L0,0 Z"
+              fill="#ffffff"
+              opacity="0.1"
+            >
+              <animate
+                attributeName="d"
+                dur="10s"
+                repeatCount="indefinite"
+                values="
                 M0,0 C600,100 600,0 1200,100 L1200,0 L0,0 Z;
                 M0,0 C600,0 600,100 1200,0 L1200,0 L0,0 Z;
                 M0,0 C600,100 600,0 1200,100 L1200,0 L0,0 Z
               "
-            />
-          </path>
-        </svg>
-      </div>
-
-      {/* HERO principal */}
-      <HeroAI />
-
-      {/* Sección: Qué es StudyDocu + servicios animados */}
-      <section className="relative w-full max-w-6xl mx-auto -mt-6 md:-mt-10 px-4 pb-8">
-        <div className="rounded-3xl border border-white/40 dark:border-white/10 bg-white/70 dark:bg-gray-900/70 shadow-xl backdrop-blur-xl px-5 sm:px-8 py-8 sm:py-10">
-          <div className="text-center max-w-3xl mx-auto mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-900/40 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700 dark:text-indigo-200 mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-              Plataforma académica todo en uno
-            </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-              Bienvenido a <span className="text-indigo-500">StudyDocu</span>
-            </h2>
-            <p className="mt-3 text-sm sm:text-base text-gray-600 dark:text-gray-300">
-              Centraliza tus apuntes, organiza tus materias, apóyate en IA y conéctate con
-              asesores académicos verificados. Todo en un solo lugar, pensado para estudiantes
-              de Ecuador.
-            </p>
-          </div>
-
-          <AnimatedServices />
+              />
+            </path>
+          </svg>
         </div>
-      </section>
 
-      {/* Testimonios */}
-      <section className="relative w-full max-w-6xl mx-auto pt-6 md:pt-10 pb-4 px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
+        {/* HERO principal */}
+        <HeroAI />
+
+        {/* Sección: Qué es StudyDocu + servicios animados */}
+        <section className="relative w-full max-w-6xl mx-auto -mt-6 md:-mt-10 px-4 pb-8">
+          <div className="rounded-3xl border border-white/40 dark:border-white/10 bg-white/70 dark:bg-gray-900/70 shadow-xl backdrop-blur-xl px-5 sm:px-8 py-8 sm:py-10">
+            <div className="text-center max-w-3xl mx-auto mb-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-900/40 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700 dark:text-indigo-200 mb-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                Plataforma académica todo en uno
+              </div>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+                Bienvenido a <span className="text-indigo-500">StudyDocu</span>
+              </h2>
+              <p className="mt-3 text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                Centraliza tus apuntes, organiza tus materias, apóyate en IA y conéctate con
+                asesores académicos verificados. Todo en un solo lugar, pensado para estudiantes
+                de Ecuador.
+              </p>
+            </div>
+
+            <AnimatedServices />
+          </div>
+        </section>
+
+        {/* Testimonios */}
+        <section className="relative w-full max-w-6xl mx-auto pt-6 md:pt-10 pb-4 px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="rounded-3xl bg-gradient-to-br from-indigo-50 via-white to-fuchsia-50 dark:from-gray-900 dark:via-gray-950 dark:to-indigo-950 border border-white/50 dark:border-white/10 shadow-xl px-5 sm:px-8 py-10"
+          >
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-3 text-gray-900 dark:text-white">
+              Lo que dicen nuestros usuarios
+            </h2>
+            <p className="text-sm sm:text-base text-center text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+              Estudiantes de distintas carreras ya usan StudyDocu para estudiar mejor, organizar sus
+              trabajos y aprobar sus materias con más tranquilidad.
+            </p>
+            <AnimatedTestimonials />
+          </motion.div>
+        </section>
+
+        {/* Asesores destacados */}
+        <section className="w-full max-w-6xl mx-auto pt-6 md:pt-10 pb-6 px-4">
+          <AnimatedAsesores />
+        </section>
+
+        {/* Funcionalidades principales */}
+        <motion.section
+          id="funcionalidades"
+          initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="rounded-3xl bg-gradient-to-br from-indigo-50 via-white to-fuchsia-50 dark:from-gray-900 dark:via-gray-950 dark:to-indigo-950 border border-white/50 dark:border-white/10 shadow-xl px-5 sm:px-8 py-10"
+          className="w-full max-w-6xl mx-auto py-10 px-4"
         >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-3 text-gray-900 dark:text-white">
-            Lo que dicen nuestros usuarios
-          </h2>
-          <p className="text-sm sm:text-base text-center text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-            Estudiantes de distintas carreras ya usan StudyDocu para estudiar mejor, organizar sus
-            trabajos y aprobar sus materias con más tranquilidad.
-          </p>
-          <AnimatedTestimonials />
-        </motion.div>
-      </section>
-
-      {/* Asesores destacados */}
-      <section className="w-full max-w-6xl mx-auto pt-6 md:pt-10 pb-6 px-4">
-        <AnimatedAsesores />
-      </section>
-
-      {/* Funcionalidades principales */}
-      <motion.section
-        id="funcionalidades"
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-6xl mx-auto py-10 px-4"
-      >
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-semibold uppercase tracking-[0.18em] text-gray-700 dark:text-gray-200 mb-3">
-            Herramientas para tu día a día
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-semibold uppercase tracking-[0.18em] text-gray-700 dark:text-gray-200 mb-3">
+              Herramientas para tu día a día
+            </div>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              Funcionalidades que organizan tu vida académica
+            </h2>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              StudyDocu combina productividad, organización e inteligencia artificial para
+              ayudarte a cumplir tus objetivos de estudio sin perder el control.
+            </p>
           </div>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            Funcionalidades que organizan tu vida académica
-          </h2>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            StudyDocu combina productividad, organización e inteligencia artificial para
-            ayudarte a cumplir tus objetivos de estudio sin perder el control.
-          </p>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-7 text-left">
-          {featureItems.map((item, i) => (
-            <motion.div
-              key={item.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.04 }}
-              className="group bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border border-white/40 dark:border-gray-800 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out"
-            >
-              <div className="flex items-center justify-center mb-4">
-                <div className="h-12 w-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                  <item.icon
-                    className="w-6 h-6 text-indigo-600 dark:text-indigo-300"
-                    strokeWidth={1.5}
-                  />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-7 text-left">
+            {featureItems.map((item, i) => (
+              <motion.div
+                key={item.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.04 }}
+                className="group bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border border-white/40 dark:border-gray-800 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out"
+              >
+                <div className="flex items-center justify-center mb-4">
+                  <div className="h-12 w-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                    <item.icon
+                      className="w-6 h-6 text-indigo-600 dark:text-indigo-300"
+                      strokeWidth={1.5}
+                    />
+                  </div>
                 </div>
-              </div>
-              <h3 className="text-lg font-semibold mb-1 text-center text-foreground">
-                {item.name}
-              </h3>
-              <p className="text-sm text-muted-foreground text-center leading-relaxed">
-                {item.description}
-              </p>
-            </motion.div>
-          ))}
-        </div>
-      </motion.section>
+                <h3 className="text-lg font-semibold mb-1 text-center text-foreground">
+                  {item.name}
+                </h3>
+                <p className="text-sm text-muted-foreground text-center leading-relaxed">
+                  {item.description}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.section>
 
-      {/* CTA principal */}
-      <section className="w-full max-w-4xl mx-auto text-center px-6 py-10 md:py-14">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 text-gray-900 dark:text-white">
-          ¿Listo para comenzar?
-        </h2>
-        <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-2xl mx-auto">
-          Crea tu cuenta en minutos, sube tus primeros apuntes y descubre cómo StudyDocu puede
-          transformar tu manera de estudiar.
-        </p>
-        <Button
-          onClick={handleStart}
-          className="px-10 py-4 text-base sm:text-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all"
+        {/* CTA principal */}
+        <section className="w-full max-w-4xl mx-auto text-center px-6 py-10 md:py-14">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 text-gray-900 dark:text-white">
+            ¿Listo para comenzar?
+          </h2>
+          <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-2xl mx-auto">
+            Crea tu cuenta en minutos, sube tus primeros apuntes y descubre cómo StudyDocu puede
+            transformar tu manera de estudiar.
+          </p>
+          <Button
+            onClick={handleStart}
+            className="px-10 py-4 text-base sm:text-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all"
+          >
+            🚀 Empezar gratis
+          </Button>
+          <p className="mt-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            Sin tarjetas. Solo necesitas tu correo universitario o personal.
+          </p>
+        </section>
+
+        {/* Más herramientas */}
+        <motion.section
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-6xl mx-auto px-4 md:px-6 mt-2 pb-20"
         >
-          🚀 Empezar gratis
-        </Button>
-        <p className="mt-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-          Sin tarjetas. Solo necesitas tu correo universitario o personal.
-        </p>
-      </section>
-
-      {/* Más herramientas */}
-      <motion.section
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-6xl mx-auto px-4 md:px-6 mt-2 pb-20"
-      >
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-fuchsia-50 dark:bg-fuchsia-900/40 text-xs font-semibold uppercase tracking-[0.18em] text-fuchsia-700 dark:text-fuchsia-200 mb-3">
-            Potenciado por IA
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-fuchsia-50 dark:bg-fuchsia-900/40 text-xs font-semibold uppercase tracking-[0.18em] text-fuchsia-700 dark:text-fuchsia-200 mb-3">
+              Potenciado por IA
+            </div>
           </div>
-        </div>
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-4 text-gray-900 dark:text-white">
-          Más herramientas útiles para tu estudio
-        </h2>
-        <p className="text-sm sm:text-base text-center text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-10">
-          No solo subes documentos. StudyDocu analiza, resume y te da una vista más clara de tu
-          carga académica con funciones avanzadas pensadas para estudiantes exigentes.
-        </p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-4 text-gray-900 dark:text-white">
+            Más herramientas útiles para tu estudio
+          </h2>
+          <p className="text-sm sm:text-base text-center text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-10">
+            No solo subes documentos. StudyDocu analiza, resume y te da una vista más clara de tu
+            carga académica con funciones avanzadas pensadas para estudiantes exigentes.
+          </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-7">
-          {extraItems.map((item, i) => (
-            <motion.div
-              key={item.name}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.06 }}
-              className="group bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border border-white/40 dark:border-gray-800 rounded-2xl p-6 text-center shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-300 ease-out"
-            >
-              <div className="flex items-center justify-center mb-4">
-                <div className="h-12 w-12 rounded-2xl bg-fuchsia-50 dark:bg-fuchsia-900/40 flex items-center justify-center group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300">
-                  <item.icon
-                    className="w-6 h-6 text-fuchsia-600 dark:text-fuchsia-200"
-                    strokeWidth={1.5}
-                  />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-7">
+            {extraItems.map((item, i) => (
+              <motion.div
+                key={item.name}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.06 }}
+                className="group bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border border-white/40 dark:border-gray-800 rounded-2xl p-6 text-center shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-300 ease-out"
+              >
+                <div className="flex items-center justify-center mb-4">
+                  <div className="h-12 w-12 rounded-2xl bg-fuchsia-50 dark:bg-fuchsia-900/40 flex items-center justify-center group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300">
+                    <item.icon
+                      className="w-6 h-6 text-fuchsia-600 dark:text-fuchsia-200"
+                      strokeWidth={1.5}
+                    />
+                  </div>
                 </div>
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">{item.name}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
-            </motion.div>
-          ))}
-        </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{item.name}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+              </motion.div>
+            ))}
+          </div>
 
-        <div className="mt-14 flex justify-center">
-          <Link href="/herramientas">
-            <Button className="text-sm sm:text-base bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border border-white/40 dark:border-gray-800 text-gray-800 dark:text-white font-medium px-8 py-3 rounded-full shadow-sm hover:bg-white/90 dark:hover:bg-gray-800/90 transition-all">
-              Ver todas las herramientas →
-            </Button>
-          </Link>
-        </div>
-      </motion.section>
+          <div className="mt-14 flex justify-center">
+            <Link href="/herramientas">
+              <Button className="text-sm sm:text-base bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border border-white/40 dark:border-gray-800 text-gray-800 dark:text-white font-medium px-8 py-3 rounded-full shadow-sm hover:bg-white/90 dark:hover:bg-gray-800/90 transition-all">
+                Ver todas las herramientas →
+              </Button>
+            </Link>
+          </div>
+        </motion.section>
 
-      <Footer />
-    </main>
+        <Footer />
+      </main>
+    </>
   )
 }
