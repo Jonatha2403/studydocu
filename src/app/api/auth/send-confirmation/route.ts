@@ -1,19 +1,35 @@
 // src/app/api/auth/send-confirmation/route.ts
-export const runtime = 'nodejs' // 👈 importante: usa Node, no Edge
+export const runtime = 'nodejs'
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendConfirmationEmail } from '@/utils/sendConfirmationEmail'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const appUrl = process.env.NEXT_PUBLIC_APP_URL!
+function getEnv() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
 
-if (!supabaseUrl || !supabaseServiceKey || !appUrl) {
-  throw new Error('❌ Faltan variables de entorno (SUPABASE URL/KEY o APP URL).')
+  const finalAppUrl =
+    appUrl && appUrl.startsWith('http')
+      ? appUrl
+      : appUrl
+      ? `https://${appUrl}`
+      : null
+
+  if (!supabaseUrl || !supabaseServiceKey || !finalAppUrl) {
+    throw new Error(
+      'Missing env: NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / NEXT_PUBLIC_APP_URL (or NEXT_PUBLIC_SITE_URL)'
+    )
+  }
+
+  return { supabaseUrl, supabaseServiceKey, appUrl: finalAppUrl.replace(/\/+$/, '') }
 }
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+function getSupabaseAdmin() {
+  const { supabaseUrl, supabaseServiceKey } = getEnv()
+  return createClient(supabaseUrl, supabaseServiceKey)
+}
 
 function normEmail(v: unknown) {
   return String(v ?? '').trim().toLowerCase()
@@ -34,7 +50,7 @@ export async function POST(request: Request) {
     const nombre_completo = normText(body?.nombre_completo)
     const universidad = body?.universidad ? String(body.universidad) : null
     const referido = body?.referido ? String(body.referido) : null
-    const role = body?.role ? String(body.role) : 'estudiante' // 👈 usar "role"
+    const role = body?.role ? String(body.role) : 'estudiante'
 
     // -------- Validaciones de entrada --------
     if (!/^\S+@\S+\.\S+$/.test(email)) {
@@ -46,6 +62,10 @@ export async function POST(request: Request) {
     if (!nombre_completo) {
       return NextResponse.json({ error: 'El nombre completo es obligatorio.' }, { status: 400 })
     }
+
+    // -------- Init Supabase Admin (lazy) --------
+    const supabaseAdmin = getSupabaseAdmin()
+    const { appUrl } = getEnv()
 
     // -------- Chequeo previo en auth.users (RPC) --------
     const { data: available, error: rpcErr } = await supabaseAdmin.rpc('email_available', { p_email: email })
@@ -68,12 +88,9 @@ export async function POST(request: Request) {
     })
 
     if (createError || !createdUser?.user) {
-      // LOG detallado para ver la causa real en la consola del server
       console.error('createUser error:', createError?.name, createError?.message, createError)
-
       const msg = (createError?.message || '').toLowerCase()
 
-      // Mapeo de errores comunes de GoTrue
       if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
         return NextResponse.json({ error: 'Este correo ya está registrado. Intenta iniciar sesión.' }, { status: 409 })
       }
@@ -110,23 +127,26 @@ export async function POST(request: Request) {
 
     if (profileError) {
       console.error('profile upsert error:', profileError)
-      // Limpia usuario de Auth si falla perfil para no dejarlo huérfano
-      try { await supabaseAdmin.auth.admin.deleteUser(userId) } catch {}
+      try {
+        await supabaseAdmin.auth.admin.deleteUser(userId)
+      } catch {}
       return NextResponse.json({ error: 'Error guardando perfil: ' + profileError.message }, { status: 500 })
     }
 
-    // -------- Magic link (con corrección # → ?) --------
+    // -------- Magic link --------
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
       email,
       options: { redirectTo: `${appUrl}/verificado` },
     })
+
     if (linkError || !linkData?.properties?.action_link) {
       console.error('generateLink error:', linkError)
       return NextResponse.json({ error: linkError?.message || 'No se pudo generar el enlace de acceso.' }, { status: 500 })
     }
 
     let rawLink = linkData.properties.action_link as string
+
     if (rawLink.includes('#')) {
       const [, hash] = rawLink.split('#')
       const params = new URLSearchParams(hash)
@@ -135,12 +155,14 @@ export async function POST(request: Request) {
       rawLink = fixed.toString()
     }
 
-    // -------- Envío de correo --------
     await sendConfirmationEmail(email, rawLink)
 
     return NextResponse.json({ message: 'Cuenta creada. Revisa tu correo para continuar.' }, { status: 200 })
   } catch (err: any) {
     console.error('[send-confirmation] ❌ Error inesperado:', err)
-    return NextResponse.json({ error: err?.message || 'Error interno del servidor.' }, { status: 500 })
+    return NextResponse.json(
+      { error: err?.message || 'Error interno del servidor.' },
+      { status: 500 }
+    )
   }
 }
