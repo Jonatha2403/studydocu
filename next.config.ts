@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
 
   images: {
-    // Uso de remotePatterns en lugar de images.domains (recomendado en Next 16)
+    // Uso de remotePatterns en lugar de images.domains (Next 16)
     remotePatterns: [
       {
         protocol: 'https',
@@ -24,17 +24,33 @@ const nextConfig: NextConfig = {
   },
 
   experimental: {
-    // typedRoutes ya no va aquí, solo webVitalsAttribution
     webVitalsAttribution: ['CLS', 'FCP', 'FID', 'LCP', 'TTFB'],
   },
 
-  // Redirect para enlaces antiguos / compatibilidad
+  // 🔁 Redirects
   async redirects() {
     return [
       {
         source: '/dashboard/perfil/mi-cuenta',
         destination: '/dashboard/perfil',
-        permanent: true, // 308/301
+        permanent: true,
+      },
+    ]
+  },
+
+  // 🚫 CACHE CONTROL GLOBAL (SOLUCIÓN AL PROBLEMA)
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          },
+          { key: 'Pragma', value: 'no-cache' },
+          { key: 'Expires', value: '0' },
+        ],
       },
     ]
   },
@@ -49,7 +65,7 @@ const nextConfig: NextConfig = {
       },
     })
 
-    // 🔒 Enforce case-sensitive paths (evita bugs entre Windows y Linux)
+    // 🔒 Enforce case-sensitive paths (Windows ↔ Linux)
     if (config.plugins) {
       config.plugins.push(new CaseSensitivePathsPlugin())
     }
