@@ -51,9 +51,7 @@ export const metadata: Metadata = {
   creator: 'StudyDocu',
   publisher: 'StudyDocu',
   category: 'education',
-  alternates: {
-    canonical: '/',
-  },
+  alternates: { canonical: '/' },
   openGraph: {
     title: 'StudyDocu – Apuntes, resúmenes y documentos académicos con IA',
     description:
@@ -61,12 +59,7 @@ export const metadata: Metadata = {
     url: 'https://studydocu.ec',
     siteName: 'StudyDocu',
     images: [
-      {
-        url: '/og-image.png', // asegúrate de tener este archivo en /public
-        width: 1200,
-        height: 630,
-        alt: 'StudyDocu – Plataforma académica inteligente',
-      },
+      { url: '/og-image.png', width: 1200, height: 630, alt: 'StudyDocu – Plataforma académica inteligente' },
     ],
     type: 'website',
     locale: 'es_EC',
@@ -77,7 +70,6 @@ export const metadata: Metadata = {
     description:
       'Encuentra apuntes, resúmenes y ensayos de tu carrera. Sube documentos y deja que la IA de StudyDocu los resuma por ti.',
     images: ['/og-image.png'],
-    // creator: '@studydocu', // descomenta si tienes usuario en X/Twitter
   },
   robots: {
     index: true,
@@ -110,20 +102,25 @@ export const viewport: Viewport = {
 }
 
 /* ---------------------- ROOT LAYOUT (server) ---------------------- */
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className={sfPro.variable} suppressHydrationWarning>
       <body className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-white antialiased">
         {/* Capas visuales globales */}
-        <div className="aurora-bg" />
-        <div className="radial-layer" />
-        <div className="bg-grid fixed inset-0 -z-50 opacity-[.22] dark:opacity-[.16] pointer-events-none" />
-        <div className="noise-layer" />
-        <Spotlight />
+        {/* ✅ En móvil: mantenerlo ligero (sin effects pesados) */}
+        <div className="aurora-bg hidden md:block" />
+        <div className="radial-layer hidden md:block" />
+
+        {/* ✅ Fixed grid solo desktop (fixed + opacity = pesado en móvil) */}
+        <div className="bg-grid fixed inset-0 -z-50 hidden md:block opacity-[.22] dark:opacity-[.16] pointer-events-none" />
+
+        {/* ✅ Noise puede ser pesado si anima/mezcla: solo desktop */}
+        <div className="noise-layer hidden md:block" />
+
+        {/* ✅ Spotlight solo desktop */}
+        <div className="hidden md:block">
+          <Spotlight />
+        </div>
 
         {/* Client boundaries */}
         <UserProvider>
