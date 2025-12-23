@@ -277,12 +277,12 @@ export default function HomeClient() {
           </div>
         )}
 
-        {/* HERO existente */}
-        <HeroAI />
+          {/* HERO existente */}
+<HeroAI />
 
-         {/* ¿Qué es StudyDocu? */}
+{/* ¿Qué es StudyDocu? */}
 <section className="relative w-full max-w-5xl mx-auto px-4 py-16">
-  <div className="rounded-3xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-xl px-6 sm:px-10 py-10">
+  <div className="rounded-3xl bg-white/70 dark:bg-gray-900/70 md:backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-xl px-6 sm:px-10 py-10">
     <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
       ¿Qué es StudyDocu?
     </h2>
@@ -316,6 +316,51 @@ export default function HomeClient() {
     </div>
   </div>
 </section>
+
+{/* Conocer sobre el fundador */}
+<section className="relative w-full max-w-5xl mx-auto px-4 pb-16">
+  <div className="mt-8 rounded-2xl border border-gray-200/70 dark:border-white/10 bg-gray-50/80 dark:bg-gray-800/40 px-6 py-5">
+    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+      Conocer sobre el fundador
+    </h3>
+
+    <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+      StudyDocu fue creado por <strong>Jonathan Octavio Rosado Lopez</strong>, empresario y emprendedor digital,
+      con el objetivo de construir una plataforma académica confiable, moderna y centrada en el aprendizaje real
+      de los estudiantes universitarios en Ecuador.
+    </p>
+
+    <a
+      href="/sobre-mi"
+      className="inline-flex items-center text-indigo-600 dark:text-indigo-400 font-semibold hover:underline"
+    >
+      Conocer al fundador de StudyDocu →
+    </a>
+  </div>
+</section>
+
+
+{/* Conocer sobre el fundador */}
+<div className="mt-8 rounded-2xl border border-gray-200/70 dark:border-white/10 bg-gray-50/80 dark:bg-gray-800/40 px-6 py-5">
+  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+    Conocer sobre el fundador
+  </h3>
+
+  <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+    StudyDocu fue creado por <strong>Jonathan Octavio Rosado Lopez</strong>,
+    empresario y emprendedor digital, con el objetivo de construir una plataforma
+    académica confiable, moderna y centrada en el aprendizaje real de los estudiantes
+    universitarios en Ecuador.
+  </p>
+
+  <a
+    href="/sobre-mi"
+    className="inline-flex items-center text-indigo-600 dark:text-indigo-400 font-semibold hover:underline"
+  >
+    Conocer al fundador de StudyDocu →
+  </a>
+</div>
+
 
 
         {/* --- NUEVO: Sección Demo / Producto en vivo --- */}
