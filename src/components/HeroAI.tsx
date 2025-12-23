@@ -147,10 +147,10 @@ export default function HeroAI() {
       ref={sectionRef}
       className="
         relative overflow-hidden
-        min-h-[70vh] md:min-h-[75vh]
-        pt-10 pb-12
-        md:pt-16 md:pb-20
-        lg:pt-14 lg:pb-16
+        min-h-[60vh] md:min-h-[68vh]
+        pt-8 pb-6
+        md:pt-10 md:pb-8
+        lg:pt-12 lg:pb-10
         flex flex-col items-center
         justify-start md:justify-start
         px-4
