@@ -1,26 +1,16 @@
 // ✅ Archivo completo: src/app/api/auth/send-magic-link/route.ts
 
 import { NextResponse } from 'next/server'
-import { Resend } from 'resend'
+import { getResend } from '@/lib/resend'
 import { supabase } from '@/lib/supabase'
 
-// ---- helpers (lazy init) ----
-function getResend() {
-  const key = process.env.RESEND_API_KEY
-  if (!key) throw new Error('RESEND_API_KEY is missing')
-  return new Resend(key)
-}
-
 function getSiteUrl() {
-  // Prioridad: variable que tú controlas
   const explicit = process.env.NEXT_PUBLIC_SITE_URL
   if (explicit) return explicit.replace(/\/+$/, '')
 
-  // En Vercel, esto suele existir en runtime
   const vercel = process.env.VERCEL_URL
   if (vercel) return `https://${vercel}`
 
-  // Fallback local
   return 'http://localhost:3000'
 }
 
@@ -34,7 +24,6 @@ export async function POST(req: Request) {
 
     const siteUrl = getSiteUrl()
 
-    // 🟡 Generar enlace mágico con Supabase
     const { data, error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -52,10 +41,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No se pudo obtener el enlace mágico' }, { status: 500 })
     }
 
-    // ✅ Convertir hash (#) en query (?) para que funcione en /verificado
     const magicLink = rawLink.replace('#', '?')
 
-    // ✉️ Enviar correo personalizado con Resend (lazy)
     const resend = getResend()
     await resend.emails.send({
       from: 'StudyDocu <registro@studydocu.ec>',
