@@ -7,6 +7,10 @@ import Spotlight from '@/components/Spotlight' // client component, ok
 import { UserProvider } from '@/context/UserContext'
 import ClientLayoutWrapper from '@/components/ClientLayoutWrapper'
 
+// ✅ Forzar render dinámico global (todas las rutas en /app)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 /* ---------------------- FUENTE SF PRO ---------------------- */
 const sfPro = localFont({
   src: [
@@ -24,8 +28,7 @@ const sfPro = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL('https://studydocu.ec'),
   title: {
-    default:
-      'StudyDocu – Apuntes, resúmenes y documentos académicos con IA',
+    default: 'StudyDocu – Apuntes, resúmenes y documentos académicos con IA',
     template: '%s | StudyDocu',
   },
   description:
@@ -52,8 +55,7 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title:
-      'StudyDocu – Apuntes, resúmenes y documentos académicos con IA',
+    title: 'StudyDocu – Apuntes, resúmenes y documentos académicos con IA',
     description:
       'Sube y comparte apuntes, resúmenes, ensayos y material académico. Descubre documentos de tu universidad y potencia tu estudio con inteligencia artificial.',
     url: 'https://studydocu.ec',
@@ -71,8 +73,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title:
-      'StudyDocu – Apuntes, resúmenes y documentos académicos con IA',
+    title: 'StudyDocu – Apuntes, resúmenes y documentos académicos con IA',
     description:
       'Encuentra apuntes, resúmenes y ensayos de tu carrera. Sube documentos y deja que la IA de StudyDocu los resuma por ti.',
     images: ['/og-image.png'],
