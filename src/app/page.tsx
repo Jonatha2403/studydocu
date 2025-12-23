@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
-import Script from 'next/script' // ⬅️ IMPORTANTE: para el JSON-LD
+import Script from 'next/script'
 
 import HeroAI from '@/components/HeroAI'
 import Footer from '@/components/Footer'
@@ -66,6 +66,24 @@ const extraItems = [
   },
 ]
 
+// ✅ Config PRO para Schema (edita aquí si cambian redes o datos)
+const BRAND = {
+  name: 'StudyDocu',
+  url: 'https://www.studydocu.ec/',
+  logo: 'https://www.studydocu.ec/logo.png', // /public/logo.png
+  ogImage: 'https://www.studydocu.ec/og-image.jpg', // /public/og-image.jpg
+  description:
+    'StudyDocu es una plataforma académica con IA para subir, organizar y resumir documentos universitarios, conectar con asesores verificados y mejorar el rendimiento de estudio en Ecuador.',
+  foundingDate: '2024',
+  phone: '+593958757302',
+  sameAs: [
+    'https://www.facebook.com/StudyDocu',
+    'https://www.instagram.com/studydocu1',
+    // 'https://www.linkedin.com/company/studydocu',
+    // 'https://www.youtube.com/@studydocu',
+  ],
+}
+
 export default function HomePage() {
   const [showConfetti, setShowConfetti] = useState(false)
   const { user } = useUserContext()
@@ -90,26 +108,67 @@ export default function HomePage() {
     router.push(user ? '/dashboard' : '/registrarse')
   }
 
+  // ✅ Schema Markup PRO (Organization + WebSite + WebPage)
+  const schemaGraph = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': `${BRAND.url}#organization`,
+        name: BRAND.name,
+        url: BRAND.url,
+        logo: {
+          '@type': 'ImageObject',
+          url: BRAND.logo,
+          width: 512,
+          height: 512,
+        },
+        image: BRAND.ogImage,
+        description: BRAND.description,
+        foundingDate: BRAND.foundingDate,
+        contactPoint: [
+          {
+            '@type': 'ContactPoint',
+            contactType: 'customer support',
+            availableLanguage: ['es'],
+            telephone: BRAND.phone,
+          },
+        ],
+        sameAs: BRAND.sameAs,
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${BRAND.url}#website`,
+        url: BRAND.url,
+        name: BRAND.name,
+        publisher: { '@id': `${BRAND.url}#organization` },
+        inLanguage: 'es-EC',
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: `${BRAND.url}explorar?q={search_term_string}`,
+          'query-input': 'required name=search_term_string',
+        },
+      },
+      {
+        '@type': 'WebPage',
+        '@id': `${BRAND.url}#homepage`,
+        url: BRAND.url,
+        name: 'StudyDocu | Plataforma académica con IA',
+        isPartOf: { '@id': `${BRAND.url}#website` },
+        about: { '@id': `${BRAND.url}#organization` },
+        inLanguage: 'es-EC',
+      },
+    ],
+  }
+
   return (
     <>
-      {/* 🔍 Schema Markup para que Google detecte tu logo y organización */}
+      {/* 🔍 Schema Markup PRO para Google */}
       <Script
-        id="studydocu-organization-schema"
+        id="studydocu-schema"
         type="application/ld+json"
         strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Organization',
-            name: 'StudyDocu',
-            url: 'https://www.studydocu.ec',
-            logo: 'https://www.studydocu.ec/logo.png', // ⬅️ ASEGÚRATE QUE ESTE ARCHIVO EXISTA
-            sameAs: [
-              'https://www.facebook.com/StudyDocu', // cambia si tienes otra URL
-              'https://wa.me/593958757302',
-            ],
-          }),
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
       />
 
       <main className="relative z-10 w-full min-h-screen flex flex-col items-center text-text bg-transparent">
@@ -123,11 +182,7 @@ export default function HomePage() {
         {/* Onda decorativa inferior */}
         <div className="absolute bottom-0 w-full overflow-hidden leading-none z-0">
           <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-[100px]">
-            <path
-              d="M0,0 C600,100 600,0 1200,100 L1200,0 L0,0 Z"
-              fill="#ffffff"
-              opacity="0.1"
-            >
+            <path d="M0,0 C600,100 600,0 1200,100 L1200,0 L0,0 Z" fill="#ffffff" opacity="0.1">
               <animate
                 attributeName="d"
                 dur="10s"
@@ -157,9 +212,8 @@ export default function HomePage() {
                 Bienvenido a <span className="text-indigo-500">StudyDocu</span>
               </h2>
               <p className="mt-3 text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                Centraliza tus apuntes, organiza tus materias, apóyate en IA y conéctate con
-                asesores académicos verificados. Todo en un solo lugar, pensado para estudiantes
-                de Ecuador.
+                Centraliza tus apuntes, organiza tus materias, apóyate en IA y conéctate con asesores académicos
+                verificados. Todo en un solo lugar, pensado para estudiantes de Ecuador.
               </p>
             </div>
 
@@ -180,8 +234,8 @@ export default function HomePage() {
               Lo que dicen nuestros usuarios
             </h2>
             <p className="text-sm sm:text-base text-center text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-              Estudiantes de distintas carreras ya usan StudyDocu para estudiar mejor, organizar sus
-              trabajos y aprobar sus materias con más tranquilidad.
+              Estudiantes de distintas carreras ya usan StudyDocu para estudiar mejor, organizar sus trabajos y
+              aprobar sus materias con más tranquilidad.
             </p>
             <AnimatedTestimonials />
           </motion.div>
@@ -209,8 +263,8 @@ export default function HomePage() {
               Funcionalidades que organizan tu vida académica
             </h2>
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              StudyDocu combina productividad, organización e inteligencia artificial para
-              ayudarte a cumplir tus objetivos de estudio sin perder el control.
+              StudyDocu combina productividad, organización e inteligencia artificial para ayudarte a cumplir tus
+              objetivos de estudio sin perder el control.
             </p>
           </div>
 
@@ -226,18 +280,11 @@ export default function HomePage() {
               >
                 <div className="flex items-center justify-center mb-4">
                   <div className="h-12 w-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                    <item.icon
-                      className="w-6 h-6 text-indigo-600 dark:text-indigo-300"
-                      strokeWidth={1.5}
-                    />
+                    <item.icon className="w-6 h-6 text-indigo-600 dark:text-indigo-300" strokeWidth={1.5} />
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold mb-1 text-center text-foreground">
-                  {item.name}
-                </h3>
-                <p className="text-sm text-muted-foreground text-center leading-relaxed">
-                  {item.description}
-                </p>
+                <h3 className="text-lg font-semibold mb-1 text-center text-foreground">{item.name}</h3>
+                <p className="text-sm text-muted-foreground text-center leading-relaxed">{item.description}</p>
               </motion.div>
             ))}
           </div>
@@ -249,8 +296,8 @@ export default function HomePage() {
             ¿Listo para comenzar?
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Crea tu cuenta en minutos, sube tus primeros apuntes y descubre cómo StudyDocu puede
-            transformar tu manera de estudiar.
+            Crea tu cuenta en minutos, sube tus primeros apuntes y descubre cómo StudyDocu puede transformar tu
+            manera de estudiar.
           </p>
           <Button
             onClick={handleStart}
@@ -280,8 +327,8 @@ export default function HomePage() {
             Más herramientas útiles para tu estudio
           </h2>
           <p className="text-sm sm:text-base text-center text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-10">
-            No solo subes documentos. StudyDocu analiza, resume y te da una vista más clara de tu
-            carga académica con funciones avanzadas pensadas para estudiantes exigentes.
+            No solo subes documentos. StudyDocu analiza, resume y te da una vista más clara de tu carga académica con
+            funciones avanzadas pensadas para estudiantes exigentes.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-7">
@@ -296,10 +343,7 @@ export default function HomePage() {
               >
                 <div className="flex items-center justify-center mb-4">
                   <div className="h-12 w-12 rounded-2xl bg-fuchsia-50 dark:bg-fuchsia-900/40 flex items-center justify-center group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300">
-                    <item.icon
-                      className="w-6 h-6 text-fuchsia-600 dark:text-fuchsia-200"
-                      strokeWidth={1.5}
-                    />
+                    <item.icon className="w-6 h-6 text-fuchsia-600 dark:text-fuchsia-200" strokeWidth={1.5} />
                   </div>
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">{item.name}</h3>
