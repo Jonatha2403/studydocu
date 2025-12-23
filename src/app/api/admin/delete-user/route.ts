@@ -1,15 +1,19 @@
 // src/app/api/admin/delete-user/route.ts
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: Request) {
   try {
-    // 0) Verificar que supabaseAdmin esté bien configurado
-    if (!supabaseAdmin) {
+    // 0) Crear cliente admin (lazy). Si faltan env, lanzará error.
+    let supabaseAdmin
+    try {
+      supabaseAdmin = getSupabaseAdmin()
+    } catch (e) {
       console.error(
-        '[DELETE_USER_CONFIG_ERROR] supabaseAdmin ES NULL — revisa NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY'
+        '[DELETE_USER_CONFIG_ERROR] Faltan env para Supabase Admin:',
+        e
       )
       return NextResponse.json(
         { error: 'Servidor mal configurado: falta service role de Supabase.' },
@@ -45,9 +49,7 @@ export async function POST(req: Request) {
     if (repByUserError) {
       console.error('[DELETE_USER_REPORTS_BY_USER_ERROR]', repByUserError)
       return NextResponse.json(
-        {
-          error: `Error al borrar reports del usuario: ${repByUserError.message}`,
-        },
+        { error: `Error al borrar reports del usuario: ${repByUserError.message}` },
         { status: 500 }
       )
     }
@@ -61,16 +63,14 @@ export async function POST(req: Request) {
     if (docsErr) {
       console.error('[DELETE_USER_GET_DOCS_ERROR]', docsErr)
       return NextResponse.json(
-        {
-          error: `Error al obtener documentos del usuario: ${docsErr.message}`,
-        },
+        { error: `Error al obtener documentos del usuario: ${docsErr.message}` },
         { status: 500 }
       )
     }
 
     // 3b) Borrar reports asociados a esos documentos
     if (docsDelUsuario && docsDelUsuario.length > 0) {
-      const docIds = docsDelUsuario.map((d) => d.id)
+      const docIds = docsDelUsuario.map((d: any) => d.id)
 
       const { error: repByDocsError } = await supabaseAdmin
         .from('reports')
@@ -97,9 +97,7 @@ export async function POST(req: Request) {
     if (delDocsErr) {
       console.error('[DELETE_USER_DELETE_DOCS_ERROR]', delDocsErr)
       return NextResponse.json(
-        {
-          error: `Error al borrar documentos del usuario: ${delDocsErr.message}`,
-        },
+        { error: `Error al borrar documentos del usuario: ${delDocsErr.message}` },
         { status: 500 }
       )
     }
@@ -113,23 +111,18 @@ export async function POST(req: Request) {
     if (delProfileErr) {
       console.error('[DELETE_USER_DELETE_PROFILE_ERROR]', delProfileErr)
       return NextResponse.json(
-        {
-          error: `Error al borrar perfil del usuario: ${delProfileErr.message}`,
-        },
+        { error: `Error al borrar perfil del usuario: ${delProfileErr.message}` },
         { status: 500 }
       )
     }
 
     // 6) Borrar de auth.users (requiere service_role)
-    const { error: authDelError } =
-      await supabaseAdmin.auth.admin.deleteUser(userId)
+    const { error: authDelError } = await supabaseAdmin.auth.admin.deleteUser(userId)
 
     if (authDelError) {
       console.error('[DELETE_USER_AUTH_DELETE_ERROR]', authDelError)
       return NextResponse.json(
-        {
-          error: `Error al eliminar al usuario en auth.users: ${authDelError.message}`,
-        },
+        { error: `Error al eliminar al usuario en auth.users: ${authDelError.message}` },
         { status: 500 }
       )
     }
