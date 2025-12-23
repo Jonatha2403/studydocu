@@ -16,7 +16,9 @@ export const metadata: Metadata = {
     'asesorías académicas',
     'estudiantes Ecuador',
   ],
-  alternates: { canonical: 'https://www.studydocu.ec/' },
+  alternates: {
+    canonical: 'https://www.studydocu.ec/',
+  },
   openGraph: {
     title: 'StudyDocu | Plataforma académica con IA',
     description:
@@ -44,29 +46,5 @@ export const metadata: Metadata = {
 }
 
 export default function Page() {
-  return (
-    <>
-      <HomeClient />
-
-      {/* SEO: ¿Qué es StudyDocu? */}
-      <section className="max-w-4xl mx-auto px-4 py-14">
-        <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-900 dark:text-white">
-          ¿Qué es StudyDocu?
-        </h2>
-
-        <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-          <strong>StudyDocu</strong> es una plataforma académica con inteligencia artificial,
-          creada en Ecuador, que ayuda a estudiantes universitarios a organizar sus apuntes,
-          comprender mejor sus materias y mejorar su rendimiento académico de forma responsable.
-        </p>
-
-        <a
-          href="/que-es-studydocu"
-          className="inline-block mt-5 text-indigo-600 font-semibold hover:underline"
-        >
-          Leer más sobre StudyDocu →
-        </a>
-      </section>
-    </>
-  )
+  return <HomeClient />
 }

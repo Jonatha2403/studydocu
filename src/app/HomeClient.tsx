@@ -280,6 +280,44 @@ export default function HomeClient() {
         {/* HERO existente */}
         <HeroAI />
 
+         {/* ¿Qué es StudyDocu? */}
+<section className="relative w-full max-w-5xl mx-auto px-4 py-16">
+  <div className="rounded-3xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-xl px-6 sm:px-10 py-10">
+    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+      ¿Qué es StudyDocu?
+    </h2>
+
+    <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base leading-relaxed mb-4">
+      <strong>StudyDocu</strong> es una plataforma académica con inteligencia artificial,
+      creada en Ecuador, que ayuda a estudiantes universitarios a organizar sus apuntes,
+      comprender mejor sus materias y estudiar de forma más eficiente.
+    </p>
+
+    <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base leading-relaxed mb-6">
+      A diferencia de otras plataformas, StudyDocu combina organización académica,
+      herramientas inteligentes y acompañamiento educativo, enfocándose en el aprendizaje
+      real y responsable.
+    </p>
+
+    <div className="flex flex-wrap gap-4">
+      <a
+        href="/que-es-studydocu"
+        className="inline-flex items-center px-6 py-3 rounded-full bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
+      >
+        Conoce más sobre StudyDocu →
+      </a>
+
+      <a
+        href="/registrarse"
+        className="inline-flex items-center px-6 py-3 rounded-full border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+      >
+        Crear cuenta gratis
+      </a>
+    </div>
+  </div>
+</section>
+
+
         {/* --- NUEVO: Sección Demo / Producto en vivo --- */}
         <section className="relative w-full max-w-6xl mx-auto -mt-8 md:-mt-12 px-4 pb-10">
           <div className="rounded-3xl border border-white/40 dark:border-white/10 bg-white/70 dark:bg-gray-900/70 shadow-xl backdrop-blur-xl px-5 sm:px-8 py-8 sm:py-10">
