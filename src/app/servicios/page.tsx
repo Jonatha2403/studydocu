@@ -16,9 +16,7 @@ export const metadata: Metadata = {
     'asesorías académicas',
     'StudyDocu',
   ],
-  alternates: {
-    canonical: 'https://www.studydocu.ec/servicios',
-  },
+  alternates: { canonical: 'https://www.studydocu.ec/servicios' },
   openGraph: {
     title: 'Servicios Académicos UTPL - Ensayos, Exámenes y Asesorías | StudyDocu',
     description:
