@@ -1,31 +1,25 @@
 // src/app/auth/send-reset/route.ts
+export const runtime = 'nodejs'
+
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { Resend } from 'resend'
-
-const resend = new Resend(process.env.RESEND_API_KEY)
+import { getResend } from '@/lib/resend'
 
 export async function POST(req: Request) {
-  const supabase = await createClient()
-  const { email } = await req.json()
-
-  if (!email) {
-    return NextResponse.json(
-      { error: 'El correo es obligatorio.' },
-      { status: 400 }
-    )
-  }
-
   try {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || 'https://studydocu.ec'
+    const supabase = await createClient()
+    const { email } = await req.json()
 
-    // 🚀 Ruta CORRECTA Y OFICIAL de recuperación
+    if (!email) {
+      return NextResponse.json({ error: 'El correo es obligatorio.' }, { status: 400 })
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://studydocu.ec'
     const redirectTo = `${baseUrl}/auth/reset-password`
 
-    // 1️⃣ Solicitar a SUPABASE el correo con token de recuperación
+    // 1) Solicitar a Supabase el correo con token de recuperación
     const { error } = await supabase.auth.resetPasswordForEmail(
-      email.trim().toLowerCase(),
+      String(email).trim().toLowerCase(),
       { redirectTo }
     )
 
@@ -34,37 +28,42 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // 2️⃣ Correo ESTÉTICO opcional (no sustituye al correo de Supabase)
-    const htmlTemplate = `
-      <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif; background: #f9fafb; border-radius: 16px;">
-        <div style="padding: 32px; text-align: center; background: white; border-radius: 16px;">
-          <img src="https://studydocu.ec/logo-mail.png" width="60" height="60" />
-          <h2 style="font-size: 24px; font-weight: bold; margin: 16px 0;">Recupera tu contraseña 🔐</h2>
-          <p style="color: #555;">Has solicitado cambiar tu contraseña. Revisa tu correo, Supabase te enviará un enlace seguro.</p>
+    // 2) Correo estético opcional (no sustituye al correo de Supabase)
+    //    Importante: inicializar Resend "lazy" para no romper build si falta la key.
+    try {
+      const resend = getResend()
 
-          <p style="font-size: 14px; margin-top: 24px; color: #777;">
-            Si no solicitaste este cambio, puedes ignorar este mensaje.
-          </p>
-        </div>
-        <div style="text-align: center; color: #aaa; font-size: 12px; padding: 16px;">
-          © ${new Date().getFullYear()} StudyDocu
-        </div>
-      </div>
-    `
+      const htmlTemplate = `
+        <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif; background: #f9fafb; border-radius: 16px;">
+          <div style="padding: 32px; text-align: center; background: white; border-radius: 16px;">
+            <img src="https://studydocu.ec/logo-mail.png" width="60" height="60" />
+            <h2 style="font-size: 24px; font-weight: bold; margin: 16px 0;">Recupera tu contraseña 🔐</h2>
+            <p style="color: #555;">Has solicitado cambiar tu contraseña. Revisa tu correo, Supabase te enviará un enlace seguro.</p>
 
-    await resend.emails.send({
-      from: 'StudyDocu <no-responder@studydocu.ec>',
-      to: email,
-      subject: 'Recuperación de contraseña solicitada',
-      html: htmlTemplate,
-    })
+            <p style="font-size: 14px; margin-top: 24px; color: #777;">
+              Si no solicitaste este cambio, puedes ignorar este mensaje.
+            </p>
+          </div>
+          <div style="text-align: center; color: #aaa; font-size: 12px; padding: 16px;">
+            © ${new Date().getFullYear()} StudyDocu
+          </div>
+        </div>
+      `
+
+      await resend.emails.send({
+        from: 'StudyDocu <no-responder@studydocu.ec>',
+        to: String(email).trim().toLowerCase(),
+        subject: 'Recuperación de contraseña solicitada',
+        html: htmlTemplate,
+      })
+    } catch (e) {
+      // Si no hay RESEND_API_KEY no debe tumbar la recuperación (Supabase igual envía el correo).
+      console.warn('[SEND_RESET] Resend no configurado o falló. Se omite correo estético.', e)
+    }
 
     return NextResponse.json({ success: true })
   } catch (err) {
     console.error('[SEND_RESET_ERROR]', err)
-    return NextResponse.json(
-      { error: 'Error interno del servidor.' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Error interno del servidor.' }, { status: 500 })
   }
 }
