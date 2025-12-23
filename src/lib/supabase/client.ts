@@ -11,7 +11,6 @@ export function getSupabaseBrowserClient(): SupabaseClient {
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!url || !anon) {
-    // No revienta build; solo falla si alguien intenta usarlo sin env
     throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY')
   }
 
@@ -25,3 +24,17 @@ export function getSupabaseBrowserClient(): SupabaseClient {
 
   return cached
 }
+
+/**
+ * ✅ Compat: para que todos los imports existentes funcionen:
+ * import { supabase } from '@/lib/supabase/client'
+ *
+ * Nota: es un getter para crear el cliente solo cuando se use en el browser.
+ */
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    const client = getSupabaseBrowserClient()
+    const value = (client as any)[prop]
+    return typeof value === 'function' ? value.bind(client) : value
+  },
+})
