@@ -1,6 +1,5 @@
 ﻿// src/app/servicios/page.tsx
 import type { Metadata } from 'next'
-import ServiciosClient from './ServiciosClient'
 
 export const metadata: Metadata = {
   title: 'Servicios Académicos UTPL - Ensayos, Exámenes y Asesorías | StudyDocu',
@@ -42,6 +41,8 @@ export const metadata: Metadata = {
     images: ['https://www.studydocu.ec/og-image.jpg'],
   },
 }
+
+import ServiciosClient from './ServiciosClient'
 
 export default function Page() {
   return <ServiciosClient />
