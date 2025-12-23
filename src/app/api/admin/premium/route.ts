@@ -1,12 +1,12 @@
 // src/app/api/admin/premium/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { supabaseServer } from '@/lib/supabaseServer'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
-  // 👈 IMPORTANTE: await al crear el cliente
+  // ✅ Cliente del usuario (cookies/session)
   const supabase = await supabaseServer()
 
   // Usuario autenticado
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Payload
-  const body = await req.json()
+  const body = await req.json().catch(() => ({}))
   const uid: string | undefined = body?.uid
   const is_premium: boolean | undefined = body?.is_premium
   const customerId: string | null = body?.customerId ?? null
@@ -40,6 +40,18 @@ export async function POST(req: NextRequest) {
 
   if (!uid || typeof is_premium !== 'boolean') {
     return NextResponse.json({ error: 'uid e is_premium son requeridos' }, { status: 400 })
+  }
+
+  // ✅ Cliente admin LAZY (evita romper build si falta env)
+  let supabaseAdmin
+  try {
+    supabaseAdmin = getSupabaseAdmin()
+  } catch (e) {
+    console.error('[ADMIN_PREMIUM_CONFIG_ERROR] Missing env:', e)
+    return NextResponse.json(
+      { error: 'Servidor mal configurado: falta SUPABASE_SERVICE_ROLE_KEY o SUPABASE_URL.' },
+      { status: 500 }
+    )
   }
 
   // RPC con service_role (bypassa RLS)
