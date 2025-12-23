@@ -1,19 +1,19 @@
-import { NextResponse } from 'next/server'
-import { sendWelcomeEmail } from '@/utils/sendWelcomeEmail'
+// src/utils/sendWelcomeEmail.ts
+import { getResend } from '@/lib/resend'
 
-export async function POST(req: Request) {
-  try {
-    const { email } = await req.json()
+export async function sendWelcomeEmail(email: string) {
+  const resend = getResend()
 
-    if (!email || typeof email !== 'string' || !email.includes('@')) {
-      return NextResponse.json({ error: 'Email válido requerido' }, { status: 400 })
-    }
-
-    await sendWelcomeEmail(email)
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('❌ Error enviando welcome email:', error)
-    return NextResponse.json({ error: 'Error enviando correo' }, { status: 500 })
-  }
+  await resend.emails.send({
+    from: 'StudyDocu <registro@studydocu.ec>',
+    to: email,
+    subject: '¡Bienvenido a StudyDocu!',
+    html: `
+      <div style="font-family:sans-serif;padding:24px">
+        <h2>🎉 ¡Bienvenido a StudyDocu!</h2>
+        <p>Tu cuenta fue creada con éxito.</p>
+        <p>Ya puedes iniciar sesión y empezar a organizar tus estudios.</p>
+      </div>
+    `,
+  })
 }
