@@ -3,37 +3,31 @@ import type { Metadata } from 'next'
 import HomeClient from './HomeClient'
 
 export const metadata: Metadata = {
-  title: 'StudyDocu | Plataforma académica con IA para estudiantes en Ecuador',
-  // ✅ Bing: mejor 120–155 caracteres (tu descripción actual puede ser “larga”)
+  title: 'Plataforma académica con IA para estudiantes en Ecuador',
   description:
     'StudyDocu es una plataforma académica con IA para estudiantes universitarios en Ecuador: organiza, resume y estudia mejor.',
-  keywords: [
-    'StudyDocu',
-    'plataforma académica',
-    'inteligencia artificial',
-    'documentos universitarios',
-    'resúmenes IA',
-    'UTPL',
-    'asesorías académicas',
-    'estudiantes Ecuador',
-  ],
-  alternates: { canonical: 'https://www.studydocu.ec/' },
+  alternates: { canonical: '/' },
   openGraph: {
     title: 'StudyDocu | Plataforma académica con IA',
     description: 'Organiza tus apuntes universitarios, estudia con IA y mejora tu rendimiento académico.',
-    url: 'https://www.studydocu.ec/',
+    url: 'https://studydocu.ec/',
     siteName: 'StudyDocu',
     locale: 'es_EC',
     type: 'website',
     images: [
-      { url: 'https://www.studydocu.ec/og-image.jpg', width: 1200, height: 630, alt: 'StudyDocu - Plataforma académica con IA' },
+      {
+        url: 'https://studydocu.ec/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'StudyDocu - Plataforma académica con IA',
+      },
     ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'StudyDocu | Plataforma académica con IA',
     description: 'Organiza tus apuntes universitarios, estudia con IA y mejora tu rendimiento académico.',
-    images: ['https://www.studydocu.ec/og-image.jpg'],
+    images: ['https://studydocu.ec/og-image.png'],
   },
 }
 

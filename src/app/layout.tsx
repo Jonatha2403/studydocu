@@ -7,10 +7,6 @@ import Spotlight from '@/components/Spotlight' // client component, ok
 import { UserProvider } from '@/context/UserContext'
 import ClientLayoutWrapper from '@/components/ClientLayoutWrapper'
 
-// ✅ Forzar render dinámico global (todas las rutas en /app)
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
-
 /* ---------------------- FUENTE SF PRO ---------------------- */
 const sfPro = localFont({
   src: [
@@ -28,23 +24,22 @@ const sfPro = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL('https://studydocu.ec'),
   title: {
-    default: 'StudyDocu – Apuntes, resúmenes y documentos académicos con IA',
+    // ✅ Título base (home) + template para el resto
+    default: 'StudyDocu | Plataforma académica con IA en Ecuador',
     template: '%s | StudyDocu',
   },
+  // ✅ Bing: ideal 120–155 caracteres aprox.
   description:
-    'StudyDocu es una plataforma académica con inteligencia artificial para estudiantes universitarios en Ecuador.',
+    'Plataforma académica con IA en Ecuador: sube, organiza y resume documentos universitarios para estudiar más rápido con StudyDocu.',
   applicationName: 'StudyDocu',
   keywords: [
     'StudyDocu',
+    'plataforma académica',
+    'inteligencia artificial',
+    'documentos universitarios',
+    'resúmenes IA',
     'UTPL',
-    'apuntes universitarios',
-    'resúmenes académicos',
-    'documentos académicos',
-    'ejemplos de ensayos',
-    'UTPL apuntes',
-    'universidad Ecuador',
-    'resúmenes de estudio',
-    'plataforma para estudiantes',
+    'estudiantes Ecuador',
     'material de estudio',
   ],
   authors: [{ name: 'StudyDocu', url: 'https://studydocu.ec' }],
@@ -52,25 +47,33 @@ export const metadata: Metadata = {
   publisher: 'StudyDocu',
   category: 'education',
   alternates: { canonical: '/' },
+
   openGraph: {
-    title: 'StudyDocu – Apuntes, resúmenes y documentos académicos con IA',
+    title: 'StudyDocu | Plataforma académica con IA en Ecuador',
     description:
-      'Sube y comparte apuntes, resúmenes, ensayos y material académico. Descubre documentos de tu universidad y potencia tu estudio con inteligencia artificial.',
+      'Sube, comparte y encuentra apuntes y documentos universitarios. Estudia mejor con herramientas de IA en StudyDocu.',
     url: 'https://studydocu.ec',
     siteName: 'StudyDocu',
     images: [
-      { url: '/og-image.png', width: 1200, height: 630, alt: 'StudyDocu – Plataforma académica inteligente' },
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'StudyDocu - Plataforma académica con IA',
+      },
     ],
     type: 'website',
     locale: 'es_EC',
   },
+
   twitter: {
     card: 'summary_large_image',
-    title: 'StudyDocu – Apuntes, resúmenes y documentos académicos con IA',
+    title: 'StudyDocu | Plataforma académica con IA en Ecuador',
     description:
-      'Encuentra apuntes, resúmenes y ensayos de tu carrera. Sube documentos y deja que la IA de StudyDocu los resuma por ti.',
+      'Encuentra apuntes y documentos de tu carrera. Sube archivos y deja que la IA de StudyDocu te ayude a estudiar mejor.',
     images: ['/og-image.png'],
   },
+
   robots: {
     index: true,
     follow: true,
@@ -82,6 +85,7 @@ export const metadata: Metadata = {
       'max-video-preview': -1,
     },
   },
+
   icons: {
     icon: [
       { url: '/favicon.ico', type: 'image/x-icon' },
