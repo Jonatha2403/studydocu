@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     template: '%s | StudyDocu',
   },
   description:
-    'StudyDocu es una plataforma académica inteligente para subir, compartir y encontrar apuntes universitarios, resúmenes, ensayos y documentos de estudio. IA integrada para resumir al subir tus archivos y estudiar más rápido.',
+    'StudyDocu es una plataforma académica con inteligencia artificial para estudiantes universitarios en Ecuador.',
   applicationName: 'StudyDocu',
   keywords: [
     'StudyDocu',
