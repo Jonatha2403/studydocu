@@ -15,9 +15,12 @@ const PUBLIC_ROUTES = new Set([
   '/favicon.ico',
   '/manifest.json',
 
-  // 🔐 Recuperación de contraseña
-  '/auth/reset-password', // ruta actual (src/app/auth/reset-password/page.tsx)
-  '/reset-password', // ruta antigua (por si algún enlace viejo aún la usa)
+  // 🔐 Recuperación de contraseña (NUEVO + compatibilidad)
+  '/auth/callback', // ✅ necesario para exchange + redirect
+  '/auth/cambiar-clave', // ✅ nueva ruta para cambiar clave
+  '/auth/send-reset', // ✅ si existe tu pantalla/endpoint para pedir enlace
+  '/auth/reset-password', // antigua
+  '/reset-password', // antigua
 ])
 
 // Rutas protegidas (requieren sesión)
@@ -59,7 +62,7 @@ export async function middleware(req: NextRequest) {
     return res
   }
 
-  // 3) Obtener usuario desde cookies
+  // 3) Obtener usuario desde cookies (Supabase Middleware)
   const supabase = createMiddlewareClient({ req, res })
   const {
     data: { user },
@@ -73,6 +76,10 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
+  // ✅ Obtener access token real desde la sesión (NO depender de sb-access-token)
+  const { data: sessionData } = await supabase.auth.getSession()
+  const accessToken = sessionData.session?.access_token ?? ''
+
   // 5) Reglas adicionales (admin / premium / onboarding)
 
   // Traer perfil para role, subscription_status y onboarding_complete
@@ -83,9 +90,7 @@ export async function middleware(req: NextRequest) {
   const profileRes = await fetch(profileUrl, {
     headers: {
       apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-      Authorization: `Bearer ${
-        req.cookies.get('sb-access-token')?.value || ''
-      }`,
+      Authorization: `Bearer ${accessToken}`,
     },
   })
 
@@ -94,8 +99,7 @@ export async function middleware(req: NextRequest) {
   const role: string | undefined = profile.role || user.user_metadata?.role
   const subscription_status: string | undefined =
     profile.subscription_status || user.user_metadata?.subscription_status
-  const onboarding_complete: boolean | undefined =
-    profile.onboarding_complete
+  const onboarding_complete: boolean | undefined = profile.onboarding_complete
 
   // 5a) Admin gate
   if (pathname.startsWith('/admin') && role !== 'admin') {
@@ -104,9 +108,8 @@ export async function middleware(req: NextRequest) {
   }
 
   // 5b) Premium gate
-  const isPremium =
-    (subscription_status || '').toLowerCase() === 'activa' ||
-    (subscription_status || '').toLowerCase() === 'premium'
+  const sub = (subscription_status || '').toLowerCase()
+  const isPremium = sub === 'activa' || sub === 'premium'
 
   if (
     pathStartsWithAny(pathname, [
