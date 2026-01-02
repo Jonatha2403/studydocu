@@ -7,7 +7,7 @@ import Confetti from 'react-confetti'
 import { useWindowSize } from 'react-use'
 import { toast } from 'sonner'
 
-// 🔹 USAR EL MISMO CLIENTE QUE EN LOGIN
+// ✅ USAR EL CLIENTE CORRECTO
 import { supabase } from '@/lib/supabase/client'
 
 import {
@@ -73,11 +73,12 @@ export default function RegisterForm() {
 
   /* ------------------------------ OAuth buttons ------------------------------ */
   const handleOAuth = async (provider: 'google' | 'facebook') => {
+    const origin = window.location.origin
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        // 🔹 Usamos la misma ruta que en LoginForm
-        redirectTo: `${window.location.origin}/verificado-oauth`,
+        // ✅ recomendado: pasar por callback también
+        redirectTo: `${origin}/auth/callback`,
       },
     })
     if (error) toast.error(`Error con ${provider}: ${error.message}`)
@@ -105,6 +106,7 @@ export default function RegisterForm() {
         setUsernameStatus('idle')
       }
     }, 500)
+
     return () => clearTimeout(t)
   }, [form.username])
 
@@ -130,16 +132,16 @@ export default function RegisterForm() {
         setEmailStatus('idle')
       }
     }, 500)
+
     return () => clearTimeout(t)
   }, [form.email])
 
   /* ------------------------------ Recordar correo ---------------------------- */
   useEffect(() => {
     const saved = localStorage.getItem('studydocu:last_email')
-    if (saved) {
-      setForm((f) => ({ ...f, email: saved }))
-    }
+    if (saved) setForm((f) => ({ ...f, email: saved }))
   }, [])
+
   useEffect(() => {
     if (form.recordar) localStorage.setItem('studydocu:last_email', form.email)
   }, [form.recordar, form.email])
@@ -207,26 +209,37 @@ export default function RegisterForm() {
 
     setLoading(true)
     submitted.current = true
-    try {
-      const payload = {
-        ...form,
-        username: normalizeUsername(form.username),
-        email: form.email.trim().toLowerCase(),
-      }
-      const res = await fetch('/api/auth/send-confirmation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      const result = await res.json()
 
-      if (!res.ok) {
-        toast.error(result?.error || 'Error al registrar')
-      } else {
-        setShowSuccess(true)
-        toast.success('¡Cuenta creada! Revisa tu correo para confirmar.')
-        new Audio('/sounds/success-sound.wav').play().catch(() => {})
+    try {
+      const origin = window.location.origin
+      const email = form.email.trim().toLowerCase()
+      const username = normalizeUsername(form.username)
+
+      const emailRedirectTo = `${origin}/auth/callback?type=signup&next=/verificado`
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password: form.password,
+        options: {
+          emailRedirectTo,
+          data: {
+            nombre_completo: form.nombre_completo.trim(),
+            username,
+            universidad: form.universidad,
+            referido: form.referido?.trim() || null,
+            role: form.role,
+          },
+        },
+      })
+
+      if (error) {
+        toast.error(error.message || 'Error al registrar')
+        return
       }
+
+      setShowSuccess(true)
+      toast.success('¡Cuenta creada! Revisa tu correo para confirmar.')
+      new Audio('/sounds/success-sound.wav').play().catch(() => {})
     } catch {
       toast.error('Error inesperado. Intenta de nuevo.')
     } finally {
@@ -553,9 +566,7 @@ function StatusChip({ status }: { status: Status }) {
       {status === 'checking' && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
       {status === 'available' && <CheckCircle2 className="w-3.5 h-3.5" />}
       {status === 'unavailable' && <CircleSlash className="w-3.5 h-3.5" />}
-      <span>
-        {status === 'checking' ? 'Comprobando…' : status === 'available' ? 'Disponible' : 'En uso'}
-      </span>
+      <span>{status === 'checking' ? 'Comprobando…' : status === 'available' ? 'Disponible' : 'En uso'}</span>
     </span>
   )
 }
@@ -563,10 +574,7 @@ function StatusChip({ status }: { status: Status }) {
 function Req({ ok, children }: { ok: boolean; children: React.ReactNode }) {
   return (
     <span className={`inline-flex items-center gap-1 ${ok ? 'text-emerald-600' : 'text-gray-500'}`}>
-      <span
-        className={`w-1.5 h-1.5 rounded-full ${ok ? 'bg-emerald-500' : 'bg-gray-300'}`}
-        aria-hidden="true"
-      />
+      <span className={`w-1.5 h-1.5 rounded-full ${ok ? 'bg-emerald-500' : 'bg-gray-300'}`} aria-hidden="true" />
       {children}
     </span>
   )
