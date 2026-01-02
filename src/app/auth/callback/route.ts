@@ -11,37 +11,25 @@ export async function GET(req: NextRequest) {
   const origin = url.origin
 
   const code = url.searchParams.get('code')
-  const type = url.searchParams.get('type')
+  const type = url.searchParams.get('type') // "recovery" en reset
   const error = url.searchParams.get('error') ?? null
+
   const rawNext = url.searchParams.get('next') ?? '/'
   const decodedNext = decodeURIComponent(rawNext)
   const next = decodedNext.startsWith('/') ? decodedNext : '/'
 
-  // 1️⃣ RECUPERACIÓN DE CONTRASEÑA
-  // Aquí SOLO redirigimos a /auth/reset-password pasando el code,
-  // sin hacer exchangeCodeForSession en el servidor.
-  if (type === 'recovery') {
-    const redirectUrl = new URL('/auth/reset-password', origin)
-
-    if (code) {
-      redirectUrl.searchParams.set('code', code)
-      redirectUrl.searchParams.set('type', 'recovery')
-    }
-
-    if (error) {
-      redirectUrl.searchParams.set('error', error)
-    }
-
-    return NextResponse.redirect(redirectUrl)
-  }
-
-  // 2️⃣ RESTO DE FLUJOS (OAuth, etc.) → aquí sí hacemos exchange en el servidor
-  const response = NextResponse.redirect(new URL(next, origin))
-
-  // Si no hay code, simplemente redirigimos
+  // ✅ Si falta el code, no hay nada que intercambiar → manda a login
   if (!code) {
-    return response
+    const fallback = new URL('/iniciar-sesion', origin)
+    if (error) fallback.searchParams.set('error', error)
+    return NextResponse.redirect(fallback)
   }
+
+  // ✅ Si es recovery, forzamos a cambiar clave (NO dashboard)
+  const redirectTarget =
+    type === 'recovery' ? '/auth/cambiar-clave' : next
+
+  const response = NextResponse.redirect(new URL(redirectTarget, origin))
 
   const cookieStore = await cookies()
 
@@ -81,15 +69,14 @@ export async function GET(req: NextRequest) {
     }
   )
 
-  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(
-    code
-  )
+  // 🔥 CLAVE: también para recovery hacemos exchange en el servidor
+  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
   if (exchangeError) {
-    console.error('[AUTH_CALLBACK] Error al crear sesión OAuth:', exchangeError)
-    return NextResponse.redirect(
-      new URL('/iniciar-sesion?error=auth_callback', origin)
-    )
+    console.error('[AUTH_CALLBACK] Error al crear sesión:', exchangeError)
+    const fail = new URL('/iniciar-sesion', origin)
+    fail.searchParams.set('error', 'auth_callback')
+    return NextResponse.redirect(fail)
   }
 
   return response
