@@ -211,29 +211,25 @@ export default function RegisterForm() {
     submitted.current = true
 
     try {
-      const origin = window.location.origin
       const email = form.email.trim().toLowerCase()
-      const username = normalizeUsername(form.username)
 
-      const emailRedirectTo = `${origin}/auth/callback?type=signup&next=/verificado`
-
-      const { error } = await supabase.auth.signUp({
-        email,
-        password: form.password,
-        options: {
-          emailRedirectTo,
-          data: {
-            nombre_completo: form.nombre_completo.trim(),
-            username,
-            universidad: form.universidad,
-            referido: form.referido?.trim() || null,
-            role: form.role,
-          },
-        },
+      const res = await fetch('/api/auth/send-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password: form.password,
+          nombre_completo: form.nombre_completo.trim(),
+          universidad: form.universidad,
+          referido: form.referido?.trim() || null,
+          role: form.role,
+        }),
       })
 
-      if (error) {
-        toast.error(error.message || 'Error al registrar')
+      const json = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        toast.error(json?.error || 'Error al registrar')
         return
       }
 
@@ -387,8 +383,8 @@ export default function RegisterForm() {
                   passwordStrength === 'fuerte'
                     ? 'bg-green-500'
                     : passwordStrength === 'media'
-                    ? 'bg-yellow-500'
-                    : 'bg-red-500'
+                      ? 'bg-yellow-500'
+                      : 'bg-red-500'
                 }`}
                 style={{ width: `${strengthPct}%` }}
               />
@@ -559,14 +555,16 @@ function StatusChip({ status }: { status: Status }) {
         status === 'available'
           ? 'text-emerald-700 border-emerald-200 bg-emerald-50'
           : status === 'unavailable'
-          ? 'text-red-700 border-red-200 bg-red-50'
-          : 'text-gray-600 border-gray-200 bg-gray-50'
+            ? 'text-red-700 border-red-200 bg-red-50'
+            : 'text-gray-600 border-gray-200 bg-gray-50'
       }`}
     >
       {status === 'checking' && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
       {status === 'available' && <CheckCircle2 className="w-3.5 h-3.5" />}
       {status === 'unavailable' && <CircleSlash className="w-3.5 h-3.5" />}
-      <span>{status === 'checking' ? 'Comprobando…' : status === 'available' ? 'Disponible' : 'En uso'}</span>
+      <span>
+        {status === 'checking' ? 'Comprobando…' : status === 'available' ? 'Disponible' : 'En uso'}
+      </span>
     </span>
   )
 }
@@ -574,7 +572,10 @@ function StatusChip({ status }: { status: Status }) {
 function Req({ ok, children }: { ok: boolean; children: React.ReactNode }) {
   return (
     <span className={`inline-flex items-center gap-1 ${ok ? 'text-emerald-600' : 'text-gray-500'}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${ok ? 'bg-emerald-500' : 'bg-gray-300'}`} aria-hidden="true" />
+      <span
+        className={`w-1.5 h-1.5 rounded-full ${ok ? 'bg-emerald-500' : 'bg-gray-300'}`}
+        aria-hidden="true"
+      />
       {children}
     </span>
   )
