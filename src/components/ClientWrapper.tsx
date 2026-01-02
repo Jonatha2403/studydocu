@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Session, AuthChangeEvent } from '@supabase/supabase-js'
+import type { Session, AuthChangeEvent } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { Toaster as SonnerToaster, toast } from 'sonner'
 import { ToastProvider } from '@/context/ToastContext'
@@ -12,8 +12,11 @@ import MobileDock from '@/components/layouts/MobileDock'
 import dynamic from 'next/dynamic'
 import { usePathname } from 'next/navigation'
 import Navbar from '@/components/layouts/Navbar'
+import Image from 'next/image'
 
-const LoadingOverlay = dynamic(() => import('@/components/ui/LoadingOverlay'), { ssr: false })
+const LoadingOverlay = dynamic(() => import('@/components/ui/LoadingOverlay'), {
+  ssr: false,
+})
 
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null)
@@ -128,9 +131,17 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
         <footer className="w-full text-muted-foreground border-t border-border bg-white/80 dark:bg-gray-900/80 backdrop-blur-md py-10">
           <div className="max-w-7xl mx-auto px-4 md:px-8 flex flex-col lg:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <img src="/icon.png" alt="Logo StudyDocu" className="h-10 w-10 rounded-md shadow" />
+              <Image
+                src="/icon.png"
+                alt="Logo StudyDocu"
+                width={40}
+                height={40}
+                priority
+                className="rounded-md shadow"
+              />
               <span className="text-lg font-bold text-gray-800 dark:text-white">StudyDocu</span>
             </div>
+
             <div className="flex flex-wrap justify-center gap-4 text-sm">
               <Link href="/sobre-nosotros" className="hover:text-primary transition">
                 Sobre nosotros
@@ -145,6 +156,7 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
                 Contacto
               </Link>
             </div>
+
             <div className="text-xs text-gray-500 dark:text-gray-400 text-center lg:text-right">
               <p>
                 © {new Date().getFullYear()}{' '}
