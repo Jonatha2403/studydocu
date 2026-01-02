@@ -2,22 +2,49 @@
 'use client'
 
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useEffect, useMemo, useState } from 'react'
 import RegisterForm from '@/components/auth/RegisterForm'
 
 export default function RegisterPage() {
+  // ✅ Palabras que “corren”
+  const words = useMemo(() => ['exámenes', 'resúmenes', 'mapas conceptuales', 'y mucho más…'], [])
+
+  // ✅ Frases originales que rotan (no copiadas)
+  const quotes = useMemo(
+    () => [
+      'Un buen hábito hoy vale más que mil planes mañana.',
+      'Estudia con intención: lo simple, repetido, se vuelve poder.',
+      'Tu avance no se mide en horas, se mide en constancia.',
+    ],
+    []
+  )
+
+  const [idx, setIdx] = useState(0)
+  const [qIdx, setQIdx] = useState(0)
+
+  useEffect(() => {
+    const t = setInterval(() => setIdx((i) => (i + 1) % words.length), 1700)
+    return () => clearInterval(t)
+  }, [words.length])
+
+  useEffect(() => {
+    const t = setInterval(() => setQIdx((i) => (i + 1) % quotes.length), 4200)
+    return () => clearInterval(t)
+  }, [quotes.length])
+
   return (
-    <main className="min-h-screen w-full bg-[#070B18]">
-      {/* Fondo gradient */}
+    <main className="relative min-h-screen w-full bg-[#070B18] overflow-hidden">
+      {/* Fondo gradients (mismo “mood” StudyDocu) */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(1200px_600px_at_20%_30%,rgba(59,130,246,0.35),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_80%_20%,rgba(34,211,238,0.18),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(800px_500px_at_50%_90%,rgba(99,102,241,0.18),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(1200px_600px_at_18%_35%,rgba(59,130,246,0.38),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(900px_520px_at_82%_22%,rgba(34,211,238,0.22),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(850px_520px_at_50%_92%,rgba(34,211,238,0.12),transparent_60%)]" />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 gap-10 items-center py-10 lg:py-16">
-          {/* LEFT: marketing */}
+          {/* LEFT */}
           <motion.section
             initial={{ opacity: 0, x: -18 }}
             animate={{ opacity: 1, x: 0 }}
@@ -31,6 +58,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="mt-6">
+              {/* LOGO texto con acento StudyDocu */}
               <div className="text-white/90 text-3xl sm:text-4xl font-semibold tracking-tight">
                 Study<span className="text-cyan-400">Docu</span>
               </div>
@@ -45,20 +73,47 @@ export default function RegisterPage() {
                 carrera y materia. Todo en un solo lugar.
               </p>
 
-              {/* typed-like line */}
-              <div className="mt-8 text-white/80 text-lg">
-                Herramientas de IA para estudiantes:{' '}
-                <span className="text-cyan-300 font-semibold">y mucho más…</span>
-                <span className="ml-1 inline-block w-2 h-5 align-middle bg-cyan-300/80 animate-pulse" />
+              {/* ✅ Línea que corre */}
+              <div className="mt-8 text-white/80 text-lg flex items-center gap-2 flex-wrap">
+                <span>Herramientas de IA para estudiantes:</span>
+
+                <span className="relative inline-flex items-center">
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={words[idx]}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.28 }}
+                      className="text-cyan-300 font-semibold"
+                    >
+                      {words[idx]}
+                    </motion.span>
+                  </AnimatePresence>
+
+                  {/* cursor */}
+                  <span className="ml-1 inline-block w-2 h-5 align-middle bg-cyan-300/80 animate-pulse" />
+                </span>
               </div>
 
-              <p className="mt-16 text-white/50 text-sm">
-                “El éxito es la suma de pequeños esfuerzos repetidos día tras día”
-              </p>
+              {/* ✅ Quote rotando (original) */}
+              <div className="mt-16 text-white/55 text-sm max-w-xl">
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={quotes[qIdx]}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.28 }}
+                  >
+                    “{quotes[qIdx]}”
+                  </motion.p>
+                </AnimatePresence>
+              </div>
             </div>
           </motion.section>
 
-          {/* RIGHT: card */}
+          {/* RIGHT */}
           <motion.section
             initial={{ opacity: 0, x: 18 }}
             animate={{ opacity: 1, x: 0 }}
@@ -66,13 +121,11 @@ export default function RegisterPage() {
             className="order-1 lg:order-2 flex justify-center lg:justify-end"
           >
             <div className="w-full max-w-lg">
-              <div className="relative rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_80px_-30px_rgba(0,0,0,0.6)]">
-                {/* top glow */}
-                <div className="absolute -top-20 -right-20 h-56 w-56 rounded-full bg-cyan-400/10 blur-3xl" />
-                <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl" />
+              <div className="relative rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_80px_-30px_rgba(0,0,0,0.65)]">
+                <div className="absolute -top-20 -right-20 h-56 w-56 rounded-full bg-cyan-400/12 blur-3xl" />
+                <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-blue-500/12 blur-3xl" />
 
                 <div className="relative p-6 sm:p-8">
-                  {/* title */}
                   <div className="text-center">
                     <h2 className="text-2xl sm:text-3xl font-semibold text-white">Crear Cuenta</h2>
                     <p className="mt-2 text-sm text-white/60">
@@ -80,14 +133,12 @@ export default function RegisterPage() {
                     </p>
                   </div>
 
-                  {/* FORM */}
                   <div className="mt-6">
                     <RegisterForm />
                   </div>
                 </div>
               </div>
 
-              {/* bottom link (extra) */}
               <div className="mt-6 text-center text-sm text-cyan-300">
                 ¿Ya tienes una cuenta?{' '}
                 <Link href="/iniciar-sesion" className="font-semibold hover:underline">
