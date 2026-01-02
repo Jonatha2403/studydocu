@@ -2,59 +2,74 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { Loader2, Lock } from 'lucide-react'
 
 export default function CambiarClavePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
-
-  // ✅ En vez de tokenSet por hash, validamos sesión real
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    let isMounted = true
+    let mounted = true
 
     const run = async () => {
-      // 1) Revisar si existe sesión
-      const { data, error } = await supabase.auth.getSession()
+      try {
+        // 1) Si viene code (PKCE), intercambiamos sesión aquí mismo
+        const code = searchParams?.get('code')
+        const type = searchParams?.get('type') // puede venir o no
 
-      if (!isMounted) return
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code)
+          if (error) throw error
+        }
 
-      if (error) {
-        console.error('[CAMBIAR_CLAVE] getSession error:', error)
-      }
+        // 2) Confirmar sesión
+        const { data, error } = await supabase.auth.getSession()
+        if (error) throw error
 
-      // Si no hay sesión, no puede cambiar clave
-      if (!data.session) {
-        toast.error('Tu enlace expiró o no es válido. Solicita uno nuevo.')
+        const session = data.session
+
+        // Si NO hay sesión, link inválido/expirado
+        if (!session) {
+          toast.error('Tu enlace expiró o no es válido. Solicita uno nuevo.')
+          router.replace('/auth/send-reset')
+          return
+        }
+
+        // 3) Validación estricta: solo permitir si es un flujo de RECOVERY
+        // - Si viene `type=recovery` -> OK
+        // - Si no viene type, aceptamos solo si el usuario tiene `recovery_sent_at`
+        const isRecovery = type === 'recovery' || Boolean(session.user?.recovery_sent_at)
+
+        if (!isRecovery) {
+          // Estabas logueado normal y entraste aquí: NO permitir
+          toast.error('Este enlace no corresponde a recuperación de contraseña.')
+          router.replace('/')
+          return
+        }
+
+        if (!mounted) return
+        setChecking(false)
+      } catch (e: any) {
+        console.error('[CAMBIAR_CLAVE] error:', e)
+        toast.error(e?.message || 'No se pudo validar el enlace de recuperación.')
         router.replace('/auth/send-reset')
-        return
       }
-
-      setChecking(false)
     }
 
-    run()
-
-    // 2) Escuchar cambios de auth (por si la sesión llega un poco después)
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!isMounted) return
-      if (session) setChecking(false)
-    })
+    void run()
 
     return () => {
-      isMounted = false
-      subscription.unsubscribe()
+      mounted = false
     }
-  }, [router])
+  }, [router, searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -80,9 +95,8 @@ export default function CambiarClavePage() {
 
     toast.success('Contraseña actualizada con éxito 🎉')
 
-    // ✅ (Opcional recomendado) cerrar sesión para obligar re-login con la nueva clave
+    // Recomendado: cerrar sesión para re-login
     await supabase.auth.signOut()
-
     router.replace('/iniciar-sesion')
     setLoading(false)
   }
@@ -90,7 +104,10 @@ export default function CambiarClavePage() {
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Validando enlace...</p>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Validando enlace...</span>
+        </div>
       </div>
     )
   }
@@ -100,9 +117,7 @@ export default function CambiarClavePage() {
       <div className="text-center mb-8 max-w-md">
         <div className="text-5xl mb-3">🔑</div>
         <h1 className="text-3xl font-bold mb-2">Cambia tu contraseña</h1>
-        <p className="text-muted-foreground text-base">
-          Ingresa tu nueva contraseña segura.
-        </p>
+        <p className="text-muted-foreground text-base">Ingresa tu nueva contraseña segura.</p>
       </div>
 
       <form
@@ -138,11 +153,7 @@ export default function CambiarClavePage() {
           disabled={loading}
           className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all duration-150 disabled:opacity-70"
         >
-          {loading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            'Guardar nueva contraseña'
-          )}
+          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Guardar nueva contraseña'}
         </button>
       </form>
     </section>
