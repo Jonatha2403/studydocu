@@ -11,23 +11,30 @@ export async function GET(req: NextRequest) {
   const origin = url.origin
 
   const code = url.searchParams.get('code')
-  const type = url.searchParams.get('type') // "recovery" en reset
-  const error = url.searchParams.get('error') ?? null
+  const type = url.searchParams.get('type') // recovery | signup | magiclink
+  const error = url.searchParams.get('error')
 
-  const rawNext = url.searchParams.get('next') ?? '/'
-  const decodedNext = decodeURIComponent(rawNext)
-  const next = decodedNext.startsWith('/') ? decodedNext : '/'
+  /**
+   * ⚠️ IMPORTANTE
+   * En recovery IGNORAMOS cualquier "next"
+   * para evitar que Supabase mande al dashboard
+   */
+  const rawNext = url.searchParams.get('next')
+  const safeNext = rawNext && rawNext.startsWith('/') ? rawNext : '/'
 
-  // ✅ Si falta el code, no hay nada que intercambiar → manda a login
+  // ❌ Sin code → nada que intercambiar
   if (!code) {
     const fallback = new URL('/iniciar-sesion', origin)
     if (error) fallback.searchParams.set('error', error)
     return NextResponse.redirect(fallback)
   }
 
-  // ✅ Si es recovery, forzamos a cambiar clave (NO dashboard)
-  const redirectTarget =
-    type === 'recovery' ? '/auth/cambiar-clave' : next
+  /**
+   * ✅ REDIRECCIÓN FINAL
+   * recovery  → /auth/cambiar-clave
+   * normal    → next o /
+   */
+  const redirectTarget = type === 'recovery' ? '/auth/cambiar-clave?type=recovery' : safeNext
 
   const response = NextResponse.redirect(new URL(redirectTarget, origin))
 
@@ -37,11 +44,6 @@ export async function GET(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookieOptions: {
-        path: '/',
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-      },
       cookies: {
         get(name) {
           return cookieStore.get(name)?.value
@@ -69,11 +71,16 @@ export async function GET(req: NextRequest) {
     }
   )
 
-  // 🔥 CLAVE: también para recovery hacemos exchange en el servidor
+  /**
+   * 🔥 PASO MÁS IMPORTANTE
+   * Intercambiar el code por sesión (OBLIGATORIO)
+   * incluso en recovery
+   */
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
   if (exchangeError) {
-    console.error('[AUTH_CALLBACK] Error al crear sesión:', exchangeError)
+    console.error('[AUTH_CALLBACK] exchangeCodeForSession error:', exchangeError)
+
     const fail = new URL('/iniciar-sesion', origin)
     fail.searchParams.set('error', 'auth_callback')
     return NextResponse.redirect(fail)
