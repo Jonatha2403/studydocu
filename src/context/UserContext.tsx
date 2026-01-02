@@ -1,7 +1,7 @@
 // src/context/UserContext.tsx
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
 
@@ -72,10 +72,7 @@ async function validarEsquemaProfiles() {
     const found = (data ?? []).map((c: any) => c.column_name)
     const missing = expectedColumns.filter((c) => !found.includes(c))
     if (missing.length) {
-      console.warn(
-        '⚠️ Columnas faltantes o mal nombradas en "profiles":',
-        missing
-      )
+      console.warn('⚠️ Columnas faltantes o mal nombradas en "profiles":', missing)
     }
   } catch (e) {
     console.error('❌ Error validando esquema profiles:', e)
@@ -89,7 +86,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [perfilError, setPerfilError] = useState(false)
 
-  const limpiarEstado = () => {
+  // ✅ Memoizado para que sea estable y no moleste a exhaustive-deps
+  const limpiarEstado = useCallback(() => {
     setUser(null)
     setSession(null)
     setPerfil(null)
@@ -97,9 +95,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('perfil')
     }
-  }
+  }, [])
 
-  const cargarDatos = async () => {
+  // ✅ Memoizado para que useEffect pueda depender de él sin warnings
+  const cargarDatos = useCallback(async () => {
     setLoading(true)
     setPerfilError(false)
 
@@ -120,16 +119,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (sessionErr || !currentSession?.user) {
-        // No hay sesión ➜ limpiar todo
         limpiarEstado()
-        setLoading(false)
         return
       }
 
       setUser(currentSession.user)
       setSession(currentSession)
 
-      // 2) (Opcional) Intentar usar cache SOLO si coincide el id
+      // 2) Cache SOLO si coincide el id
       if (typeof window !== 'undefined') {
         const cache = localStorage.getItem('perfil')
         if (cache) {
@@ -146,7 +143,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // 3) Cargar perfil desde la BD
+      // 3) Perfil desde BD
       const { data: perfilData, error: perfilErr } = await supabase
         .from('profiles')
         .select(
@@ -163,11 +160,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         console.error('❌ Error cargando perfil:', perfilErr)
         setPerfilError(true)
         setPerfil(null)
-        setLoading(false)
         return
       }
 
-      // 4) Tags del usuario
+      // 4) Tags
       const { data: tagsRaw } = await supabase
         .from('user_tags')
         .select('tag')
@@ -175,7 +171,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       const tags = tagsRaw?.map((t) => t.tag) ?? []
 
-      // 5) Lógica de nivel / medalla
+      // 5) Nivel / medalla
       const puntos = perfilData.points ?? 0
       let nivel = 'Nuevo'
       let medalla = '🥉 Bronce'
@@ -212,34 +208,30 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [limpiarEstado])
 
-  // Carga inicial
+  // Carga inicial + listener auth
   useEffect(() => {
     void cargarDatos()
 
-    // Listener de cambios de auth
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        console.log('[onAuthStateChange]', event, !!newSession)
+    const { data: listener } = supabase.auth.onAuthStateChange((event, newSession) => {
+      console.log('[onAuthStateChange]', event, !!newSession)
 
-        if (event === 'SIGNED_OUT') {
-          // ⬅️ AQUÍ LIMPIAMOS TODO AL CERRAR SESIÓN
-          limpiarEstado()
-          setLoading(false)
-          return
-        }
-
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          void cargarDatos()
-        }
+      if (event === 'SIGNED_OUT') {
+        limpiarEstado()
+        setLoading(false)
+        return
       }
-    )
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        void cargarDatos()
+      }
+    })
 
     return () => {
       listener?.subscription?.unsubscribe()
     }
-  }, [])
+  }, [cargarDatos, limpiarEstado])
 
   // Refrescar al volver al tab/ventana
   useEffect(() => {
@@ -248,7 +240,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
-  }, [])
+  }, [cargarDatos])
 
   return (
     <UserContext.Provider
