@@ -1,3 +1,4 @@
+// src/components/auth/RegisterForm.tsx
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -7,7 +8,7 @@ import Confetti from 'react-confetti'
 import { useWindowSize } from 'react-use'
 import { toast } from 'sonner'
 
-// ✅ USAR EL CLIENTE CORRECTO
+// ✅ cliente supabase (browser)
 import { supabase } from '@/lib/supabase/client'
 
 import {
@@ -23,10 +24,10 @@ import {
   KeyRound,
 } from 'lucide-react'
 import { FcGoogle } from 'react-icons/fc'
-import { FaFacebook } from 'react-icons/fa'
+
 
 /* -------------------------------------------------------------------------- */
-/*                                Types                                       */
+/*                                   Types                                    */
 /* -------------------------------------------------------------------------- */
 
 type Status = 'idle' | 'checking' | 'available' | 'unavailable'
@@ -34,7 +35,7 @@ type Strength = 'débil' | 'media' | 'fuerte'
 
 type UniversityRow = {
   id: string
-  name: string
+  name: string // si tu columna es "nombre", cambia este type y el select abajo
 }
 
 /* -------------------------------------------------------------------------- */
@@ -47,8 +48,8 @@ export default function RegisterForm() {
     username: '',
     email: '',
     password: '',
-    universidad: '', // ✅ aquí guardamos id (o "otra")
-    universidad_otra: '', // ✅ texto cuando elige "otra"
+    universidad: '', // ✅ guarda id o "otra"
+    universidad_otra: '',
     referido: '',
     role: 'estudiante',
     recordar: false,
@@ -67,6 +68,9 @@ export default function RegisterForm() {
 
   const { width, height } = useWindowSize()
   const submitted = useRef(false)
+
+  // ✅ UI PRO: el formulario por email se despliega al hacer clic
+  const [showEmailForm, setShowEmailForm] = useState(false)
 
   // ✅ Universidades desde Supabase
   const [universidades, setUniversidades] = useState<UniversityRow[]>([])
@@ -90,6 +94,8 @@ export default function RegisterForm() {
 
     const loadUniversidades = async () => {
       setLoadingUnis(true)
+
+      // ✅ Si tu columna es "nombre" cambia aquí a: .select('id,nombre').order('nombre', ...)
       const { data, error } = await supabase
         .from('universities')
         .select('id,name')
@@ -98,17 +104,17 @@ export default function RegisterForm() {
       if (!mounted) return
 
       if (error) {
-        console.error('Error cargando universidades:', error)
+        console.error('Error cargando universities:', error)
         toast.error('No se pudieron cargar las universidades')
         setUniversidades([])
       } else {
         setUniversidades((data ?? []) as UniversityRow[])
       }
+
       setLoadingUnis(false)
     }
 
     loadUniversidades()
-
     return () => {
       mounted = false
     }
@@ -247,7 +253,7 @@ export default function RegisterForm() {
     try {
       const email = form.email.trim().toLowerCase()
 
-      // ✅ si elige otra, enviamos el texto; si no, enviamos el id
+      // ✅ si elige otra -> texto; si no -> id
       const universidadPayload =
         form.universidad === 'otra' ? form.universidad_otra.trim() : form.universidad
 
@@ -295,271 +301,305 @@ export default function RegisterForm() {
     <div className="relative">
       {/* Header */}
       <div className="text-center mb-4">
-        <h2 className="text-xl font-semibold">Crea tu cuenta</h2>
-        <p className="text-sm text-muted-foreground">Únete a StudyDocu en segundos</p>
+        <h2 className="text-xl font-semibold">Crear cuenta</h2>
+        <p className="text-sm text-muted-foreground">Empieza a estudiar más rápido con StudyDocu</p>
       </div>
 
-      {/* OAuth */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+      {/* CTA: OAuth + Email (PRO) */}
+      <div className="grid grid-cols-1 gap-3 mb-4">
         <button
           type="button"
           onClick={() => handleOAuth('google')}
-          className="flex items-center justify-center gap-2 py-3 border rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800"
+          className="flex items-center justify-center gap-2 py-3 border rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800 transition"
         >
           <FcGoogle size={20} />
           <span className="text-sm font-medium">Continuar con Google</span>
         </button>
+
         <button
           type="button"
-          onClick={() => handleOAuth('facebook')}
-          className="flex items-center justify-center gap-2 py-3 border rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800"
+          onClick={() => setShowEmailForm((s) => !s)}
+          className="flex items-center justify-center gap-2 py-3 border rounded-xl bg-white/5 hover:bg-white/10 dark:bg-zinc-900/40 dark:hover:bg-zinc-900/60 transition"
         >
-          <FaFacebook size={20} className="text-blue-600" />
-          <span className="text-sm font-medium">Continuar con Facebook</span>
+          <Mail className="w-5 h-5 text-gray-300" />
+          <span className="text-sm font-medium">
+            {showEmailForm ? 'Ocultar formulario' : 'Registrarse con email'}
+          </span>
         </button>
       </div>
 
-      {/* Divider */}
-      <div className="flex items-center my-5">
-        <div className="flex-1 h-px bg-gray-200 dark:bg-zinc-800" />
-        <span className="mx-3 text-[11px] text-gray-500 tracking-wider">O CON TU CORREO</span>
-        <div className="flex-1 h-px bg-gray-200 dark:bg-zinc-800" />
-      </div>
+      {/* Legal */}
+      <p className="text-[12px] text-gray-400 leading-snug text-center mb-3">
+        Al registrarte, aceptas los{' '}
+        <Link href="/terminos" className="text-cyan-400 hover:underline">
+          Términos y Condiciones
+        </Link>{' '}
+        y la{' '}
+        <Link href="/privacidad" className="text-cyan-400 hover:underline">
+          Política de Privacidad
+        </Link>{' '}
+        de StudyDocu.
+      </p>
 
-      {/* Form */}
-      <motion.form
-        onSubmit={handleSubmit}
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45 }}
-        className="space-y-3"
-      >
-        {/* Nombre */}
-        <div>
-          <div className="relative">
-            <UserCircle2 className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
-            <input
-              className={`${inputClass('nombre_completo')} pl-10`}
-              placeholder="Nombre completo"
-              aria-label="Nombre completo"
-              autoComplete="name"
-              value={form.nombre_completo}
-              onChange={(e) => setForm({ ...form, nombre_completo: e.target.value })}
-            />
-          </div>
-          {errors.nombre_completo && <FieldError>{errors.nombre_completo}</FieldError>}
-        </div>
-
-        {/* Username */}
-        <div>
-          <div className="relative">
-            <ShieldCheck className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
-            <input
-              className={`${inputClass('username')} pl-10`}
-              placeholder="Nombre de usuario (min. 3, solo letras y números)"
-              aria-label="Nombre de usuario"
-              autoComplete="username"
-              value={form.username}
-              onChange={(e) => setForm({ ...form, username: normalizeUsername(e.target.value) })}
-            />
-            <StatusChip status={usernameStatus} />
-          </div>
-          <div className="mt-1 text-[11px] text-gray-500">
-            Se permite <span className="font-medium">a–z, 0–9, . _ -</span>
-          </div>
-          {errors.username && <FieldError>{errors.username}</FieldError>}
-        </div>
-
-        {/* Email */}
-        <div>
-          <div className="relative">
-            <Mail className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
-            <input
-              type="email"
-              className={`${inputClass('email')} pl-10`}
-              placeholder="Correo electrónico"
-              aria-label="Correo electrónico"
-              autoComplete="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-            />
-            <StatusChip status={emailStatus} />
-          </div>
-          {errors.email && <FieldError>{errors.email}</FieldError>}
-        </div>
-
-        {/* Password */}
-        <div>
-          <div className="relative">
-            <KeyRound className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
-            <input
-              type={showPassword ? 'text' : 'password'}
-              className={`${inputClass('password')} pl-10 pr-10`}
-              placeholder="Contraseña"
-              aria-label="Contraseña"
-              autoComplete="new-password"
-              value={form.password}
-              onKeyDown={(e) => setCapsLockOn(e.getModifierState?.('CapsLock') ?? false)}
-              onKeyUp={(e) => setCapsLockOn(e.getModifierState?.('CapsLock') ?? false)}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-            />
-            <button
-              type="button"
-              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-              className="absolute right-3 top-2.5 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800"
-              onClick={() => setShowPassword((s) => !s)}
-            >
-              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-            </button>
-          </div>
-
-          {/* Barra de fuerza */}
-          <div className="mt-2">
-            <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-zinc-800 overflow-hidden">
-              <div
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  passwordStrength === 'fuerte'
-                    ? 'bg-green-500'
-                    : passwordStrength === 'media'
-                      ? 'bg-yellow-500'
-                      : 'bg-red-500'
-                }`}
-                style={{ width: `${strengthPct}%` }}
-              />
-            </div>
-            <div className="mt-1 text-[11px] text-gray-500 flex items-center gap-2">
-              Fortaleza: <b className="capitalize">{passwordStrength}</b>
-              {capsLockOn && (
-                <span className="inline-flex items-center gap-1 text-red-500">
-                  <CircleSlash className="w-3.5 h-3.5" /> Mayúsculas activadas
-                </span>
-              )}
-            </div>
-            <ul className="mt-1 text-[11px] text-gray-500 grid grid-cols-2 gap-x-3">
-              <Req ok={form.password.length >= 8}>Mínimo 8 caracteres</Req>
-              <Req ok={/[0-9]/.test(form.password)}>Al menos un número</Req>
-              <Req ok={/[A-Z]/.test(form.password)}>Una mayúscula</Req>
-              <Req ok={/[^A-Za-z0-9]/.test(form.password)}>Un símbolo</Req>
-            </ul>
-          </div>
-          {errors.password && <FieldError>{errors.password}</FieldError>}
-        </div>
-
-        {/* Universidad */}
-        <div>
-          <div className="relative">
-            <GraduationCap className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
-            <select
-              className={`${inputClass('universidad')} pl-10 text-gray-700 dark:text-gray-300`}
-              value={form.universidad}
-              onChange={(e) => {
-                const v = e.target.value
-                setForm((f) => ({
-                  ...f,
-                  universidad: v,
-                  universidad_otra: v === 'otra' ? f.universidad_otra : '',
-                }))
-              }}
-            >
-              <option value="">
-                {loadingUnis ? 'Cargando universidades…' : 'Selecciona tu universidad'}
-              </option>
-
-              {!loadingUnis &&
-                universidades.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
-
-              <option value="otra">Otra</option>
-            </select>
-          </div>
-
-          {form.universidad === 'otra' && (
-            <div className="mt-2">
-              <input
-                className={inputClass('universidad_otra')}
-                placeholder="Escribe tu universidad"
-                value={form.universidad_otra}
-                onChange={(e) => setForm({ ...form, universidad_otra: e.target.value })}
-              />
-              {errors.universidad_otra && <FieldError>{errors.universidad_otra}</FieldError>}
-            </div>
-          )}
-
-          {errors.universidad && <FieldError>{errors.universidad}</FieldError>}
-        </div>
-
-        {/* Rol */}
-        <div>
-          <select
-            className={inputClass('role')}
-            value={form.role}
-            onChange={(e) => setForm({ ...form, role: e.target.value })}
+      {/* FORM por email colapsable */}
+      <AnimatePresence initial={false}>
+        {showEmailForm && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.35 }}
+            className="overflow-hidden"
           >
-            <option value="estudiante">Estudiante</option>
-            <option value="docente">Docente</option>
-          </select>
-          {errors.role && <FieldError>{errors.role}</FieldError>}
-        </div>
+            {/* Divider */}
+            <div className="flex items-center my-4">
+              <div className="flex-1 h-px bg-gray-200/20" />
+              <span className="mx-3 text-[11px] text-gray-400 tracking-wider">
+                REGISTRO CON CORREO
+              </span>
+              <div className="flex-1 h-px bg-gray-200/20" />
+            </div>
 
-        {/* Referido */}
-        <input
-          className={inputClass('referido')}
-          placeholder="Código de referido (opcional)"
-          value={form.referido}
-          onChange={(e) => setForm({ ...form, referido: e.target.value })}
-        />
+            <motion.form
+              onSubmit={handleSubmit}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+              className="space-y-3"
+            >
+              {/* Nombre */}
+              <div>
+                <div className="relative">
+                  <UserCircle2 className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                  <input
+                    className={`${inputClass('nombre_completo')} pl-10`}
+                    placeholder="Nombre completo"
+                    aria-label="Nombre completo"
+                    autoComplete="name"
+                    value={form.nombre_completo}
+                    onChange={(e) => setForm({ ...form, nombre_completo: e.target.value })}
+                  />
+                </div>
+                {errors.nombre_completo && <FieldError>{errors.nombre_completo}</FieldError>}
+              </div>
 
-        {/* Checkboxes */}
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <label className="flex items-center text-sm text-gray-600">
-            <input
-              type="checkbox"
-              className="mr-2"
-              checked={form.recordar}
-              onChange={(e) => setForm({ ...form, recordar: e.target.checked })}
-            />
-            Recordar correo
-          </label>
-          <label className="flex items-center text-sm text-gray-600">
-            <input
-              type="checkbox"
-              className="mr-2"
-              checked={form.terms}
-              onChange={(e) => setForm({ ...form, terms: e.target.checked })}
-            />
-            Acepto los{' '}
-            <Link href="/terminos" className="text-indigo-600 ml-1 hover:underline">
-              Términos y Privacidad
-            </Link>
-          </label>
-        </div>
-        {errors.terms && <FieldError>{errors.terms}</FieldError>}
+              {/* Username */}
+              <div>
+                <div className="relative">
+                  <ShieldCheck className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                  <input
+                    className={`${inputClass('username')} pl-10`}
+                    placeholder="Nombre de usuario (min. 3, solo letras y números)"
+                    aria-label="Nombre de usuario"
+                    autoComplete="username"
+                    value={form.username}
+                    onChange={(e) =>
+                      setForm({ ...form, username: normalizeUsername(e.target.value) })
+                    }
+                  />
+                  <StatusChip status={usernameStatus} />
+                </div>
+                <div className="mt-1 text-[11px] text-gray-500">
+                  Se permite <span className="font-medium">a–z, 0–9, . _ -</span>
+                </div>
+                {errors.username && <FieldError>{errors.username}</FieldError>}
+              </div>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          className="w-full py-3 text-white text-lg rounded-xl font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 hover:shadow-lg hover:scale-[1.01] transition disabled:opacity-60"
-          disabled={loading}
-        >
-          {loading ? (
-            <span className="inline-flex items-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin" /> Registrando…
-            </span>
-          ) : (
-            'Registrarme'
-          )}
-        </button>
+              {/* Email */}
+              <div>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                  <input
+                    type="email"
+                    className={`${inputClass('email')} pl-10`}
+                    placeholder="Correo electrónico"
+                    aria-label="Correo electrónico"
+                    autoComplete="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  />
+                  <StatusChip status={emailStatus} />
+                </div>
+                {errors.email && <FieldError>{errors.email}</FieldError>}
+              </div>
 
-        <p className="text-center text-sm text-gray-600">
-          ¿Ya tienes una cuenta?{' '}
-          <Link href="/iniciar-sesion" className="text-indigo-600 font-medium hover:underline">
-            Inicia sesión aquí
-          </Link>
-        </p>
-      </motion.form>
+              {/* Password */}
+              <div>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className={`${inputClass('password')} pl-10 pr-10`}
+                    placeholder="Contraseña"
+                    aria-label="Contraseña"
+                    autoComplete="new-password"
+                    value={form.password}
+                    onKeyDown={(e) => setCapsLockOn(e.getModifierState?.('CapsLock') ?? false)}
+                    onKeyUp={(e) => setCapsLockOn(e.getModifierState?.('CapsLock') ?? false)}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  />
+                  <button
+                    type="button"
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    className="absolute right-3 top-2.5 p-1 rounded-md hover:bg-gray-100/10"
+                    onClick={() => setShowPassword((s) => !s)}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+
+                {/* Barra de fuerza */}
+                <div className="mt-2">
+                  <div className="h-2 w-full rounded-full bg-gray-200/20 overflow-hidden">
+                    <div
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        passwordStrength === 'fuerte'
+                          ? 'bg-green-500'
+                          : passwordStrength === 'media'
+                            ? 'bg-yellow-500'
+                            : 'bg-red-500'
+                      }`}
+                      style={{ width: `${strengthPct}%` }}
+                    />
+                  </div>
+                  <div className="mt-1 text-[11px] text-gray-500 flex items-center gap-2">
+                    Fortaleza: <b className="capitalize">{passwordStrength}</b>
+                    {capsLockOn && (
+                      <span className="inline-flex items-center gap-1 text-red-500">
+                        <CircleSlash className="w-3.5 h-3.5" /> Mayúsculas activadas
+                      </span>
+                    )}
+                  </div>
+                  <ul className="mt-1 text-[11px] text-gray-500 grid grid-cols-2 gap-x-3">
+                    <Req ok={form.password.length >= 8}>Mínimo 8 caracteres</Req>
+                    <Req ok={/[0-9]/.test(form.password)}>Al menos un número</Req>
+                    <Req ok={/[A-Z]/.test(form.password)}>Una mayúscula</Req>
+                    <Req ok={/[^A-Za-z0-9]/.test(form.password)}>Un símbolo</Req>
+                  </ul>
+                </div>
+
+                {errors.password && <FieldError>{errors.password}</FieldError>}
+              </div>
+
+              {/* Universidad */}
+              <div>
+                <div className="relative">
+                  <GraduationCap className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                  <select
+                    className={`${inputClass('universidad')} pl-10 text-gray-700 dark:text-gray-300`}
+                    value={form.universidad}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      setForm((f) => ({
+                        ...f,
+                        universidad: v,
+                        universidad_otra: v === 'otra' ? f.universidad_otra : '',
+                      }))
+                    }}
+                  >
+                    <option value="">
+                      {loadingUnis ? 'Cargando universidades…' : 'Selecciona tu universidad'}
+                    </option>
+
+                    {!loadingUnis &&
+                      universidades.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name}
+                        </option>
+                      ))}
+
+                    <option value="otra">Otra</option>
+                  </select>
+                </div>
+
+                {form.universidad === 'otra' && (
+                  <div className="mt-2">
+                    <input
+                      className={inputClass('universidad_otra')}
+                      placeholder="Escribe tu universidad"
+                      value={form.universidad_otra}
+                      onChange={(e) => setForm({ ...form, universidad_otra: e.target.value })}
+                    />
+                    {errors.universidad_otra && <FieldError>{errors.universidad_otra}</FieldError>}
+                  </div>
+                )}
+
+                {errors.universidad && <FieldError>{errors.universidad}</FieldError>}
+              </div>
+
+              {/* Rol */}
+              <div>
+                <select
+                  className={inputClass('role')}
+                  value={form.role}
+                  onChange={(e) => setForm({ ...form, role: e.target.value })}
+                >
+                  <option value="estudiante">Estudiante</option>
+                  <option value="docente">Docente</option>
+                </select>
+                {errors.role && <FieldError>{errors.role}</FieldError>}
+              </div>
+
+              {/* Referido */}
+              <input
+                className={inputClass('referido')}
+                placeholder="Código de referido (opcional)"
+                value={form.referido}
+                onChange={(e) => setForm({ ...form, referido: e.target.value })}
+              />
+
+              {/* Checkboxes */}
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <label className="flex items-center text-sm text-gray-600">
+                  <input
+                    type="checkbox"
+                    className="mr-2"
+                    checked={form.recordar}
+                    onChange={(e) => setForm({ ...form, recordar: e.target.checked })}
+                  />
+                  Recordar correo
+                </label>
+                <label className="flex items-center text-sm text-gray-600">
+                  <input
+                    type="checkbox"
+                    className="mr-2"
+                    checked={form.terms}
+                    onChange={(e) => setForm({ ...form, terms: e.target.checked })}
+                  />
+                  Acepto los{' '}
+                  <Link href="/terminos" className="text-indigo-600 ml-1 hover:underline">
+                    Términos y Privacidad
+                  </Link>
+                </label>
+              </div>
+              {errors.terms && <FieldError>{errors.terms}</FieldError>}
+
+              {/* Submit */}
+              <button
+                type="submit"
+                className="w-full py-3 text-white text-lg rounded-xl font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 hover:shadow-lg hover:scale-[1.01] transition disabled:opacity-60"
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" /> Registrando…
+                  </span>
+                ) : (
+                  'Registrarme'
+                )}
+              </button>
+            </motion.form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Link login */}
+      <p className="text-center text-sm text-cyan-400 mt-5">
+        ¿Ya tienes una cuenta?{' '}
+        <Link href="/iniciar-sesion" className="font-medium hover:underline">
+          Inicia sesión aquí
+        </Link>
+      </p>
 
       {/* Success overlay + confetti */}
       <AnimatePresence>
