@@ -4,7 +4,7 @@ import '@/app/globals.css'
 
 export default function RegisterLayout({ children }: { children: ReactNode }) {
   return (
-    <main className="pt-20 min-h-screen bg-white dark:bg-black">
+    <main className="min-h-screen bg-transparent">
       {children}
     </main>
   )
