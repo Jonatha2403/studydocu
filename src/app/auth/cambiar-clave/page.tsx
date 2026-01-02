@@ -1,3 +1,4 @@
+// src/app/auth/cambiar-clave/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -8,26 +9,56 @@ import { Loader2, Lock } from 'lucide-react'
 
 export default function CambiarClavePage() {
   const router = useRouter()
+
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [tokenSet, setTokenSet] = useState(false)
+
+  // ✅ En vez de tokenSet por hash, validamos sesión real
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    const hash = window.location.hash
-    const params = new URLSearchParams(hash.replace('#', '?'))
-    const access_token = params.get('access_token')
-    const refresh_token = params.get('refresh_token')
+    let isMounted = true
 
-    if (access_token && refresh_token) {
-      supabase.auth.setSession({ access_token, refresh_token })
-        .then(() => setTokenSet(true))
-        .catch(() => toast.error('No se pudo validar el token'))
+    const run = async () => {
+      // 1) Revisar si existe sesión
+      const { data, error } = await supabase.auth.getSession()
+
+      if (!isMounted) return
+
+      if (error) {
+        console.error('[CAMBIAR_CLAVE] getSession error:', error)
+      }
+
+      // Si no hay sesión, no puede cambiar clave
+      if (!data.session) {
+        toast.error('Tu enlace expiró o no es válido. Solicita uno nuevo.')
+        router.replace('/auth/send-reset')
+        return
+      }
+
+      setChecking(false)
     }
-  }, [])
+
+    run()
+
+    // 2) Escuchar cambios de auth (por si la sesión llega un poco después)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return
+      if (session) setChecking(false)
+    })
+
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (password.length < 6) {
       toast.error('La contraseña debe tener al menos 6 caracteres.')
       return
@@ -43,15 +74,20 @@ export default function CambiarClavePage() {
 
     if (error) {
       toast.error(error.message)
-    } else {
-      toast.success('Contraseña actualizada con éxito 🎉')
-      router.push('/iniciar-sesion')
+      setLoading(false)
+      return
     }
 
+    toast.success('Contraseña actualizada con éxito 🎉')
+
+    // ✅ (Opcional recomendado) cerrar sesión para obligar re-login con la nueva clave
+    await supabase.auth.signOut()
+
+    router.replace('/iniciar-sesion')
     setLoading(false)
   }
 
-  if (!tokenSet) {
+  if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-muted-foreground">Validando enlace...</p>
@@ -64,7 +100,9 @@ export default function CambiarClavePage() {
       <div className="text-center mb-8 max-w-md">
         <div className="text-5xl mb-3">🔑</div>
         <h1 className="text-3xl font-bold mb-2">Cambia tu contraseña</h1>
-        <p className="text-muted-foreground text-base">Ingresa tu nueva contraseña segura.</p>
+        <p className="text-muted-foreground text-base">
+          Ingresa tu nueva contraseña segura.
+        </p>
       </div>
 
       <form
@@ -98,9 +136,13 @@ export default function CambiarClavePage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all duration-150"
+          className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all duration-150 disabled:opacity-70"
         >
-          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Guardar nueva contraseña'}
+          {loading ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            'Guardar nueva contraseña'
+          )}
         </button>
       </form>
     </section>
