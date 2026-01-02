@@ -10,20 +10,21 @@ export async function POST(req: Request) {
     const supabase = await createClient()
     const { email } = await req.json()
 
-    if (!email) {
+    const normalizedEmail = String(email ?? '')
+      .trim()
+      .toLowerCase()
+    if (!normalizedEmail) {
       return NextResponse.json({ error: 'El correo es obligatorio.' }, { status: 400 })
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://studydocu.ec'
 
-    // ✅ CLAVE: pasar por callback y forzar cambiar-clave
-    const redirectTo = `${baseUrl}/auth/callback?type=recovery&next=/auth/cambiar-clave`
+    // ✅ CLAVE: redirect limpio (sin next=) para que Supabase NO lo reemplace por Site URL
+    // Tu callback ya se encarga de mandar a /auth/cambiar-clave.
+    const redirectTo = `${baseUrl}/auth/callback?type=recovery`
 
     // 1) Solicitar a Supabase el correo con token de recuperación
-    const { error } = await supabase.auth.resetPasswordForEmail(
-      String(email).trim().toLowerCase(),
-      { redirectTo }
-    )
+    const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, { redirectTo })
 
     if (error) {
       console.error('[SUPABASE_RESET_ERROR]', error)
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
       const htmlTemplate = `
         <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif; background: #f9fafb; border-radius: 16px;">
           <div style="padding: 32px; text-align: center; background: white; border-radius: 16px;">
-            <img src="https://studydocu.ec/logo-mail.png" width="60" height="60" />
+            <img src="https://studydocu.ec/logo-mail.png" width="60" height="60" alt="StudyDocu" />
             <h2 style="font-size: 24px; font-weight: bold; margin: 16px 0;">Recupera tu contraseña 🔐</h2>
             <p style="color: #555;">
               Has solicitado cambiar tu contraseña. Revisa tu correo, Supabase te enviará un enlace seguro.
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
 
       await resend.emails.send({
         from: 'StudyDocu <no-responder@studydocu.ec>',
-        to: String(email).trim().toLowerCase(),
+        to: normalizedEmail,
         subject: 'Recuperación de contraseña solicitada',
         html: htmlTemplate,
       })
