@@ -26,20 +26,16 @@ import { FcGoogle } from 'react-icons/fc'
 import { FaFacebook } from 'react-icons/fa'
 
 /* -------------------------------------------------------------------------- */
-/*                                Config & data                               */
+/*                                Types                                       */
 /* -------------------------------------------------------------------------- */
-
-const universidades = [
-  'Pontificia Universidad Católica del Ecuador',
-  'Escuela Politécnica Nacional',
-  'Universidad Central del Ecuador',
-  'Universidad San Francisco de Quito',
-  'Universidad de las Américas',
-  'Otra',
-]
 
 type Status = 'idle' | 'checking' | 'available' | 'unavailable'
 type Strength = 'débil' | 'media' | 'fuerte'
+
+type UniversityRow = {
+  id: string
+  name: string
+}
 
 /* -------------------------------------------------------------------------- */
 /*                               Register Form UI                             */
@@ -51,7 +47,8 @@ export default function RegisterForm() {
     username: '',
     email: '',
     password: '',
-    universidad: '',
+    universidad: '', // ✅ aquí guardamos id (o "otra")
+    universidad_otra: '', // ✅ texto cuando elige "otra"
     referido: '',
     role: 'estudiante',
     recordar: false,
@@ -71,18 +68,51 @@ export default function RegisterForm() {
   const { width, height } = useWindowSize()
   const submitted = useRef(false)
 
+  // ✅ Universidades desde Supabase
+  const [universidades, setUniversidades] = useState<UniversityRow[]>([])
+  const [loadingUnis, setLoadingUnis] = useState(false)
+
   /* ------------------------------ OAuth buttons ------------------------------ */
   const handleOAuth = async (provider: 'google' | 'facebook') => {
     const origin = window.location.origin
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        // ✅ recomendado: pasar por callback también
         redirectTo: `${origin}/auth/callback`,
       },
     })
     if (error) toast.error(`Error con ${provider}: ${error.message}`)
   }
+
+  /* ----------------------- Cargar universidades (Supabase) ------------------- */
+  useEffect(() => {
+    let mounted = true
+
+    const loadUniversidades = async () => {
+      setLoadingUnis(true)
+      const { data, error } = await supabase
+        .from('universities')
+        .select('id,name')
+        .order('name', { ascending: true })
+
+      if (!mounted) return
+
+      if (error) {
+        console.error('Error cargando universidades:', error)
+        toast.error('No se pudieron cargar las universidades')
+        setUniversidades([])
+      } else {
+        setUniversidades((data ?? []) as UniversityRow[])
+      }
+      setLoadingUnis(false)
+    }
+
+    loadUniversidades()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   /* ------------------------------ Username check ----------------------------- */
   useEffect(() => {
@@ -194,6 +224,10 @@ export default function RegisterForm() {
     else if (passwordStrength === 'débil') e.password = 'Fortalece tu contraseña'
 
     if (!form.universidad) e.universidad = 'Campo requerido'
+    if (form.universidad === 'otra' && !form.universidad_otra.trim()) {
+      e.universidad_otra = 'Escribe el nombre de tu universidad'
+    }
+
     if (!form.role) e.role = 'Campo requerido'
     if (!form.terms) e.terms = 'Debes aceptar los términos'
 
@@ -213,6 +247,10 @@ export default function RegisterForm() {
     try {
       const email = form.email.trim().toLowerCase()
 
+      // ✅ si elige otra, enviamos el texto; si no, enviamos el id
+      const universidadPayload =
+        form.universidad === 'otra' ? form.universidad_otra.trim() : form.universidad
+
       const res = await fetch('/api/auth/send-confirmation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -220,7 +258,7 @@ export default function RegisterForm() {
           email,
           password: form.password,
           nombre_completo: form.nombre_completo.trim(),
-          universidad: form.universidad,
+          universidad: universidadPayload,
           referido: form.referido?.trim() || null,
           role: form.role,
         }),
@@ -414,16 +452,42 @@ export default function RegisterForm() {
             <select
               className={`${inputClass('universidad')} pl-10 text-gray-700 dark:text-gray-300`}
               value={form.universidad}
-              onChange={(e) => setForm({ ...form, universidad: e.target.value })}
+              onChange={(e) => {
+                const v = e.target.value
+                setForm((f) => ({
+                  ...f,
+                  universidad: v,
+                  universidad_otra: v === 'otra' ? f.universidad_otra : '',
+                }))
+              }}
             >
-              <option value="">Selecciona tu universidad</option>
-              {universidades.map((u) => (
-                <option key={u} value={u}>
-                  {u}
-                </option>
-              ))}
+              <option value="">
+                {loadingUnis ? 'Cargando universidades…' : 'Selecciona tu universidad'}
+              </option>
+
+              {!loadingUnis &&
+                universidades.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+
+              <option value="otra">Otra</option>
             </select>
           </div>
+
+          {form.universidad === 'otra' && (
+            <div className="mt-2">
+              <input
+                className={inputClass('universidad_otra')}
+                placeholder="Escribe tu universidad"
+                value={form.universidad_otra}
+                onChange={(e) => setForm({ ...form, universidad_otra: e.target.value })}
+              />
+              {errors.universidad_otra && <FieldError>{errors.universidad_otra}</FieldError>}
+            </div>
+          )}
+
           {errors.universidad && <FieldError>{errors.universidad}</FieldError>}
         </div>
 
