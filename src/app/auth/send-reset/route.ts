@@ -15,7 +15,9 @@ export async function POST(req: Request) {
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://studydocu.ec'
-    const redirectTo = `${baseUrl}/auth/reset-password`
+
+    // ✅ CLAVE: pasar por callback y forzar cambiar-clave
+    const redirectTo = `${baseUrl}/auth/callback?type=recovery&next=/auth/cambiar-clave`
 
     // 1) Solicitar a Supabase el correo con token de recuperación
     const { error } = await supabase.auth.resetPasswordForEmail(
@@ -29,7 +31,6 @@ export async function POST(req: Request) {
     }
 
     // 2) Correo estético opcional (no sustituye al correo de Supabase)
-    //    Importante: inicializar Resend "lazy" para no romper build si falta la key.
     try {
       const resend = getResend()
 
@@ -38,7 +39,9 @@ export async function POST(req: Request) {
           <div style="padding: 32px; text-align: center; background: white; border-radius: 16px;">
             <img src="https://studydocu.ec/logo-mail.png" width="60" height="60" />
             <h2 style="font-size: 24px; font-weight: bold; margin: 16px 0;">Recupera tu contraseña 🔐</h2>
-            <p style="color: #555;">Has solicitado cambiar tu contraseña. Revisa tu correo, Supabase te enviará un enlace seguro.</p>
+            <p style="color: #555;">
+              Has solicitado cambiar tu contraseña. Revisa tu correo, Supabase te enviará un enlace seguro.
+            </p>
 
             <p style="font-size: 14px; margin-top: 24px; color: #777;">
               Si no solicitaste este cambio, puedes ignorar este mensaje.
@@ -57,7 +60,6 @@ export async function POST(req: Request) {
         html: htmlTemplate,
       })
     } catch (e) {
-      // Si no hay RESEND_API_KEY no debe tumbar la recuperación (Supabase igual envía el correo).
       console.warn('[SEND_RESET] Resend no configurado o falló. Se omite correo estético.', e)
     }
 
