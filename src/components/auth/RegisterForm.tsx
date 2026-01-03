@@ -24,7 +24,6 @@ import {
   KeyRound,
   Sparkles,
 } from 'lucide-react'
-import { FcGoogle } from 'react-icons/fc'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -35,7 +34,7 @@ type Strength = 'débil' | 'media' | 'fuerte'
 
 type UniversityRow = {
   id: string
-  name: string // si tu columna es "nombre", cambia este type y el select abajo
+  name: string
 }
 
 /* -------------------------------------------------------------------------- */
@@ -48,7 +47,7 @@ export default function RegisterForm() {
     username: '',
     email: '',
     password: '',
-    universidad: '', // ✅ guarda id o "otra"
+    universidad: '',
     universidad_otra: '',
     referido: '',
     role: 'estudiante',
@@ -69,7 +68,7 @@ export default function RegisterForm() {
   const { width, height } = useWindowSize()
   const submitted = useRef(false)
 
-  // ✅ UI PRO: el formulario por email se despliega al hacer clic
+  // ✅ UI: formulario por email se despliega
   const [showEmailForm, setShowEmailForm] = useState(false)
 
   // ✅ Universidades desde Supabase
@@ -95,7 +94,6 @@ export default function RegisterForm() {
     const loadUniversidades = async () => {
       setLoadingUnis(true)
 
-      // ✅ Si tu columna es "nombre" cambia aquí a: .select('id,nombre').order('nombre', ...)
       const { data, error } = await supabase
         .from('universities')
         .select('id,name')
@@ -252,8 +250,6 @@ export default function RegisterForm() {
 
     try {
       const email = form.email.trim().toLowerCase()
-
-      // ✅ si elige otra -> texto; si no -> id
       const universidadPayload =
         form.universidad === 'otra' ? form.universidad_otra.trim() : form.universidad
 
@@ -291,51 +287,47 @@ export default function RegisterForm() {
   /* ---------------------------------- UI fx --------------------------------- */
   const inputClass = (field: string) =>
     [
-      // base
       'w-full px-4 py-3 rounded-xl border text-sm transition',
-      // backgrounds
-      'bg-white/80 dark:bg-white/5',
-      // border
-      errors[field] ? 'border-red-500/70' : 'border-gray-200/80 dark:border-white/10',
-      // text
-      'text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40',
-      // focus
-      'focus:outline-none focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40',
-      // hover
-      'hover:border-gray-300/80 dark:hover:border-white/20',
+      'bg-white/80',
+      errors[field] ? 'border-rose-400/80' : 'border-slate-200',
+      'text-slate-900 placeholder:text-slate-400',
+      'focus:outline-none focus:ring-2 focus:ring-cyan-400/35 focus:border-cyan-400/50',
+      'hover:border-slate-300',
     ].join(' ')
 
   const softCard =
-    'rounded-2xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5 ' +
-    'shadow-[0_20px_60px_-20px_rgba(0,0,0,0.35)] backdrop-blur-xl'
+    'rounded-2xl border border-slate-200/70 bg-white/70 ' +
+    'shadow-[0_18px_55px_-30px_rgba(15,23,42,0.25)] backdrop-blur-xl'
 
   return (
     <div className="relative">
-      {/* Header PRO */}
+      {/* Header */}
       <div className="text-center mb-5">
-        <div className="mx-auto mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[12px] text-white/70">
-          <Sparkles className="h-4 w-4 text-cyan-300" />
+        <div className="mx-auto mb-3 inline-flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/70 px-3 py-1 text-[12px] text-slate-600 shadow-sm backdrop-blur">
+          <Sparkles className="h-4 w-4 text-cyan-600" />
           <span>Crear tu cuenta en StudyDocu</span>
         </div>
 
-        <h2 className="text-2xl font-semibold tracking-tight text-white">Crear cuenta</h2>
-        <p className="mt-1 text-sm text-white/60">
+        <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Crear cuenta</h2>
+        <p className="mt-1 text-sm text-slate-600">
           Empieza a estudiar más rápido con IA y organización real.
         </p>
       </div>
 
-      {/* CTA: OAuth + Email (PRO) */}
+      {/* OAuth + Email */}
       <div className={`grid grid-cols-1 gap-3 mb-4 p-3 ${softCard}`}>
         <button
           type="button"
           onClick={() => handleOAuth('google')}
           className={[
-            'w-full flex items-center justify-center gap-2 py-3 rounded-xl transition',
-            'bg-white text-gray-900 hover:bg-white/90',
-            'shadow-[0_10px_25px_-15px_rgba(0,0,0,0.35)]',
+            'w-full flex items-center justify-center gap-3 py-3 rounded-xl transition',
+            'bg-white text-slate-900 hover:bg-slate-50',
+            'border border-slate-200/80',
+            'shadow-[0_10px_25px_-18px_rgba(15,23,42,0.25)]',
           ].join(' ')}
         >
-          <FcGoogle size={20} />
+          {/* ✅ Logo real (tu archivo) */}
+          <img src="/google-icon.svg" alt="Google" className="h-5 w-5" />
           <span className="text-sm font-semibold">Continuar con Google</span>
         </button>
 
@@ -344,11 +336,11 @@ export default function RegisterForm() {
           onClick={() => setShowEmailForm((s) => !s)}
           className={[
             'w-full flex items-center justify-center gap-2 py-3 rounded-xl transition',
-            'border border-white/10 bg-white/5 hover:bg-white/10',
-            'text-white/90',
+            'border border-slate-200/80 bg-[#EEF2FF] hover:bg-[#E0E7FF]',
+            'text-slate-900',
           ].join(' ')}
         >
-          <Mail className="w-5 h-5 text-cyan-300" />
+          <Mail className="w-5 h-5 text-cyan-600" />
           <span className="text-sm font-semibold">
             {showEmailForm ? 'Ocultar formulario' : 'Registrarse con email'}
           </span>
@@ -356,13 +348,13 @@ export default function RegisterForm() {
       </div>
 
       {/* Legal */}
-      <p className="text-[12px] text-white/60 leading-snug text-center mb-4 px-1">
+      <p className="text-[12px] text-slate-600 leading-snug text-center mb-4 px-1">
         Al registrarte, aceptas los{' '}
-        <Link href="/terminos" className="text-cyan-300 hover:underline">
+        <Link href="/terminos" className="text-cyan-700 hover:underline font-medium">
           Términos y Condiciones
         </Link>{' '}
         y la{' '}
-        <Link href="/privacidad" className="text-cyan-300 hover:underline">
+        <Link href="/privacidad" className="text-cyan-700 hover:underline font-medium">
           Política de Privacidad
         </Link>{' '}
         de StudyDocu.
@@ -380,11 +372,11 @@ export default function RegisterForm() {
           >
             {/* Divider */}
             <div className="flex items-center my-4">
-              <div className="flex-1 h-px bg-white/10" />
-              <span className="mx-3 text-[11px] text-white/50 tracking-wider">
+              <div className="flex-1 h-px bg-slate-200/70" />
+              <span className="mx-3 text-[11px] text-slate-500 tracking-wider">
                 REGISTRO CON CORREO
               </span>
-              <div className="flex-1 h-px bg-white/10" />
+              <div className="flex-1 h-px bg-slate-200/70" />
             </div>
 
             <motion.form
@@ -397,7 +389,7 @@ export default function RegisterForm() {
               {/* Nombre */}
               <div>
                 <div className="relative">
-                  <UserCircle2 className="absolute left-3 top-3.5 w-5 h-5 text-white/45" />
+                  <UserCircle2 className="absolute left-3 top-3.5 w-5 h-5 text-slate-400" />
                   <input
                     className={`${inputClass('nombre_completo')} pl-10`}
                     placeholder="Nombre completo"
@@ -413,21 +405,19 @@ export default function RegisterForm() {
               {/* Username */}
               <div>
                 <div className="relative">
-                  <ShieldCheck className="absolute left-3 top-3.5 w-5 h-5 text-white/45" />
+                  <ShieldCheck className="absolute left-3 top-3.5 w-5 h-5 text-slate-400" />
                   <input
                     className={`${inputClass('username')} pl-10 pr-24`}
                     placeholder="Nombre de usuario (min. 3)"
                     aria-label="Nombre de usuario"
                     autoComplete="username"
                     value={form.username}
-                    onChange={(e) =>
-                      setForm({ ...form, username: normalizeUsername(e.target.value) })
-                    }
+                    onChange={(e) => setForm({ ...form, username: normalizeUsername(e.target.value) })}
                   />
                   <StatusChip status={usernameStatus} />
                 </div>
-                <div className="mt-1 text-[11px] text-white/50">
-                  Se permite <span className="font-medium text-white/70">a–z, 0–9, . _ -</span>
+                <div className="mt-1 text-[11px] text-slate-500">
+                  Se permite <span className="font-medium text-slate-700">a–z, 0–9, . _ -</span>
                 </div>
                 {errors.username && <FieldError>{errors.username}</FieldError>}
               </div>
@@ -435,7 +425,7 @@ export default function RegisterForm() {
               {/* Email */}
               <div>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3.5 w-5 h-5 text-white/45" />
+                  <Mail className="absolute left-3 top-3.5 w-5 h-5 text-slate-400" />
                   <input
                     type="email"
                     className={`${inputClass('email')} pl-10 pr-24`}
@@ -453,7 +443,7 @@ export default function RegisterForm() {
               {/* Password */}
               <div>
                 <div className="relative">
-                  <KeyRound className="absolute left-3 top-3.5 w-5 h-5 text-white/45" />
+                  <KeyRound className="absolute left-3 top-3.5 w-5 h-5 text-slate-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     className={`${inputClass('password')} pl-10 pr-10`}
@@ -468,42 +458,42 @@ export default function RegisterForm() {
                   <button
                     type="button"
                     aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                    className="absolute right-3 top-2.5 p-1 rounded-md hover:bg-white/10 transition"
+                    className="absolute right-3 top-2.5 p-1 rounded-md hover:bg-slate-100 transition"
                     onClick={() => setShowPassword((s) => !s)}
                   >
                     {showPassword ? (
-                      <EyeOff className="w-5 h-5 text-white/70" />
+                      <EyeOff className="w-5 h-5 text-slate-600" />
                     ) : (
-                      <Eye className="w-5 h-5 text-white/70" />
+                      <Eye className="w-5 h-5 text-slate-600" />
                     )}
                   </button>
                 </div>
 
                 {/* Barra de fuerza */}
                 <div className="mt-2">
-                  <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+                  <div className="h-2 w-full rounded-full bg-slate-200/70 overflow-hidden">
                     <div
                       className={`h-2 rounded-full transition-all duration-300 ${
                         passwordStrength === 'fuerte'
-                          ? 'bg-emerald-400'
+                          ? 'bg-emerald-500'
                           : passwordStrength === 'media'
-                            ? 'bg-yellow-300'
-                            : 'bg-rose-400'
+                            ? 'bg-amber-400'
+                            : 'bg-rose-500'
                       }`}
                       style={{ width: `${strengthPct}%` }}
                     />
                   </div>
 
-                  <div className="mt-1 text-[11px] text-white/60 flex items-center gap-2">
-                    Fortaleza: <b className="capitalize text-white/80">{passwordStrength}</b>
+                  <div className="mt-1 text-[11px] text-slate-600 flex items-center gap-2">
+                    Fortaleza: <b className="capitalize text-slate-800">{passwordStrength}</b>
                     {capsLockOn && (
-                      <span className="inline-flex items-center gap-1 text-rose-300">
+                      <span className="inline-flex items-center gap-1 text-rose-600">
                         <CircleSlash className="w-3.5 h-3.5" /> Mayúsculas activadas
                       </span>
                     )}
                   </div>
 
-                  <ul className="mt-1 text-[11px] text-white/60 grid grid-cols-2 gap-x-3">
+                  <ul className="mt-1 text-[11px] text-slate-600 grid grid-cols-2 gap-x-3">
                     <Req ok={form.password.length >= 8}>Mínimo 8 caracteres</Req>
                     <Req ok={/[0-9]/.test(form.password)}>Al menos un número</Req>
                     <Req ok={/[A-Z]/.test(form.password)}>Una mayúscula</Req>
@@ -517,7 +507,7 @@ export default function RegisterForm() {
               {/* Universidad */}
               <div>
                 <div className="relative">
-                  <GraduationCap className="absolute left-3 top-3.5 w-5 h-5 text-white/45" />
+                  <GraduationCap className="absolute left-3 top-3.5 w-5 h-5 text-slate-400" />
                   <select
                     className={`${inputClass('universidad')} pl-10`}
                     value={form.universidad}
@@ -581,28 +571,28 @@ export default function RegisterForm() {
                 onChange={(e) => setForm({ ...form, referido: e.target.value })}
               />
 
-              {/* Checkboxes PRO */}
+              {/* Checkboxes */}
               <div className="flex flex-col gap-2 pt-1">
-                <label className="flex items-center gap-2 text-sm text-white/70">
+                <label className="flex items-center gap-2 text-sm text-slate-700">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 rounded border-white/20 bg-white/10 text-cyan-400 focus:ring-cyan-400/40"
+                    className="h-4 w-4 rounded border-slate-300 bg-white text-cyan-600 focus:ring-cyan-400/40"
                     checked={form.recordar}
                     onChange={(e) => setForm({ ...form, recordar: e.target.checked })}
                   />
                   Recordar correo
                 </label>
 
-                <label className="flex items-start gap-2 text-sm text-white/70">
+                <label className="flex items-start gap-2 text-sm text-slate-700">
                   <input
                     type="checkbox"
-                    className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/10 text-cyan-400 focus:ring-cyan-400/40"
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 bg-white text-cyan-600 focus:ring-cyan-400/40"
                     checked={form.terms}
                     onChange={(e) => setForm({ ...form, terms: e.target.checked })}
                   />
                   <span>
                     Acepto los{' '}
-                    <Link href="/terminos" className="text-cyan-300 hover:underline">
+                    <Link href="/terminos" className="text-cyan-700 hover:underline font-medium">
                       Términos y Privacidad
                     </Link>
                   </span>
@@ -617,8 +607,8 @@ export default function RegisterForm() {
                 className={[
                   'w-full py-3 rounded-xl font-semibold transition',
                   'text-white',
-                  'bg-gradient-to-r from-cyan-500 via-indigo-500 to-purple-500',
-                  'hover:shadow-[0_18px_45px_-22px_rgba(56,189,248,0.65)] hover:scale-[1.01]',
+                  'bg-gradient-to-r from-[#7C5CFF] via-[#5C7CFA] to-[#38BDF8]',
+                  'hover:shadow-[0_18px_45px_-26px_rgba(56,189,248,0.65)] hover:scale-[1.01]',
                   'disabled:opacity-60 disabled:hover:scale-100',
                 ].join(' ')}
                 disabled={loading}
@@ -636,8 +626,8 @@ export default function RegisterForm() {
         )}
       </AnimatePresence>
 
-      {/* Link login (solo 1, limpio) */}
-      <p className="text-center text-sm text-cyan-300 mt-5">
+      {/* Link login */}
+      <p className="text-center text-sm text-cyan-700 mt-5">
         ¿Ya tienes una cuenta?{' '}
         <Link href="/iniciar-sesion" className="font-semibold hover:underline">
           Inicia sesión aquí
@@ -655,22 +645,22 @@ export default function RegisterForm() {
             </div>
 
             <motion.div
-              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4"
+              className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-xl text-center max-w-sm w-full border border-black/5 dark:border-white/10"
+                className="bg-white p-6 rounded-2xl shadow-xl text-center max-w-sm w-full border border-slate-200/70"
                 initial={{ scale: 0.95, y: 10 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.95, y: 10 }}
               >
                 <CheckCircle2 className="mx-auto mb-3 text-emerald-500" size={48} />
-                <h3 className="text-xl font-semibold mb-1 text-gray-900 dark:text-white">
+                <h3 className="text-xl font-semibold mb-1 text-slate-900">
                   ¡Cuenta creada!
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-slate-600">
                   Revisa tu correo para confirmar tu cuenta.
                 </p>
 
@@ -694,38 +684,36 @@ export default function RegisterForm() {
 /* -------------------------------------------------------------------------- */
 
 function FieldError({ children }: { children: React.ReactNode }) {
-  return <p className="text-[12px] text-rose-300 mt-1">{children}</p>
+  return <p className="text-[12px] text-rose-600 mt-1">{children}</p>
 }
 
 function StatusChip({ status }: { status: Status }) {
   if (status === 'idle') return null
 
   const base =
-    'absolute right-2 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] border backdrop-blur'
+    'absolute right-2 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] border bg-white/80 backdrop-blur'
   const styles =
     status === 'available'
-      ? 'text-emerald-200 border-emerald-400/20 bg-emerald-500/10'
+      ? 'text-emerald-700 border-emerald-200'
       : status === 'unavailable'
-        ? 'text-rose-200 border-rose-400/20 bg-rose-500/10'
-        : 'text-white/70 border-white/15 bg-white/10'
+        ? 'text-rose-700 border-rose-200'
+        : 'text-slate-600 border-slate-200'
 
   return (
     <span className={`${base} ${styles}`}>
       {status === 'checking' && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
       {status === 'available' && <CheckCircle2 className="w-3.5 h-3.5" />}
       {status === 'unavailable' && <CircleSlash className="w-3.5 h-3.5" />}
-      <span>
-        {status === 'checking' ? 'Comprobando…' : status === 'available' ? 'Disponible' : 'En uso'}
-      </span>
+      <span>{status === 'checking' ? 'Comprobando…' : status === 'available' ? 'Disponible' : 'En uso'}</span>
     </span>
   )
 }
 
 function Req({ ok, children }: { ok: boolean; children: React.ReactNode }) {
   return (
-    <span className={`inline-flex items-center gap-1 ${ok ? 'text-emerald-200' : 'text-white/55'}`}>
+    <span className={`inline-flex items-center gap-1 ${ok ? 'text-emerald-700' : 'text-slate-600'}`}>
       <span
-        className={`w-1.5 h-1.5 rounded-full ${ok ? 'bg-emerald-300' : 'bg-white/25'}`}
+        className={`w-1.5 h-1.5 rounded-full ${ok ? 'bg-emerald-500' : 'bg-slate-300'}`}
         aria-hidden="true"
       />
       {children}
