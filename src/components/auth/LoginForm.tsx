@@ -97,25 +97,28 @@ export default function LoginForm() {
         redirectTo: `${location.origin}/verificado-oauth`,
       },
     })
-
     if (error) toast.error(`Error con Google: ${error.message}`)
   }
 
   return (
     <div className="w-full">
-      {/* Botones (como tu screenshot) */}
+      {/* Botones (como screenshot) */}
       <div className="space-y-4">
         {/* Google */}
         <button
           type="button"
           onClick={loginWithGoogle}
-          className="
-            w-full h-12 rounded-xl
-            bg-white text-slate-900 font-semibold
-            flex items-center justify-center gap-3
-            shadow-sm hover:bg-white/95 active:scale-[0.99] transition
-          "
+          className={[
+            'w-full h-12 rounded-xl',
+            'bg-white text-slate-900 font-semibold',
+            'flex items-center justify-center gap-3',
+            'border border-slate-200/80',
+            'shadow-sm hover:bg-slate-50 active:scale-[0.99] transition',
+            // dark
+            'dark:bg-white dark:text-slate-900',
+          ].join(' ')}
         >
+          {/* ✅ Tu archivo: public/google-icon.svg -> ruta: /google-icon.svg */}
           <img src="/google-icon.svg" alt="Google" className="h-5 w-5" />
           Continuar con Google
         </button>
@@ -124,18 +127,20 @@ export default function LoginForm() {
         <button
           type="button"
           onClick={() => setShowEmail((v) => !v)}
-          className="
-            w-full h-12 rounded-xl
-            bg-white/10 text-white font-semibold
-            border border-white/10
-            flex items-center justify-center gap-3
-            hover:bg-white/12 active:scale-[0.99] transition
-          "
+          className={[
+            'w-full h-12 rounded-xl',
+            'bg-white/70 text-slate-900 font-semibold',
+            'border border-slate-200/70',
+            'flex items-center justify-center gap-3',
+            'hover:bg-white active:scale-[0.99] transition',
+            // dark
+            'dark:bg-slate-900/60 dark:text-white dark:border-white/10 dark:hover:bg-slate-900/70',
+          ].join(' ')}
         >
-          <Mail className="h-5 w-5 text-white/80" />
+          <Mail className="h-5 w-5 text-slate-600 dark:text-white/80" />
           Iniciar sesión con email
           <ChevronDown
-            className={`h-4 w-4 text-white/70 transition ${showEmail ? 'rotate-180' : ''}`}
+            className={`h-4 w-4 transition ${showEmail ? 'rotate-180' : ''} text-slate-500 dark:text-white/70`}
           />
         </button>
       </div>
@@ -144,46 +149,56 @@ export default function LoginForm() {
       {showEmail && (
         <form onSubmit={handleLogin} className="mt-5 space-y-4">
           <div className="relative">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" size={18} />
+            <Mail
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/50"
+              size={18}
+            />
             <input
               type="email"
               placeholder="Correo electrónico"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="
-                w-full h-12 pl-11 pr-4 rounded-xl
-                bg-white/5 text-white placeholder-white/35
-                border border-white/10
-                focus:outline-none focus:ring-2 focus:ring-cyan-400/40
-              "
+              className={[
+                'w-full h-12 pl-11 pr-4 rounded-xl',
+                'bg-white text-slate-900 placeholder-slate-400',
+                'border border-slate-200/80',
+                'focus:outline-none focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40',
+                // dark
+                'dark:bg-white/5 dark:text-white dark:placeholder-white/40 dark:border-white/10',
+              ].join(' ')}
             />
           </div>
 
           <div className="relative">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" size={18} />
+            <Lock
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/50"
+              size={18}
+            />
             <input
               type="password"
               placeholder="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="
-                w-full h-12 pl-11 pr-4 rounded-xl
-                bg-white/5 text-white placeholder-white/35
-                border border-white/10
-                focus:outline-none focus:ring-2 focus:ring-cyan-400/40
-              "
+              className={[
+                'w-full h-12 pl-11 pr-4 rounded-xl',
+                'bg-white text-slate-900 placeholder-slate-400',
+                'border border-slate-200/80',
+                'focus:outline-none focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40',
+                // dark
+                'dark:bg-white/5 dark:text-white dark:placeholder-white/40 dark:border-white/10',
+              ].join(' ')}
             />
           </div>
 
-          <div className="flex items-center justify-between text-sm text-white/60">
+          <div className="flex items-center justify-between text-sm text-slate-600 dark:text-white/60">
             <label className="flex items-center gap-2">
-              <input type="checkbox" className="accent-cyan-400" />
+              <input type="checkbox" className="accent-cyan-500" />
               Recuérdame
             </label>
 
-            <Link href="/auth/reset-password" className="text-cyan-300 hover:underline">
+            <Link href="/auth/reset-password" className="text-cyan-600 hover:underline dark:text-cyan-300">
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
@@ -191,22 +206,22 @@ export default function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="
-              w-full h-12 rounded-xl
-              bg-gradient-to-r from-cyan-500 to-blue-500
-              text-white font-semibold
-              flex items-center justify-center gap-2
-              hover:brightness-110 active:scale-[0.99] transition
-              disabled:opacity-60
-            "
+            className={[
+              'w-full h-12 rounded-xl',
+              'bg-gradient-to-r from-cyan-500 to-blue-500',
+              'text-white font-semibold',
+              'flex items-center justify-center gap-2',
+              'hover:brightness-110 active:scale-[0.99] transition',
+              'disabled:opacity-60',
+            ].join(' ')}
           >
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Entrar'}
           </button>
         </form>
       )}
 
-      {/* Registro (como tu screenshot: link abajo) */}
-      <div className="mt-6 text-center text-sm text-cyan-300">
+      {/* Registro */}
+      <div className="mt-6 text-center text-sm text-cyan-600 dark:text-cyan-300">
         ¿No tienes una cuenta aún?{' '}
         <Link href="/registrarse" className="font-semibold hover:underline">
           Regístrate aquí
