@@ -116,7 +116,7 @@ export default function LoginForm() {
             shadow-sm hover:bg-white/95 active:scale-[0.99] transition
           "
         >
-          <img src="/icons/google.svg" alt="Google" className="h-5 w-5" />
+          <img src="/google-icon.svg" alt="Google" className="h-5 w-5" />
           Continuar con Google
         </button>
 
