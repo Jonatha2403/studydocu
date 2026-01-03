@@ -67,6 +67,9 @@ export default function LoginPage() {
     return () => clearInterval(t)
   }, [])
 
+  // ✅ Ajusta SOLO este valor si tu header fijo es más alto/bajo
+  const HEADER_H = 88
+
   return (
     <main className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#F6F5FF] via-[#F1EDFF] to-[#EAF4FF]">
       {/* Fondo suave tipo landing */}
@@ -77,9 +80,16 @@ export default function LoginPage() {
         <div className="absolute inset-0 opacity-60 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.75),transparent_25%,transparent_70%,rgba(255,255,255,0.45))]" />
       </div>
 
-      {/* Espacio para tu header fijo (ajusta si tu header tiene otra altura) */}
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-[92px] pb-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-140px)]">
+      {/* ✅ Contenedor que ocupa el alto real disponible (sin espacio muerto) */}
+      <div
+        className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+        style={{
+          paddingTop: HEADER_H,
+          paddingBottom: 24,
+          minHeight: `calc(100vh - ${HEADER_H}px)`,
+        }}
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center h-full">
           {/* LEFT */}
           <motion.section
             initial={{ opacity: 0, y: 10 }}
@@ -113,7 +123,7 @@ export default function LoginPage() {
               <TypingText />
             </div>
 
-            <p className="mt-16 text-sm italic text-slate-500">“{quote}”</p>
+            <p className="mt-12 text-sm italic text-slate-500">“{quote}”</p>
           </motion.section>
 
           {/* RIGHT */}
