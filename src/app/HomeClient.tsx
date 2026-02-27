@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Script from 'next/script'
 import { toast } from 'sonner'
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import { motion, useMotionValue, useSpring, useTransform, useReducedMotion } from 'framer-motion'
 
 import HeroAI from '@/components/HeroAI'
 import Footer from '@/components/Footer'
@@ -132,18 +132,18 @@ function Badge({
 }) {
   const tones: Record<string, string> = {
     indigo:
-      'bg-indigo-50/80 dark:bg-indigo-900/25 text-indigo-700 dark:text-indigo-200 border border-indigo-200/60 dark:border-indigo-300/15',
+      'bg-indigo-50/70 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-200 border border-indigo-200/50 dark:border-indigo-300/10',
     fuchsia:
-      'bg-fuchsia-50/80 dark:bg-fuchsia-900/25 text-fuchsia-700 dark:text-fuchsia-200 border border-fuchsia-200/60 dark:border-fuchsia-300/15',
+      'bg-fuchsia-50/70 dark:bg-fuchsia-900/20 text-fuchsia-700 dark:text-fuchsia-200 border border-fuchsia-200/50 dark:border-fuchsia-300/10',
     emerald:
-      'bg-emerald-50/80 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-200 border border-emerald-200/60 dark:border-emerald-300/15',
+      'bg-emerald-50/70 dark:bg-emerald-900/15 text-emerald-700 dark:text-emerald-200 border border-emerald-200/50 dark:border-emerald-300/10',
     amber:
-      'bg-amber-50/80 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 border border-amber-200/60 dark:border-amber-300/15',
+      'bg-amber-50/70 dark:bg-amber-900/15 text-amber-800 dark:text-amber-200 border border-amber-200/50 dark:border-amber-300/10',
   }
 
   return (
     <div
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.18em] ${tones[tone]} backdrop-blur`}
+      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.18em] ${tones[tone]} md:backdrop-blur`}
     >
       {icon}
       {label}
@@ -168,7 +168,8 @@ function GradientCard({
     <div
       className={`rounded-3xl p-[1px] bg-gradient-to-r from-indigo-500/25 via-purple-500/20 to-fuchsia-500/25 ${className}`}
     >
-      <div className="rounded-3xl bg-white/70 dark:bg-gray-950/45 border border-white/50 dark:border-white/10 md:backdrop-blur-xl shadow-[0_20px_70px_-35px_rgba(15,23,42,0.45)]">
+      {/* ✅ glass más liviano en móvil, blur solo desktop */}
+      <div className="rounded-3xl bg-white/55 dark:bg-gray-950/22 border border-white/45 dark:border-white/10 md:backdrop-blur-xl shadow-[0_16px_60px_-40px_rgba(15,23,42,0.45)]">
         {children}
       </div>
     </div>
@@ -177,7 +178,7 @@ function GradientCard({
 
 /**
  * ✅ Spotlight optimizado:
- * - En móvil se desactiva (no hay mouse, y consume de más)
+ * - En móvil NO hace cálculos de mouse / overlay
  * - En desktop mantiene el efecto premium
  */
 function SpotlightCard({
@@ -188,10 +189,14 @@ function SpotlightCard({
   className?: string
 }) {
   const ref = useRef<HTMLDivElement | null>(null)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useState(false)
 
   useEffect(() => {
-    setEnabled(window.innerWidth >= 768)
+    const mq = window.matchMedia('(min-width: 768px)')
+    const sync = () => setEnabled(mq.matches)
+    sync()
+    mq.addEventListener?.('change', sync)
+    return () => mq.removeEventListener?.('change', sync)
   }, [])
 
   const mx = useMotionValue(0)
@@ -215,10 +220,11 @@ function SpotlightCard({
       }}
       className={[
         'relative overflow-hidden rounded-2xl',
-        'border border-white/50 dark:border-white/10',
-        'bg-white/75 dark:bg-gray-900/55',
-        'md:backdrop-blur-md shadow-sm hover:shadow-xl',
-        'transition-all',
+        'border border-white/45 dark:border-white/10',
+        // ✅ glass más transparente para NO tapar el fondo
+        'bg-white/50 dark:bg-gray-900/22',
+        'shadow-sm md:hover:shadow-xl transition-all',
+        'md:backdrop-blur-md',
         className,
       ].join(' ')}
     >
@@ -236,7 +242,7 @@ function SpotlightCard({
 
 /**
  * ✅ CountUp optimizado:
- * - En móvil NO anima (evita raf + cálculos)
+ * - En móvil NO anima
  * - En desktop sí anima
  */
 function CountUp({
@@ -249,10 +255,14 @@ function CountUp({
   durationMs?: number
 }) {
   const [val, setVal] = useState(0)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useState(false)
 
   useEffect(() => {
-    setEnabled(window.innerWidth >= 768)
+    const mq = window.matchMedia('(min-width: 768px)')
+    const sync = () => setEnabled(mq.matches)
+    sync()
+    mq.addEventListener?.('change', sync)
+    return () => mq.removeEventListener?.('change', sync)
   }, [])
 
   useEffect(() => {
@@ -260,7 +270,6 @@ function CountUp({
       setVal(to)
       return
     }
-
     let raf = 0
     const start = performance.now()
     const from = 0
@@ -268,8 +277,7 @@ function CountUp({
     const tick = (t: number) => {
       const p = Math.min(1, (t - start) / durationMs)
       const eased = 1 - Math.pow(1 - p, 3)
-      const next = Math.round(from + (to - from) * eased)
-      setVal(next)
+      setVal(Math.round(from + (to - from) * eased))
       if (p < 1) raf = requestAnimationFrame(tick)
     }
 
@@ -290,16 +298,19 @@ function CountUp({
 ------------------------------ */
 export default function HomeClient() {
   const [showConfetti, setShowConfetti] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile] = useState(true)
 
   const { user } = useUserContext()
   const router = useRouter()
+  const reduceMotion = useReducedMotion()
 
+  // ✅ isMobile sin resize listener pesado (matchMedia)
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
+    const mq = window.matchMedia('(max-width: 767px)')
+    const sync = () => setIsMobile(mq.matches)
+    sync()
+    mq.addEventListener?.('change', sync)
+    return () => mq.removeEventListener?.('change', sync)
   }, [])
 
   useEffect(() => {
@@ -307,20 +318,18 @@ export default function HomeClient() {
     const isDark = localStorage.getItem('theme') === 'dark'
     document.documentElement.classList.toggle('dark', isDark)
 
-    const mobile = window.innerWidth < 768
-
     if (!localStorage.getItem('visited')) {
       toast.success('🎉 ¡Logro desbloqueado! Primer ingreso a StudyDocu')
 
-      // ✅ Confetti solo en desktop (Lottie full-screen es pesado en móvil)
-      if (!mobile) {
+      // ✅ Confetti solo en desktop y si no reduce motion
+      if (!isMobile && !reduceMotion) {
         setShowConfetti(true)
         setTimeout(() => setShowConfetti(false), 4500)
       }
 
       localStorage.setItem('visited', 'true')
     }
-  }, [])
+  }, [isMobile, reduceMotion])
 
   const handleStart = () => router.push(user ? '/dashboard' : '/registrarse')
 
@@ -383,6 +392,11 @@ export default function HomeClient() {
     []
   )
 
+  // ✅ Animaciones framer solo desktop y si no reduceMotion
+  const motionEnabled = !isMobile && !reduceMotion
+  const fadeFrom = motionEnabled ? { opacity: 0, y: 18 } : undefined
+  const fadeTo = motionEnabled ? { opacity: 1, y: 0 } : undefined
+
   return (
     <>
       <Script
@@ -426,7 +440,7 @@ export default function HomeClient() {
                   label="Plataforma académica con IA"
                   tone="indigo"
                 />
-                <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200 border border-emerald-200/60 dark:border-emerald-300/20">
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-100/80 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200 border border-emerald-200/50 dark:border-emerald-300/15 md:backdrop-blur">
                   Ecuador · UTPL y más
                 </span>
               </div>
@@ -474,8 +488,7 @@ export default function HomeClient() {
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
                   Conocer sobre el fundador
                 </h3>
-
-                <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-200 border border-amber-200/60 dark:border-amber-300/20">
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-100/80 text-amber-800 dark:bg-amber-500/10 dark:text-amber-200 border border-amber-200/50 dark:border-amber-300/15 md:backdrop-blur">
                   Transparencia · Confianza
                 </span>
               </div>
@@ -510,9 +523,9 @@ export default function HomeClient() {
         <Section className="-mt-4 md:-mt-10 pb-12">
           <div
             className={[
-              'rounded-3xl border border-white/50 dark:border-white/10',
-              // ✅ Más liviano en móvil
-              'bg-white/55 dark:bg-gray-950/28',
+              'rounded-3xl border border-white/45 dark:border-white/10',
+              // ✅ glass transparente (NO tapa el fondo)
+              'bg-white/40 dark:bg-gray-950/18',
               'shadow-[0_12px_40px_-30px_rgba(15,23,42,0.45)] md:shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)]',
               'md:backdrop-blur-xl',
               'px-5 sm:px-8 py-8 sm:py-10',
@@ -541,7 +554,7 @@ export default function HomeClient() {
                 <div className="mt-6 flex flex-wrap gap-3 justify-center lg:justify-start">
                   <Button
                     onClick={handleStart}
-                    className="px-7 py-5 rounded-2xl text-sm sm:text-base bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 text-white shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all"
+                    className="px-7 py-5 rounded-2xl text-sm sm:text-base bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 text-white shadow-xl hover:shadow-2xl md:hover:scale-[1.02] transition-all"
                   >
                     🚀 Empezar gratis <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
@@ -549,7 +562,7 @@ export default function HomeClient() {
                   <Button
                     onClick={handleWhatsApp}
                     variant="outline"
-                    className="px-7 py-5 rounded-2xl text-sm sm:text-base bg-white/65 dark:bg-gray-900/35 md:backdrop-blur-md border border-white/50 dark:border-white/10 hover:bg-white/85 dark:hover:bg-white/5"
+                    className="px-7 py-5 rounded-2xl text-sm sm:text-base bg-white/55 dark:bg-gray-900/20 md:backdrop-blur-md border border-white/45 dark:border-white/10 hover:bg-white/80 dark:hover:bg-white/5"
                   >
                     Hablar por WhatsApp
                   </Button>
@@ -568,22 +581,20 @@ export default function HomeClient() {
                 </div>
               </div>
 
-              {/* ✅ Demo mock (glass para no tapar tanto el fondo/animaciones) */}
+              {/* ✅ Demo mock (glass real, blur solo desktop) */}
               <motion.div
-                initial={isMobile ? undefined : { opacity: 0, y: 18 }}
-                whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
+                initial={fadeFrom}
+                whileInView={fadeTo}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
                 className={[
-                  'rounded-3xl overflow-hidden border border-white/50 dark:border-white/10',
-                  // 👇 más transparente para dejar ver el fondo detrás
-                  'bg-white/35 dark:bg-gray-950/18',
+                  'rounded-3xl overflow-hidden border border-white/45 dark:border-white/10',
+                  'bg-white/25 dark:bg-gray-950/12',
                   'shadow-lg',
-                  // blur solo desktop (en móvil pesa)
                   'md:backdrop-blur-xl',
                 ].join(' ')}
               >
-                <div className="p-4 border-b border-white/40 dark:border-white/10 flex items-center justify-between">
+                <div className="p-4 border-b border-white/35 dark:border-white/10 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
                     <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
@@ -595,7 +606,7 @@ export default function HomeClient() {
                 </div>
 
                 <div className="p-5 grid gap-4">
-                  <div className="rounded-2xl bg-white/55 dark:bg-gray-900/25 border border-white/40 dark:border-white/10 p-4 md:backdrop-blur-md">
+                  <div className="rounded-2xl bg-white/45 dark:bg-gray-900/18 border border-white/35 dark:border-white/10 p-4 md:backdrop-blur-md">
                     <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
                       <FileText className="w-4 h-4 text-indigo-500" />
                       Macroeconomía · Unidad 6.pdf
@@ -606,7 +617,7 @@ export default function HomeClient() {
                     </p>
                   </div>
 
-                  <div className="rounded-2xl bg-gradient-to-br from-indigo-500/12 via-purple-500/10 to-cyan-500/10 border border-white/40 dark:border-white/10 p-4 md:backdrop-blur-md">
+                  <div className="rounded-2xl bg-gradient-to-br from-indigo-500/10 via-purple-500/08 to-cyan-500/08 border border-white/35 dark:border-white/10 p-4 md:backdrop-blur-md">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-200">
                         Resumen automático (preview)
@@ -631,15 +642,15 @@ export default function HomeClient() {
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="rounded-2xl bg-white/55 dark:bg-gray-900/25 border border-white/40 dark:border-white/10 p-3 text-center md:backdrop-blur-md">
+                    <div className="rounded-2xl bg-white/45 dark:bg-gray-900/18 border border-white/35 dark:border-white/10 p-3 text-center md:backdrop-blur-md">
                       <p className="text-[11px] text-gray-700 dark:text-gray-200">Tareas hoy</p>
                       <p className="text-lg font-bold text-gray-900 dark:text-white">3</p>
                     </div>
-                    <div className="rounded-2xl bg-white/55 dark:bg-gray-900/25 border border-white/40 dark:border-white/10 p-3 text-center md:backdrop-blur-md">
+                    <div className="rounded-2xl bg-white/45 dark:bg-gray-900/18 border border-white/35 dark:border-white/10 p-3 text-center md:backdrop-blur-md">
                       <p className="text-[11px] text-gray-700 dark:text-gray-200">Exámenes</p>
                       <p className="text-lg font-bold text-gray-900 dark:text-white">1</p>
                     </div>
-                    <div className="rounded-2xl bg-white/55 dark:bg-gray-900/25 border border-white/40 dark:border-white/10 p-3 text-center md:backdrop-blur-md">
+                    <div className="rounded-2xl bg-white/45 dark:bg-gray-900/18 border border-white/35 dark:border-white/10 p-3 text-center md:backdrop-blur-md">
                       <p className="text-[11px] text-gray-700 dark:text-gray-200">Progreso</p>
                       <p className="text-lg font-bold text-gray-900 dark:text-white">72%</p>
                     </div>
@@ -648,22 +659,25 @@ export default function HomeClient() {
               </motion.div>
             </div>
 
-            <div className="mt-10">
-              <AnimatedServices />
-            </div>
+            {/* ✅ En móvil NO montamos AnimatedServices (pesado) */}
+            {!isMobile && (
+              <div className="mt-10">
+                <AnimatedServices />
+              </div>
+            )}
           </div>
         </Section>
 
         {/* Antes vs Después */}
         <Section className="pb-12">
           <motion.div
-            initial={isMobile ? undefined : { opacity: 0, y: 22 }}
-            whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
+            initial={fadeFrom}
+            whileInView={fadeTo}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
             className={[
-              'rounded-3xl border border-white/50 dark:border-white/10',
-              'bg-white/55 dark:bg-gray-950/28',
+              'rounded-3xl border border-white/45 dark:border-white/10',
+              'bg-white/40 dark:bg-gray-950/18',
               'md:backdrop-blur-xl',
               'shadow-[0_12px_40px_-30px_rgba(15,23,42,0.45)] md:shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)]',
               'px-5 sm:px-8 py-10',
@@ -690,7 +704,7 @@ export default function HomeClient() {
                   <span className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
                     Antes
                   </span>
-                  <span className="text-[11px] px-2 py-1 rounded-full bg-gray-100/80 dark:bg-white/5 border border-gray-200/70 dark:border-white/10 text-gray-700 dark:text-gray-200">
+                  <span className="text-[11px] px-2 py-1 rounded-full bg-gray-100/80 dark:bg-white/5 border border-gray-200/60 dark:border-white/10 text-gray-700 dark:text-gray-200">
                     Caos
                   </span>
                 </div>
@@ -716,7 +730,7 @@ export default function HomeClient() {
                   <span className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
                     Después
                   </span>
-                  <span className="text-[11px] px-2 py-1 rounded-full bg-indigo-50/80 dark:bg-indigo-500/10 border border-indigo-200/60 dark:border-indigo-300/15 text-indigo-700 dark:text-indigo-200">
+                  <span className="text-[11px] px-2 py-1 rounded-full bg-indigo-50/70 dark:bg-indigo-500/10 border border-indigo-200/50 dark:border-indigo-300/10 text-indigo-700 dark:text-indigo-200">
                     Control + IA
                   </span>
                 </div>
@@ -777,51 +791,54 @@ export default function HomeClient() {
           </p>
         </Section>
 
-        {/* Testimonios */}
-        <Section className="pb-12">
-          <motion.div
-            initial={isMobile ? undefined : { opacity: 0, y: 24 }}
-            whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className={[
-              'rounded-3xl border border-white/50 dark:border-white/10',
-              'bg-white/55 dark:bg-gray-950/28',
-              'md:backdrop-blur-xl',
-              'shadow-[0_12px_40px_-30px_rgba(15,23,42,0.45)] md:shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)]',
-              'px-5 sm:px-8 py-10',
-            ].join(' ')}
-          >
-            <div className="text-center">
-              <Badge
-                icon={<Sparkles className="w-4 h-4" />}
-                label="Confianza real"
-                tone="emerald"
-              />
-              <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                Lo que dicen nuestros usuarios
-              </h2>
-              <p className="mt-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-                Estudiantes de distintas carreras ya usan StudyDocu para estudiar mejor, organizar
-                sus trabajos y avanzar con más tranquilidad.
-              </p>
-            </div>
+        {/* ✅ Testimonios y Asesores SOLO desktop (móvil lite) */}
+        {!isMobile && (
+          <>
+            <Section className="pb-12">
+              <motion.div
+                initial={fadeFrom}
+                whileInView={fadeTo}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className={[
+                  'rounded-3xl border border-white/45 dark:border-white/10',
+                  'bg-white/40 dark:bg-gray-950/18',
+                  'md:backdrop-blur-xl',
+                  'shadow-[0_12px_40px_-30px_rgba(15,23,42,0.45)] md:shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)]',
+                  'px-5 sm:px-8 py-10',
+                ].join(' ')}
+              >
+                <div className="text-center">
+                  <Badge
+                    icon={<Sparkles className="w-4 h-4" />}
+                    label="Confianza real"
+                    tone="emerald"
+                  />
+                  <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+                    Lo que dicen nuestros usuarios
+                  </h2>
+                  <p className="mt-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+                    Estudiantes de distintas carreras ya usan StudyDocu para estudiar mejor,
+                    organizar sus trabajos y avanzar con más tranquilidad.
+                  </p>
+                </div>
 
-            <AnimatedTestimonials />
-          </motion.div>
-        </Section>
+                <AnimatedTestimonials />
+              </motion.div>
+            </Section>
 
-        {/* Asesores */}
-        <Section className="pb-10">
-          <AnimatedAsesores />
-        </Section>
+            <Section className="pb-10">
+              <AnimatedAsesores />
+            </Section>
+          </>
+        )}
 
         {/* Funcionalidades */}
         <Section className="py-10">
           <motion.div
             id="funcionalidades"
-            initial={isMobile ? undefined : { opacity: 0, y: 26 }}
-            whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
+            initial={fadeFrom}
+            whileInView={fadeTo}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
@@ -843,14 +860,14 @@ export default function HomeClient() {
               {featureItems.map((item, i) => (
                 <motion.div
                   key={item.name}
-                  initial={isMobile ? undefined : { opacity: 0, y: 14 }}
-                  whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
+                  initial={motionEnabled ? { opacity: 0, y: 14 } : undefined}
+                  whileInView={motionEnabled ? { opacity: 1, y: 0 } : undefined}
                   viewport={{ once: true }}
-                  transition={{ delay: isMobile ? 0 : i * 0.03 }}
+                  transition={{ delay: motionEnabled ? i * 0.03 : 0 }}
                 >
                   <SpotlightCard className="p-6 text-center">
                     <div className="flex items-center justify-center mb-4">
-                      <div className="h-12 w-12 rounded-2xl bg-indigo-50/80 dark:bg-indigo-500/10 border border-indigo-200/60 dark:border-indigo-300/15 flex items-center justify-center">
+                      <div className="h-12 w-12 rounded-2xl bg-indigo-50/70 dark:bg-indigo-500/10 border border-indigo-200/50 dark:border-indigo-300/10 flex items-center justify-center md:backdrop-blur">
                         <item.icon
                           className="w-6 h-6 text-indigo-600 dark:text-indigo-200"
                           strokeWidth={1.5}
@@ -887,7 +904,7 @@ export default function HomeClient() {
             <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Button
                 onClick={handleStart}
-                className="px-10 py-5 text-base sm:text-lg bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 text-white rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all"
+                className="px-10 py-5 text-base sm:text-lg bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 text-white rounded-2xl shadow-xl hover:shadow-2xl md:hover:scale-[1.02] transition-all"
               >
                 🚀 Empezar gratis <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
@@ -895,7 +912,7 @@ export default function HomeClient() {
               <Button
                 onClick={() => router.push('/explorar')}
                 variant="outline"
-                className="px-10 py-5 text-base sm:text-lg rounded-2xl bg-white/65 dark:bg-gray-900/35 md:backdrop-blur-md border border-white/50 dark:border-white/10 hover:bg-white/85 dark:hover:bg-white/5"
+                className="px-10 py-5 text-base sm:text-lg rounded-2xl bg-white/55 dark:bg-gray-900/20 md:backdrop-blur-md border border-white/45 dark:border-white/10 hover:bg-white/80 dark:hover:bg-white/5"
               >
                 Explorar documentos
               </Button>
@@ -910,13 +927,13 @@ export default function HomeClient() {
         {/* Más herramientas */}
         <Section className="pb-16">
           <motion.div
-            initial={isMobile ? undefined : { opacity: 0, y: 22 }}
-            whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
+            initial={fadeFrom}
+            whileInView={fadeTo}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
             className={[
-              'rounded-3xl border border-white/50 dark:border-white/10',
-              'bg-white/55 dark:bg-gray-950/28',
+              'rounded-3xl border border-white/45 dark:border-white/10',
+              'bg-white/40 dark:bg-gray-950/18',
               'md:backdrop-blur-xl',
               'shadow-[0_12px_40px_-30px_rgba(15,23,42,0.45)] md:shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)]',
               'px-5 sm:px-8 py-10',
@@ -941,14 +958,14 @@ export default function HomeClient() {
               {extraItems.map((item, i) => (
                 <motion.div
                   key={item.name}
-                  initial={isMobile ? undefined : { opacity: 0, y: 12 }}
-                  whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
+                  initial={motionEnabled ? { opacity: 0, y: 12 } : undefined}
+                  whileInView={motionEnabled ? { opacity: 1, y: 0 } : undefined}
                   viewport={{ once: true }}
-                  transition={{ delay: isMobile ? 0 : i * 0.04 }}
+                  transition={{ delay: motionEnabled ? i * 0.04 : 0 }}
                 >
                   <SpotlightCard className="p-6 text-center">
                     <div className="flex items-center justify-center mb-4">
-                      <div className="h-12 w-12 rounded-2xl bg-fuchsia-50/80 dark:bg-fuchsia-500/10 border border-fuchsia-200/60 dark:border-fuchsia-300/15 flex items-center justify-center">
+                      <div className="h-12 w-12 rounded-2xl bg-fuchsia-50/70 dark:bg-fuchsia-500/10 border border-fuchsia-200/50 dark:border-fuchsia-300/10 flex items-center justify-center md:backdrop-blur">
                         <item.icon
                           className="w-6 h-6 text-fuchsia-600 dark:text-fuchsia-200"
                           strokeWidth={1.5}
@@ -968,7 +985,7 @@ export default function HomeClient() {
 
             <div className="mt-12 flex justify-center">
               <Link href="/herramientas">
-                <Button className="text-sm sm:text-base bg-white/65 dark:bg-gray-900/35 md:backdrop-blur-md border border-white/50 dark:border-white/10 text-gray-900 dark:text-white font-medium px-8 py-3 rounded-full shadow-sm hover:bg-white/85 dark:hover:bg-white/5 transition-all">
+                <Button className="text-sm sm:text-base bg-white/55 dark:bg-gray-900/20 md:backdrop-blur-md border border-white/45 dark:border-white/10 text-gray-900 dark:text-white font-medium px-8 py-3 rounded-full shadow-sm hover:bg-white/80 dark:hover:bg-white/5 transition-all">
                   Ver todas las herramientas <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </Link>
@@ -981,14 +998,14 @@ export default function HomeClient() {
         {/* CTA flotante */}
         <div className="fixed bottom-4 left-0 right-0 z-30 pointer-events-none">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 flex justify-center">
-            <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/50 dark:border-white/10 bg-white/70 dark:bg-gray-950/35 md:backdrop-blur-md shadow-[0_20px_60px_-35px_rgba(15,23,42,0.6)] px-3 py-2">
+            <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/45 dark:border-white/10 bg-white/55 dark:bg-gray-950/18 md:backdrop-blur-md shadow-[0_20px_60px_-35px_rgba(15,23,42,0.6)] px-3 py-2">
               <Button onClick={handleStart} className="rounded-full px-4 py-2 h-auto">
                 Empezar <ArrowRight className="ml-1 w-4 h-4" />
               </Button>
               <Button
                 onClick={handleWhatsApp}
                 variant="outline"
-                className="rounded-full px-4 py-2 h-auto bg-white/65 dark:bg-gray-900/35 border border-white/50 dark:border-white/10 hover:bg-white/85 dark:hover:bg-white/5"
+                className="rounded-full px-4 py-2 h-auto bg-white/55 dark:bg-gray-900/20 border border-white/45 dark:border-white/10 hover:bg-white/80 dark:hover:bg-white/5"
               >
                 WhatsApp
               </Button>

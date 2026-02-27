@@ -17,7 +17,8 @@ const sfPro = localFont({
   ],
   variable: '--font-sf',
   display: 'swap',
-  preload: true,
+  // ✅ Mejor para móvil: evita forzar preload de 4 OTF en el primer render
+  preload: false,
 })
 
 /* ---------------------- METADATOS ---------------------- */
@@ -100,7 +101,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           // typography
           'text-slate-900 dark:text-slate-50',
           // backgrounds (light default)
-          'bg-gradient-to-br from-slate-50 via-white to-indigo-50/60 bg-fixed',
+          // ✅ md:bg-fixed para evitar lag en móviles
+          'bg-gradient-to-br from-slate-50 via-white to-indigo-50/60 md:bg-fixed',
           // backgrounds (dark)
           'dark:bg-gradient-to-br dark:from-[#0B1020] dark:via-[#0F172A] dark:to-[#111827]',
         ].join(' ')}
