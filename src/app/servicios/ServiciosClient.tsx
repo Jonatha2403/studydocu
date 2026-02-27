@@ -203,11 +203,10 @@ function Badge({
   children: string
   variant?: 'premium' | 'destacado'
 }) {
-  // Colores más pro (no chillones), y consistentes en dark mode.
   const cls =
     variant === 'destacado'
       ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-200 dark:border-emerald-500/20'
-      : 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/10 dark:text-amber-200 dark:border-amber-500/20'
+      : 'bg-indigo-50 text-indigo-800 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-200 dark:border-indigo-500/20'
 
   return (
     <span className={`text-[10px] uppercase tracking-wide px-2 py-1 rounded-full border ${cls}`}>
@@ -236,13 +235,13 @@ function ServiceCard({
   return (
     <Card
       className={[
-        'group relative rounded-2xl border bg-white/80 dark:bg-gray-900/70 backdrop-blur',
-        'border-gray-200/80 dark:border-gray-700/70',
-        'shadow-[0_8px_28px_-18px_rgba(0,0,0,0.25)] hover:shadow-[0_18px_55px_-30px_rgba(0,0,0,0.45)]',
+        'group relative rounded-2xl border bg-white/85 dark:bg-slate-900/65 backdrop-blur',
+        'border-slate-200/80 dark:border-slate-700/70',
+        'shadow-[0_10px_28px_-20px_rgba(2,6,23,0.35)] hover:shadow-[0_18px_55px_-32px_rgba(2,6,23,0.55)]',
         'transition-all',
         destacado
-          ? 'ring-1 ring-purple-400/40 dark:ring-purple-500/40'
-          : 'hover:border-gray-300/80 dark:hover:border-gray-600/70',
+          ? 'ring-1 ring-indigo-400/35 dark:ring-indigo-500/35'
+          : 'hover:border-slate-300/80 dark:hover:border-slate-600/70',
       ].join(' ')}
     >
       {/* top accent */}
@@ -250,8 +249,8 @@ function ServiceCard({
         className={[
           'absolute inset-x-0 top-0 h-[2px] rounded-t-2xl',
           destacado
-            ? 'bg-gradient-to-r from-purple-500 via-indigo-500 to-amber-400'
-            : 'bg-gradient-to-r from-transparent via-gray-200/70 to-transparent dark:via-gray-700/60',
+            ? 'bg-gradient-to-r from-indigo-500 via-violet-500 to-amber-400'
+            : 'bg-gradient-to-r from-transparent via-slate-200/70 to-transparent dark:via-slate-700/60',
         ].join(' ')}
       />
 
@@ -261,39 +260,38 @@ function ServiceCard({
             <div
               className={[
                 'h-10 w-10 rounded-xl flex items-center justify-center',
-                'bg-purple-600/10 dark:bg-purple-400/10',
-                'ring-1 ring-purple-600/10 dark:ring-purple-400/10',
+                'bg-indigo-600/10 dark:bg-indigo-400/10',
+                'ring-1 ring-indigo-600/10 dark:ring-indigo-400/10',
                 'transition-transform duration-300 group-hover:scale-[1.03]',
               ].join(' ')}
             >
-              <Icon className="text-purple-700 dark:text-purple-200" size={20} />
+              <Icon className="text-indigo-700 dark:text-indigo-200" size={20} />
             </div>
 
             <div>
-              <p className="text-[11px] uppercase tracking-widest text-purple-700/90 dark:text-purple-200/90">
+              <p className="text-[11px] uppercase tracking-widest text-indigo-700/90 dark:text-indigo-200/90">
                 {subtitle}
               </p>
-              <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 leading-snug">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 leading-snug">
                 {title}
               </h3>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Premium en TODOS */}
             <Badge variant="premium">Premium</Badge>
             {destacado ? <Badge variant="destacado">Más solicitado</Badge> : null}
           </div>
         </div>
 
-        <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{description}</p>
+        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{description}</p>
 
         <div className="pt-1">
           <Button
             className={[
               'w-full rounded-xl text-white',
-              'bg-gradient-to-r from-purple-600 to-indigo-600',
-              'hover:from-purple-700 hover:to-indigo-700',
+              'bg-gradient-to-r from-indigo-600 to-violet-600',
+              'hover:from-indigo-700 hover:to-violet-700',
               'shadow-[0_14px_35px_-22px_rgba(99,102,241,0.65)]',
             ].join(' ')}
             onClick={onClick}
@@ -301,7 +299,7 @@ function ServiceCard({
             {buttonText} <ArrowRight size={16} className="ml-2" />
           </Button>
 
-          <p className="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
             Respuesta rápida por WhatsApp • Enfoque en aprobación y aprendizaje
           </p>
         </div>
@@ -311,7 +309,7 @@ function ServiceCard({
 }
 
 export default function ServiciosClient() {
-  const [visibleCount, setVisibleCount] = useState(8)
+  const [visibleCount, setVisibleCount] = useState(9)
   const [filtroCategoria, setFiltroCategoria] = useState<Categoria>('Todos')
 
   const totalFiltrado = useMemo(() => {
@@ -328,7 +326,7 @@ export default function ServiciosClient() {
     return base.slice(0, visibleCount)
   }, [visibleCount, filtroCategoria])
 
-  const loadMore = () => setVisibleCount((prev) => prev + 8)
+  const loadMore = () => setVisibleCount((prev) => prev + 9)
 
   const handleWhatsAppClick = (servicio?: string) => {
     toast.success('Redirigiendo a WhatsApp...')
@@ -346,42 +344,42 @@ export default function ServiciosClient() {
       >
         <div className="text-center lg:text-left">
           <div className="inline-flex items-center gap-2 justify-center lg:justify-start mb-3">
-            <Sparkles className="text-purple-600" size={22} />
-            <span className="text-purple-700 dark:text-purple-200 font-semibold text-xs sm:text-sm uppercase tracking-wider">
+            <Sparkles className="text-indigo-600" size={22} />
+            <span className="text-indigo-700 dark:text-indigo-200 font-semibold text-xs sm:text-sm uppercase tracking-wider">
               Servicios académicos StudyDocu
             </span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white leading-tight">
             Servicios académicos profesionales
-            <span className="block text-purple-700 dark:text-purple-200">
+            <span className="block text-indigo-700 dark:text-indigo-200">
               para estudiantes universitarios
             </span>
           </h1>
 
-          <p className="mt-3 text-sm sm:text-base text-gray-600 dark:text-gray-300 max-w-2xl">
+          <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl">
             Te acompañamos en todo tu ciclo académico: ensayos, exámenes, plataformas
             universitarias, resúmenes, normas APA y asesorías personalizadas. Enfoque fuerte para
             UTPL y universidades de Ecuador.
           </p>
 
           <div className="mt-5 flex flex-wrap gap-3 justify-center lg:justify-start">
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-200">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
               <ShieldCheck className="text-emerald-600 dark:text-emerald-300" size={18} />
               <span>Calidad académica verificada</span>
             </div>
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-200">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
               <Clock className="text-indigo-600 dark:text-indigo-300" size={18} />
               <span>Respuestas rápidas</span>
             </div>
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-200">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
               <GraduationCap className="text-amber-600 dark:text-amber-300" size={18} />
               <span>Enfoque en aprobación y aprendizaje</span>
             </div>
           </div>
         </div>
 
-        <Card className="border border-gray-200/60 dark:border-gray-700/60 shadow-xl bg-gradient-to-br from-purple-600 via-indigo-600 to-amber-500 text-white relative overflow-hidden rounded-2xl">
+        <Card className="border border-slate-200/60 dark:border-slate-700/60 shadow-xl bg-gradient-to-br from-indigo-600 via-violet-600 to-amber-500 text-white relative overflow-hidden rounded-2xl">
           <div className="absolute inset-0 bg-black/10" />
           <CardContent className="relative p-6 flex flex-col gap-4">
             <div className="flex items-center gap-3">
@@ -414,7 +412,7 @@ export default function ServiciosClient() {
             <Button
               onClick={() => handleWhatsAppClick()}
               size="lg"
-              className="mt-2 bg-white text-gray-900 hover:bg-gray-100 rounded-xl"
+              className="mt-2 bg-white text-slate-900 hover:bg-slate-100 rounded-xl"
             >
               📲 Hablar con un asesor
             </Button>
@@ -436,20 +434,20 @@ export default function ServiciosClient() {
       >
         <div className="flex items-end justify-between gap-4 mb-4">
           <div>
-            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Nuevo
             </p>
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
               OTROS SERVICIOS
             </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
               Acompañamiento de alto nivel para trabajos de titulación y proyectos de investigación.
             </p>
           </div>
 
           <Button
             variant="outline"
-            className="rounded-xl border-gray-200 dark:border-gray-700"
+            className="rounded-xl border-slate-200 dark:border-slate-700"
             onClick={() => handleWhatsAppClick('Tesis (Pregrado / Posgrado / Doctorado)')}
           >
             Cotizar tesis <ArrowRight size={16} className="ml-2" />
@@ -481,11 +479,11 @@ export default function ServiciosClient() {
       {/* Filtro */}
       <section className="mb-6">
         <div className="flex items-center gap-2 mb-3">
-          <Filter size={16} className="text-purple-600" />
-          <span className="text-xs uppercase tracking-wide text-gray-600 dark:text-gray-300">
+          <Filter size={16} className="text-indigo-600" />
+          <span className="text-xs uppercase tracking-wide text-slate-600 dark:text-slate-300">
             Filtrar por tipo de servicio
           </span>
-          <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
+          <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">
             Mostrando {Math.min(visibleCount, totalFiltrado)} de {totalFiltrado}
           </span>
         </div>
@@ -498,13 +496,13 @@ export default function ServiciosClient() {
                 key={cat}
                 onClick={() => {
                   setFiltroCategoria(cat)
-                  setVisibleCount(8)
+                  setVisibleCount(9)
                 }}
                 className={[
                   'px-3 py-1.5 rounded-full text-xs sm:text-sm border transition-all',
                   isActive
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-transparent shadow-sm'
-                    : 'bg-white/70 dark:bg-gray-900/60 text-gray-700 dark:text-gray-200 border-gray-200/80 dark:border-gray-700/70 hover:bg-gray-100 dark:hover:bg-gray-800',
+                    ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-transparent shadow-sm'
+                    : 'bg-white/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700/70 hover:bg-slate-100 dark:hover:bg-slate-800',
                 ].join(' ')}
               >
                 {cat}
@@ -514,8 +512,8 @@ export default function ServiciosClient() {
         </div>
       </section>
 
-      {/* Grid servicios */}
-      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {/* Grid servicios (✅ ahora solo 3 columnas máximo, uniforme como arriba) */}
+      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {serviciosFiltrados.map((servicio, index) => (
           <motion.div
             key={`${servicio.titulo}-${index}`}
@@ -541,7 +539,7 @@ export default function ServiciosClient() {
         <div className="text-center mt-10">
           <Button
             onClick={loadMore}
-            className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100 px-6 py-3 rounded-xl shadow-sm transition"
+            className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 px-6 py-3 rounded-xl shadow-sm transition"
           >
             Ver más servicios
           </Button>
@@ -550,15 +548,15 @@ export default function ServiciosClient() {
 
       {/* SEO */}
       <section className="mt-14 max-w-4xl mx-auto text-center lg:text-left">
-        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">
+        <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-3">
           ¿Por qué contratar los servicios académicos de StudyDocu?
         </h2>
-        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4">
+        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mb-4">
           En StudyDocu apoyamos a estudiantes de la UTPL y diversas universidades del Ecuador con un
           enfoque responsable y orientado al aprendizaje. Nuestros servicios optimizan tu tiempo y
           mejoran tu rendimiento académico.
         </p>
-        <ul className="grid gap-3 sm:grid-cols-2 text-sm text-gray-700 dark:text-gray-200">
+        <ul className="grid gap-3 sm:grid-cols-2 text-sm text-slate-700 dark:text-slate-200">
           <li>✅ Ensayos académicos en formato APA con fuentes confiables.</li>
           <li>✅ Acompañamiento en exámenes bimestrales, quices y complexivos.</li>
           <li>✅ Manejo experto de plataformas universitarias (incluida UTPL).</li>
@@ -576,7 +574,7 @@ export default function ServiciosClient() {
         >
           📲 Solicitar servicio por WhatsApp
         </Button>
-        <p className="mt-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-3 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
           Respuesta rápida. Cuéntanos qué necesitas y te ofrecemos la mejor opción académica.
         </p>
       </div>
