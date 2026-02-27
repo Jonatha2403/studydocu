@@ -284,32 +284,43 @@ export default function RegisterForm() {
     }
   }
 
-  /* ---------------------------------- UI fx --------------------------------- */
+  /* ---------------------------------- UI styles ------------------------------ */
   const inputClass = (field: string) =>
     [
       'w-full px-4 py-3 rounded-xl border text-sm transition',
-      'bg-white/80',
-      errors[field] ? 'border-rose-400/80' : 'border-slate-200',
-      'text-slate-900 placeholder:text-slate-400',
-      'focus:outline-none focus:ring-2 focus:ring-cyan-400/35 focus:border-cyan-400/50',
+      // light
+      'bg-white/85 text-slate-900 placeholder:text-slate-400',
+      errors[field] ? 'border-rose-400/80' : 'border-slate-200/90',
       'hover:border-slate-300',
+      // focus
+      'focus:outline-none focus:ring-2 focus:ring-violet-500/25 focus:border-violet-500/40',
+      // dark
+      'dark:bg-white/5 dark:text-white dark:placeholder:text-white/40',
+      errors[field] ? 'dark:border-rose-500/60' : 'dark:border-white/10',
+      'dark:hover:border-white/20',
+      'dark:focus:ring-violet-400/25 dark:focus:border-violet-400/30',
     ].join(' ')
 
   const softCard =
     'rounded-2xl border border-slate-200/70 bg-white/70 ' +
-    'shadow-[0_18px_55px_-30px_rgba(15,23,42,0.25)] backdrop-blur-xl'
+    'shadow-[0_18px_55px_-30px_rgba(15,23,42,0.25)] backdrop-blur-xl ' +
+    'dark:border-white/10 dark:bg-white/5 dark:shadow-[0_18px_60px_-34px_rgba(0,0,0,0.55)]'
+
+  const primaryLink = 'text-violet-700 hover:underline font-semibold dark:text-violet-200'
 
   return (
     <div className="relative">
       {/* Header */}
       <div className="text-center mb-5">
-        <div className="mx-auto mb-3 inline-flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/70 px-3 py-1 text-[12px] text-slate-600 shadow-sm backdrop-blur">
-          <Sparkles className="h-4 w-4 text-cyan-600" />
+        <div className="mx-auto mb-3 inline-flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/70 px-3 py-1 text-[12px] text-slate-700 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-white/80">
+          <Sparkles className="h-4 w-4 text-violet-600 dark:text-violet-300" />
           <span>Crear tu cuenta en StudyDocu</span>
         </div>
 
-        <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Crear cuenta</h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
+          Crear cuenta
+        </h2>
+        <p className="mt-1 text-sm text-slate-600 dark:text-white/60">
           Empieza a estudiar más rápido con IA y organización real.
         </p>
       </div>
@@ -322,11 +333,12 @@ export default function RegisterForm() {
           className={[
             'w-full flex items-center justify-center gap-3 py-3 rounded-xl transition',
             'bg-white text-slate-900 hover:bg-slate-50',
-            'border border-slate-200/80',
+            'border border-slate-200/90',
             'shadow-[0_10px_25px_-18px_rgba(15,23,42,0.25)]',
+            'active:scale-[0.99]',
+            'dark:bg-white/5 dark:text-white dark:hover:bg-white/8 dark:border-white/10',
           ].join(' ')}
         >
-          {/* ✅ Logo real (tu archivo) */}
           <img src="/google-icon.svg" alt="Google" className="h-5 w-5" />
           <span className="text-sm font-semibold">Continuar con Google</span>
         </button>
@@ -336,11 +348,13 @@ export default function RegisterForm() {
           onClick={() => setShowEmailForm((s) => !s)}
           className={[
             'w-full flex items-center justify-center gap-2 py-3 rounded-xl transition',
-            'border border-slate-200/80 bg-[#EEF2FF] hover:bg-[#E0E7FF]',
-            'text-slate-900',
+            'border border-slate-200/90 bg-gradient-to-r from-violet-50 to-indigo-50 hover:from-violet-100 hover:to-indigo-100',
+            'text-slate-900 shadow-[0_10px_25px_-20px_rgba(99,102,241,0.28)]',
+            'active:scale-[0.99]',
+            'dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/8 dark:shadow-none',
           ].join(' ')}
         >
-          <Mail className="w-5 h-5 text-cyan-600" />
+          <Mail className="w-5 h-5 text-violet-600 dark:text-violet-300" />
           <span className="text-sm font-semibold">
             {showEmailForm ? 'Ocultar formulario' : 'Registrarse con email'}
           </span>
@@ -348,13 +362,13 @@ export default function RegisterForm() {
       </div>
 
       {/* Legal */}
-      <p className="text-[12px] text-slate-600 leading-snug text-center mb-4 px-1">
+      <p className="text-[12px] text-slate-600 leading-snug text-center mb-4 px-1 dark:text-white/55">
         Al registrarte, aceptas los{' '}
-        <Link href="/terminos" className="text-cyan-700 hover:underline font-medium">
+        <Link href="/terminos" className={primaryLink}>
           Términos y Condiciones
         </Link>{' '}
         y la{' '}
-        <Link href="/privacidad" className="text-cyan-700 hover:underline font-medium">
+        <Link href="/privacidad" className={primaryLink}>
           Política de Privacidad
         </Link>{' '}
         de StudyDocu.
@@ -372,11 +386,11 @@ export default function RegisterForm() {
           >
             {/* Divider */}
             <div className="flex items-center my-4">
-              <div className="flex-1 h-px bg-slate-200/70" />
-              <span className="mx-3 text-[11px] text-slate-500 tracking-wider">
+              <div className="flex-1 h-px bg-slate-200/70 dark:bg-white/10" />
+              <span className="mx-3 text-[11px] text-slate-500 tracking-wider dark:text-white/45">
                 REGISTRO CON CORREO
               </span>
-              <div className="flex-1 h-px bg-slate-200/70" />
+              <div className="flex-1 h-px bg-slate-200/70 dark:bg-white/10" />
             </div>
 
             <motion.form
@@ -389,7 +403,7 @@ export default function RegisterForm() {
               {/* Nombre */}
               <div>
                 <div className="relative">
-                  <UserCircle2 className="absolute left-3 top-3.5 w-5 h-5 text-slate-400" />
+                  <UserCircle2 className="absolute left-3 top-3.5 w-5 h-5 text-slate-400 dark:text-white/35" />
                   <input
                     className={`${inputClass('nombre_completo')} pl-10`}
                     placeholder="Nombre completo"
@@ -405,19 +419,24 @@ export default function RegisterForm() {
               {/* Username */}
               <div>
                 <div className="relative">
-                  <ShieldCheck className="absolute left-3 top-3.5 w-5 h-5 text-slate-400" />
+                  <ShieldCheck className="absolute left-3 top-3.5 w-5 h-5 text-slate-400 dark:text-white/35" />
                   <input
                     className={`${inputClass('username')} pl-10 pr-24`}
                     placeholder="Nombre de usuario (min. 3)"
                     aria-label="Nombre de usuario"
                     autoComplete="username"
                     value={form.username}
-                    onChange={(e) => setForm({ ...form, username: normalizeUsername(e.target.value) })}
+                    onChange={(e) =>
+                      setForm({ ...form, username: normalizeUsername(e.target.value) })
+                    }
                   />
                   <StatusChip status={usernameStatus} />
                 </div>
-                <div className="mt-1 text-[11px] text-slate-500">
-                  Se permite <span className="font-medium text-slate-700">a–z, 0–9, . _ -</span>
+                <div className="mt-1 text-[11px] text-slate-500 dark:text-white/45">
+                  Se permite{' '}
+                  <span className="font-medium text-slate-700 dark:text-white/75">
+                    a–z, 0–9, . _ -
+                  </span>
                 </div>
                 {errors.username && <FieldError>{errors.username}</FieldError>}
               </div>
@@ -425,7 +444,7 @@ export default function RegisterForm() {
               {/* Email */}
               <div>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3.5 w-5 h-5 text-slate-400" />
+                  <Mail className="absolute left-3 top-3.5 w-5 h-5 text-slate-400 dark:text-white/35" />
                   <input
                     type="email"
                     className={`${inputClass('email')} pl-10 pr-24`}
@@ -443,7 +462,7 @@ export default function RegisterForm() {
               {/* Password */}
               <div>
                 <div className="relative">
-                  <KeyRound className="absolute left-3 top-3.5 w-5 h-5 text-slate-400" />
+                  <KeyRound className="absolute left-3 top-3.5 w-5 h-5 text-slate-400 dark:text-white/35" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     className={`${inputClass('password')} pl-10 pr-10`}
@@ -458,20 +477,20 @@ export default function RegisterForm() {
                   <button
                     type="button"
                     aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                    className="absolute right-3 top-2.5 p-1 rounded-md hover:bg-slate-100 transition"
+                    className="absolute right-3 top-2.5 p-1 rounded-md hover:bg-slate-100 transition dark:hover:bg-white/10"
                     onClick={() => setShowPassword((s) => !s)}
                   >
                     {showPassword ? (
-                      <EyeOff className="w-5 h-5 text-slate-600" />
+                      <EyeOff className="w-5 h-5 text-slate-600 dark:text-white/70" />
                     ) : (
-                      <Eye className="w-5 h-5 text-slate-600" />
+                      <Eye className="w-5 h-5 text-slate-600 dark:text-white/70" />
                     )}
                   </button>
                 </div>
 
                 {/* Barra de fuerza */}
                 <div className="mt-2">
-                  <div className="h-2 w-full rounded-full bg-slate-200/70 overflow-hidden">
+                  <div className="h-2 w-full rounded-full bg-slate-200/70 overflow-hidden dark:bg-white/10">
                     <div
                       className={`h-2 rounded-full transition-all duration-300 ${
                         passwordStrength === 'fuerte'
@@ -484,16 +503,17 @@ export default function RegisterForm() {
                     />
                   </div>
 
-                  <div className="mt-1 text-[11px] text-slate-600 flex items-center gap-2">
-                    Fortaleza: <b className="capitalize text-slate-800">{passwordStrength}</b>
+                  <div className="mt-1 text-[11px] text-slate-600 flex items-center gap-2 dark:text-white/60">
+                    Fortaleza:{' '}
+                    <b className="capitalize text-slate-800 dark:text-white">{passwordStrength}</b>
                     {capsLockOn && (
-                      <span className="inline-flex items-center gap-1 text-rose-600">
+                      <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-300">
                         <CircleSlash className="w-3.5 h-3.5" /> Mayúsculas activadas
                       </span>
                     )}
                   </div>
 
-                  <ul className="mt-1 text-[11px] text-slate-600 grid grid-cols-2 gap-x-3">
+                  <ul className="mt-1 text-[11px] text-slate-600 grid grid-cols-2 gap-x-3 dark:text-white/55">
                     <Req ok={form.password.length >= 8}>Mínimo 8 caracteres</Req>
                     <Req ok={/[0-9]/.test(form.password)}>Al menos un número</Req>
                     <Req ok={/[A-Z]/.test(form.password)}>Una mayúscula</Req>
@@ -507,7 +527,7 @@ export default function RegisterForm() {
               {/* Universidad */}
               <div>
                 <div className="relative">
-                  <GraduationCap className="absolute left-3 top-3.5 w-5 h-5 text-slate-400" />
+                  <GraduationCap className="absolute left-3 top-3.5 w-5 h-5 text-slate-400 dark:text-white/35" />
                   <select
                     className={`${inputClass('universidad')} pl-10`}
                     value={form.universidad}
@@ -573,26 +593,26 @@ export default function RegisterForm() {
 
               {/* Checkboxes */}
               <div className="flex flex-col gap-2 pt-1">
-                <label className="flex items-center gap-2 text-sm text-slate-700">
+                <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-white/75">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 rounded border-slate-300 bg-white text-cyan-600 focus:ring-cyan-400/40"
+                    className="h-4 w-4 rounded border-slate-300 bg-white text-violet-600 focus:ring-violet-400/40 dark:border-white/20 dark:bg-white/10"
                     checked={form.recordar}
                     onChange={(e) => setForm({ ...form, recordar: e.target.checked })}
                   />
                   Recordar correo
                 </label>
 
-                <label className="flex items-start gap-2 text-sm text-slate-700">
+                <label className="flex items-start gap-2 text-sm text-slate-700 dark:text-white/75">
                   <input
                     type="checkbox"
-                    className="mt-0.5 h-4 w-4 rounded border-slate-300 bg-white text-cyan-600 focus:ring-cyan-400/40"
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 bg-white text-violet-600 focus:ring-violet-400/40 dark:border-white/20 dark:bg-white/10"
                     checked={form.terms}
                     onChange={(e) => setForm({ ...form, terms: e.target.checked })}
                   />
                   <span>
                     Acepto los{' '}
-                    <Link href="/terminos" className="text-cyan-700 hover:underline font-medium">
+                    <Link href="/terminos" className={primaryLink}>
                       Términos y Privacidad
                     </Link>
                   </span>
@@ -607,8 +627,8 @@ export default function RegisterForm() {
                 className={[
                   'w-full py-3 rounded-xl font-semibold transition',
                   'text-white',
-                  'bg-gradient-to-r from-[#7C5CFF] via-[#5C7CFA] to-[#38BDF8]',
-                  'hover:shadow-[0_18px_45px_-26px_rgba(56,189,248,0.65)] hover:scale-[1.01]',
+                  'bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-500',
+                  'hover:opacity-[0.98] hover:shadow-[0_18px_45px_-26px_rgba(99,102,241,0.55)] hover:scale-[1.01]',
                   'disabled:opacity-60 disabled:hover:scale-100',
                 ].join(' ')}
                 disabled={loading}
@@ -627,9 +647,9 @@ export default function RegisterForm() {
       </AnimatePresence>
 
       {/* Link login */}
-      <p className="text-center text-sm text-cyan-700 mt-5">
+      <p className="text-center text-sm mt-5 text-slate-700 dark:text-white/70">
         ¿Ya tienes una cuenta?{' '}
-        <Link href="/iniciar-sesion" className="font-semibold hover:underline">
+        <Link href="/iniciar-sesion" className={primaryLink}>
           Inicia sesión aquí
         </Link>
       </p>
@@ -645,28 +665,28 @@ export default function RegisterForm() {
             </div>
 
             <motion.div
-              className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
+              className="fixed inset-0 bg-black/45 flex items-center justify-center z-50 px-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="bg-white p-6 rounded-2xl shadow-xl text-center max-w-sm w-full border border-slate-200/70"
+                className="bg-white p-6 rounded-2xl shadow-xl text-center max-w-sm w-full border border-slate-200/70 dark:bg-[#0B1020] dark:border-white/10"
                 initial={{ scale: 0.95, y: 10 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.95, y: 10 }}
               >
                 <CheckCircle2 className="mx-auto mb-3 text-emerald-500" size={48} />
-                <h3 className="text-xl font-semibold mb-1 text-slate-900">
+                <h3 className="text-xl font-semibold mb-1 text-slate-900 dark:text-white">
                   ¡Cuenta creada!
                 </h3>
-                <p className="text-slate-600">
+                <p className="text-slate-600 dark:text-white/65">
                   Revisa tu correo para confirmar tu cuenta.
                 </p>
 
                 <Link
                   href="/"
-                  className="mt-4 inline-flex justify-center w-full px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-semibold hover:opacity-95 transition"
+                  className="mt-4 inline-flex justify-center w-full px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-500 text-white font-semibold hover:opacity-95 transition"
                 >
                   Volver al inicio
                 </Link>
@@ -691,29 +711,35 @@ function StatusChip({ status }: { status: Status }) {
   if (status === 'idle') return null
 
   const base =
-    'absolute right-2 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] border bg-white/80 backdrop-blur'
+    'absolute right-2 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] border backdrop-blur'
   const styles =
     status === 'available'
-      ? 'text-emerald-700 border-emerald-200'
+      ? 'text-emerald-700 border-emerald-200 bg-emerald-50/70 dark:text-emerald-200 dark:border-emerald-500/20 dark:bg-emerald-500/10'
       : status === 'unavailable'
-        ? 'text-rose-700 border-rose-200'
-        : 'text-slate-600 border-slate-200'
+        ? 'text-rose-700 border-rose-200 bg-rose-50/70 dark:text-rose-200 dark:border-rose-500/20 dark:bg-rose-500/10'
+        : 'text-slate-600 border-slate-200 bg-white/70 dark:text-white/65 dark:border-white/10 dark:bg-white/5'
 
   return (
     <span className={`${base} ${styles}`}>
       {status === 'checking' && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
       {status === 'available' && <CheckCircle2 className="w-3.5 h-3.5" />}
       {status === 'unavailable' && <CircleSlash className="w-3.5 h-3.5" />}
-      <span>{status === 'checking' ? 'Comprobando…' : status === 'available' ? 'Disponible' : 'En uso'}</span>
+      <span>
+        {status === 'checking' ? 'Comprobando…' : status === 'available' ? 'Disponible' : 'En uso'}
+      </span>
     </span>
   )
 }
 
 function Req({ ok, children }: { ok: boolean; children: React.ReactNode }) {
   return (
-    <span className={`inline-flex items-center gap-1 ${ok ? 'text-emerald-700' : 'text-slate-600'}`}>
+    <span
+      className={`inline-flex items-center gap-1 ${
+        ok ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-600 dark:text-white/55'
+      }`}
+    >
       <span
-        className={`w-1.5 h-1.5 rounded-full ${ok ? 'bg-emerald-500' : 'bg-slate-300'}`}
+        className={`w-1.5 h-1.5 rounded-full ${ok ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-white/20'}`}
         aria-hidden="true"
       />
       {children}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Lottie from 'lottie-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -43,22 +43,66 @@ const featureItems = [
   { name: 'Tareas', icon: CheckCircle2, description: 'Organiza y gestiona tus pendientes.' },
   { name: 'Documentos', icon: FileText, description: 'Centraliza tus apuntes y trabajos.' },
   { name: 'Chat', icon: MessageSquare, description: 'Colabora en tiempo real con tu equipo.' },
-  { name: 'IA Asistente', icon: Brain, description: 'Potencia tu estudio con respuestas inteligentes.' },
-  { name: 'Calendario', icon: CalendarDays, description: 'Visualiza entregas, exámenes y plazos clave.' },
+  {
+    name: 'IA Asistente',
+    icon: Brain,
+    description: 'Potencia tu estudio con respuestas inteligentes.',
+  },
+  {
+    name: 'Calendario',
+    icon: CalendarDays,
+    description: 'Visualiza entregas, exámenes y plazos clave.',
+  },
   { name: 'Metas', icon: Goal, description: 'Define objetivos y mide tu avance.' },
-  { name: 'Suscripciones', icon: CreditCard, description: 'Accede a funciones premium sin complicaciones.' },
-  { name: 'Dashboards', icon: LayoutDashboard, description: 'Monitorea tu progreso académico visualmente.' },
-  { name: 'Asesores verificados', icon: UserCheck, description: 'Recibe apoyo de profesionales validados.' },
+  {
+    name: 'Suscripciones',
+    icon: CreditCard,
+    description: 'Accede a funciones premium sin complicaciones.',
+  },
+  {
+    name: 'Dashboards',
+    icon: LayoutDashboard,
+    description: 'Monitorea tu progreso académico visualmente.',
+  },
+  {
+    name: 'Asesores verificados',
+    icon: UserCheck,
+    description: 'Recibe apoyo de profesionales validados.',
+  },
   { name: 'Referidos', icon: Gift, description: 'Invita amigos y gana recompensas exclusivas.' },
-  { name: 'Blog educativo', icon: BookOpenCheck, description: 'Tips, guías y buenas prácticas de estudio.' },
-  { name: 'Modo universidad segura', icon: ShieldCheck, description: 'Configurado según políticas institucionales.' },
+  {
+    name: 'Blog educativo',
+    icon: BookOpenCheck,
+    description: 'Tips, guías y buenas prácticas de estudio.',
+  },
+  {
+    name: 'Modo universidad segura',
+    icon: ShieldCheck,
+    description: 'Configurado según políticas institucionales.',
+  },
 ]
 
 const extraItems = [
-  { name: 'Resumen automático', icon: Wand2, description: 'IA que resume tus documentos al subirlos.' },
-  { name: 'Vista previa inteligente', icon: Eye, description: 'Explora el contenido sin abrir cada archivo.' },
-  { name: 'Moderación automática', icon: ShieldCheck, description: 'IA que ayuda a revisar el contenido.' },
-  { name: 'Sistema de recompensas', icon: Gift, description: 'Gana puntos y beneficios por participar.' },
+  {
+    name: 'Resumen automático',
+    icon: Wand2,
+    description: 'IA que resume tus documentos al subirlos.',
+  },
+  {
+    name: 'Vista previa inteligente',
+    icon: Eye,
+    description: 'Explora el contenido sin abrir cada archivo.',
+  },
+  {
+    name: 'Moderación automática',
+    icon: ShieldCheck,
+    description: 'IA que ayuda a revisar el contenido.',
+  },
+  {
+    name: 'Sistema de recompensas',
+    icon: Gift,
+    description: 'Gana puntos y beneficios por participar.',
+  },
 ]
 
 // ✅ Schema config
@@ -87,18 +131,46 @@ function Badge({
   tone?: 'indigo' | 'fuchsia' | 'emerald' | 'amber'
 }) {
   const tones: Record<string, string> = {
-    indigo: 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-200',
-    fuchsia: 'bg-fuchsia-50 dark:bg-fuchsia-900/40 text-fuchsia-700 dark:text-fuchsia-200',
-    emerald: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-200',
-    amber: 'bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200',
+    indigo:
+      'bg-indigo-50/80 dark:bg-indigo-900/25 text-indigo-700 dark:text-indigo-200 border border-indigo-200/60 dark:border-indigo-300/15',
+    fuchsia:
+      'bg-fuchsia-50/80 dark:bg-fuchsia-900/25 text-fuchsia-700 dark:text-fuchsia-200 border border-fuchsia-200/60 dark:border-fuchsia-300/15',
+    emerald:
+      'bg-emerald-50/80 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-200 border border-emerald-200/60 dark:border-emerald-300/15',
+    amber:
+      'bg-amber-50/80 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 border border-amber-200/60 dark:border-amber-300/15',
   }
 
   return (
     <div
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-[0.18em] ${tones[tone]}`}
+      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.18em] ${tones[tone]} backdrop-blur`}
     >
       {icon}
       {label}
+    </div>
+  )
+}
+
+function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <section className={`w-full max-w-7xl mx-auto px-4 sm:px-6 ${className}`}>{children}</section>
+  )
+}
+
+function GradientCard({
+  children,
+  className = '',
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div
+      className={`rounded-3xl p-[1px] bg-gradient-to-r from-indigo-500/25 via-purple-500/20 to-fuchsia-500/25 ${className}`}
+    >
+      <div className="rounded-3xl bg-white/70 dark:bg-gray-950/45 border border-white/50 dark:border-white/10 md:backdrop-blur-xl shadow-[0_20px_70px_-35px_rgba(15,23,42,0.45)]">
+        {children}
+      </div>
     </div>
   )
 }
@@ -117,7 +189,7 @@ function SpotlightCard({
   const sy = useSpring(my, { stiffness: 220, damping: 30 })
 
   const bg = useTransform([sx, sy], ([x, y]) => {
-    return `radial-gradient(240px circle at ${x}px ${y}px, rgba(99,102,241,0.22), rgba(168,85,247,0.10), transparent 60%)`
+    return `radial-gradient(280px circle at ${x}px ${y}px, rgba(99,102,241,0.22), rgba(168,85,247,0.10), transparent 62%)`
   })
 
   return (
@@ -129,7 +201,14 @@ function SpotlightCard({
         mx.set(e.clientX - rect.left)
         my.set(e.clientY - rect.top)
       }}
-      className={`relative overflow-hidden rounded-2xl border border-white/40 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md shadow-sm hover:shadow-xl transition-all ${className}`}
+      className={[
+        'relative overflow-hidden rounded-2xl',
+        'border border-white/50 dark:border-white/10',
+        'bg-white/75 dark:bg-gray-900/55',
+        'md:backdrop-blur-md shadow-sm hover:shadow-xl',
+        'transition-all',
+        className,
+      ].join(' ')}
     >
       <motion.div
         aria-hidden
@@ -186,6 +265,7 @@ export default function HomeClient() {
   const router = useRouter()
 
   useEffect(() => {
+    // Mantengo tu lógica actual (ideal sería next-themes, pero no lo toco)
     const isDark = localStorage.getItem('theme') === 'dark'
     document.documentElement.classList.toggle('dark', isDark)
 
@@ -193,19 +273,17 @@ export default function HomeClient() {
       toast.success('🎉 ¡Logro desbloqueado! Primer ingreso a StudyDocu')
       setShowConfetti(true)
       localStorage.setItem('visited', 'true')
-      setTimeout(() => setShowConfetti(false), 5000)
+      setTimeout(() => setShowConfetti(false), 4500)
     }
   }, [])
 
-  const handleStart = () => {
-    router.push(user ? '/dashboard' : '/registrarse')
-  }
+  const handleStart = () => router.push(user ? '/dashboard' : '/registrarse')
 
   const handleWhatsApp = () => {
     toast.success('Redirigiendo a WhatsApp...')
     window.open(
       'https://wa.me/593958757302?text=Hola%20StudyDocu,%20deseo%20conocer%20m%C3%A1s%20sobre%20la%20plataforma%20y%20sus%20servicios.',
-      '_blank',
+      '_blank'
     )
   }
 
@@ -257,7 +335,7 @@ export default function HomeClient() {
         },
       ],
     }),
-    [],
+    []
   )
 
   return (
@@ -269,121 +347,147 @@ export default function HomeClient() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
       />
 
-      <main className="relative z-10 w-full min-h-screen flex flex-col items-center text-text bg-transparent">
+      <main className="relative z-10 w-full min-h-screen flex flex-col items-center bg-transparent">
+        {/* Fondo premium sutil (no interfiere con tu RootLayout) */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_15%_20%,rgba(99,102,241,0.18),transparent_60%)] dark:bg-[radial-gradient(900px_500px_at_15%_20%,rgba(99,102,241,0.14),transparent_60%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_85%_25%,rgba(168,85,247,0.16),transparent_60%)] dark:bg-[radial-gradient(900px_500px_at_85%_25%,rgba(168,85,247,0.12),transparent_60%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(900px_600px_at_50%_90%,rgba(56,189,248,0.10),transparent_65%)] dark:bg-[radial-gradient(900px_600px_at_50%_90%,rgba(56,189,248,0.08),transparent_65%)]" />
+          <div className="absolute inset-0 opacity-70 dark:opacity-40 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.55),transparent_24%,transparent_76%,rgba(255,255,255,0.28))] dark:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.05),transparent_25%,transparent_75%,rgba(255,255,255,0.03))]" />
+        </div>
+
         {/* Confetti */}
         {showConfetti && (
           <div className="fixed inset-0 z-40 pointer-events-none">
-            <Lottie animationData={confettiAnimation} loop={false} autoplay className="w-full h-full" />
+            <Lottie
+              animationData={confettiAnimation}
+              loop={false}
+              autoplay
+              className="w-full h-full"
+            />
           </div>
         )}
 
-            {/* HERO existente */}
-<HeroAI />
+        {/* HERO existente */}
+        <HeroAI />
 
-{/* ¿Qué es StudyDocu? */}
-<section className="relative w-full max-w-5xl mx-auto px-4 py-16">
-  <div className="rounded-3xl bg-white/70 dark:bg-gray-900/70 md:backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-xl px-6 sm:px-10 py-10">
-    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-      ¿Qué es StudyDocu?
-    </h2>
+        {/* ¿Qué es StudyDocu? */}
+        <Section className="py-14 sm:py-16">
+          <GradientCard>
+            <div className="px-6 sm:px-10 py-10">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <Badge
+                  icon={<Sparkles className="w-4 h-4" />}
+                  label="Plataforma académica con IA"
+                  tone="indigo"
+                />
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200 border border-emerald-200/60 dark:border-emerald-300/20">
+                  Ecuador · UTPL y más
+                </span>
+              </div>
 
-    <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base leading-relaxed mb-4">
-      <strong>StudyDocu</strong> es una plataforma académica con inteligencia artificial,
-      creada en Ecuador, que ayuda a estudiantes universitarios a organizar sus apuntes,
-      comprender mejor sus materias y estudiar de forma más eficiente.
-    </p>
+              <h2 className="mt-5 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+                ¿Qué es StudyDocu?
+              </h2>
 
-    <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base leading-relaxed mb-6">
-      A diferencia de otras plataformas, StudyDocu combina organización académica,
-      herramientas inteligentes y acompañamiento educativo, enfocándose en el aprendizaje
-      real y responsable.
-    </p>
+              <p className="mt-4 text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed">
+                <strong>StudyDocu</strong> es una plataforma académica con inteligencia artificial,
+                creada en Ecuador, que ayuda a estudiantes universitarios a organizar sus apuntes,
+                comprender mejor sus materias y estudiar de forma más eficiente.
+              </p>
 
-    <div className="flex flex-wrap gap-4">
-      <a
-        href="/que-es-studydocu"
-        className="inline-flex items-center px-6 py-3 rounded-full bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
-      >
-        Conoce más sobre StudyDocu →
-      </a>
+              <p className="mt-3 text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed">
+                A diferencia de otras plataformas, StudyDocu combina organización académica,
+                herramientas inteligentes y acompañamiento educativo, con enfoque responsable en el
+                aprendizaje.
+              </p>
 
-      <a
-        href="/registrarse"
-        className="inline-flex items-center px-6 py-3 rounded-full border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-      >
-        Crear cuenta gratis
-      </a>
-    </div>
-  </div>
-</section>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Link
+                  href="/que-es-studydocu"
+                  className="inline-flex items-center px-6 py-3 rounded-full bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
+                >
+                  Conoce más sobre StudyDocu <ArrowRight className="ml-2 w-4 h-4" />
+                </Link>
 
-{/* Conocer sobre el fundador (versión PRO, sin duplicados) */}
-<section className="relative w-full max-w-5xl mx-auto px-4 pb-16">
-  <div className="rounded-3xl p-[1px] bg-gradient-to-r from-indigo-500/35 via-purple-500/30 to-fuchsia-500/35">
-    <div className="rounded-3xl bg-white/80 dark:bg-gray-900/50 md:backdrop-blur-xl border border-gray-200/60 dark:border-white/10 px-6 sm:px-8 py-7 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
-          Conocer sobre el fundador
-        </h3>
+                <Link
+                  href="/registrarse"
+                  className="inline-flex items-center px-6 py-3 rounded-full border border-gray-300/80 dark:border-white/15 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition"
+                >
+                  Crear cuenta gratis
+                </Link>
+              </div>
+            </div>
+          </GradientCard>
+        </Section>
 
-        <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200 border border-emerald-200/60 dark:border-emerald-300/20">
-          Transparencia · Confianza
-        </span>
-      </div>
+        {/* Fundador (PRO, sin duplicados) */}
+        <Section className="pb-14">
+          <GradientCard>
+            <div className="px-6 sm:px-10 py-8">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+                  Conocer sobre el fundador
+                </h3>
 
-      <p className="mt-3 text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
-        StudyDocu fue creado por <strong>Jonathan Octavio Rosado Lopez</strong>, empresario y emprendedor digital,
-        con el objetivo de construir una plataforma académica confiable, moderna y centrada en el aprendizaje real
-        de los estudiantes universitarios en Ecuador.
-      </p>
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-200 border border-amber-200/60 dark:border-amber-300/20">
+                  Transparencia · Confianza
+                </span>
+              </div>
 
-      <div className="mt-5 flex flex-wrap gap-3">
-        <a
-          href="/sobre-mi"
-          className="inline-flex items-center px-5 py-2.5 rounded-full bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
-        >
-          Conocer al fundador →
-        </a>
+              <p className="mt-3 text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
+                StudyDocu fue creado por <strong>Jonathan Octavio Rosado Lopez</strong>, empresario
+                y emprendedor digital, con el objetivo de construir una plataforma académica
+                confiable, moderna y centrada en el aprendizaje real de los estudiantes
+                universitarios en Ecuador.
+              </p>
 
-        <a
-          href="/sobre-mi#studydocu"
-          className="inline-flex items-center px-5 py-2.5 rounded-full border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
-        >
-          Ver misión de StudyDocu
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link
+                  href="/sobre-mi"
+                  className="inline-flex items-center px-5 py-2.5 rounded-full bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
+                >
+                  Conocer al fundador <ArrowRight className="ml-2 w-4 h-4" />
+                </Link>
 
+                <Link
+                  href="/sobre-mi#studydocu"
+                  className="inline-flex items-center px-5 py-2.5 rounded-full border border-gray-300/80 dark:border-white/15 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition"
+                >
+                  Ver misión de StudyDocu
+                </Link>
+              </div>
+            </div>
+          </GradientCard>
+        </Section>
 
-
-
-        {/* --- NUEVO: Sección Demo / Producto en vivo --- */}
-        <section className="relative w-full max-w-6xl mx-auto -mt-8 md:-mt-12 px-4 pb-10">
-          <div className="rounded-3xl border border-white/40 dark:border-white/10 bg-white/70 dark:bg-gray-900/70 shadow-xl backdrop-blur-xl px-5 sm:px-8 py-8 sm:py-10">
-            <div className="grid gap-8 lg:grid-cols-[1.2fr,0.8fr] items-start">
+        {/* Producto/Demo */}
+        <Section className="-mt-4 md:-mt-10 pb-12">
+          <div className="rounded-3xl border border-white/50 dark:border-white/10 bg-white/70 dark:bg-gray-950/40 shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)] md:backdrop-blur-xl px-5 sm:px-8 py-8 sm:py-10">
+            <div className="grid gap-10 lg:grid-cols-[1.2fr,0.8fr] items-start">
               <div className="text-center lg:text-left">
                 <Badge
                   icon={<Sparkles className="w-4 h-4" />}
-                  label="Plataforma académica todo en uno"
+                  label="Todo en un solo lugar"
                   tone="indigo"
                 />
 
                 <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
                   Tu estudio, ordenado y potenciado con IA
-                  <span className="block text-indigo-600 dark:text-indigo-300">en segundos, no en horas.</span>
+                  <span className="block text-indigo-600 dark:text-indigo-300">
+                    en segundos, no en horas.
+                  </span>
                 </h2>
 
-                <p className="mt-3 text-sm sm:text-base text-gray-600 dark:text-gray-300 max-w-2xl">
-                  Sube documentos, organiza tus materias y obtén resúmenes, ideas y apoyo de asesores verificados.
-                  Diseñado para estudiantes de Ecuador (UTPL y más).
+                <p className="mt-3 text-sm sm:text-base text-gray-700 dark:text-gray-300 max-w-2xl">
+                  Sube documentos, organiza tus materias y obtén resúmenes, ideas y apoyo de
+                  asesores verificados. Diseñado para estudiantes de Ecuador (UTPL y más).
                 </p>
 
                 <div className="mt-6 flex flex-wrap gap-3 justify-center lg:justify-start">
                   <Button
                     onClick={handleStart}
-                    className="px-7 py-5 rounded-2xl text-sm sm:text-base bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all"
+                    className="px-7 py-5 rounded-2xl text-sm sm:text-base bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 text-white shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all"
                   >
                     🚀 Empezar gratis <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
@@ -391,7 +495,7 @@ export default function HomeClient() {
                   <Button
                     onClick={handleWhatsApp}
                     variant="outline"
-                    className="px-7 py-5 rounded-2xl text-sm sm:text-base bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border border-white/40 dark:border-gray-800"
+                    className="px-7 py-5 rounded-2xl text-sm sm:text-base bg-white/70 dark:bg-gray-900/50 md:backdrop-blur-md border border-white/50 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/5"
                   >
                     Hablar por WhatsApp
                   </Button>
@@ -416,29 +520,32 @@ export default function HomeClient() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
-                className="rounded-3xl overflow-hidden border border-white/40 dark:border-gray-800 bg-white/60 dark:bg-gray-950/50 backdrop-blur-md shadow-lg"
+                className="rounded-3xl overflow-hidden border border-white/50 dark:border-white/10 bg-white/70 dark:bg-gray-950/50 md:backdrop-blur-md shadow-lg"
               >
-                <div className="p-4 border-b border-white/40 dark:border-gray-800 flex items-center justify-between">
+                <div className="p-4 border-b border-white/50 dark:border-white/10 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
                     <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
                   </div>
-                  <span className="text-xs text-gray-600 dark:text-gray-300">Vista previa · Resumen IA</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-300">
+                    Vista previa · Resumen IA
+                  </span>
                 </div>
 
                 <div className="p-5 grid gap-4">
-                  <div className="rounded-2xl bg-white/70 dark:bg-gray-900/60 border border-white/40 dark:border-gray-800 p-4">
+                  <div className="rounded-2xl bg-white/80 dark:bg-gray-900/55 border border-white/50 dark:border-white/10 p-4">
                     <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
                       <FileText className="w-4 h-4 text-indigo-500" />
                       Macroeconomía · Unidad 6.pdf
                     </div>
-                    <p className="mt-2 text-xs text-gray-600 dark:text-gray-300">
-                      IA detectó: IPC, inflación, deflactor del PIB, tasa de inflación, sesgos de medición.
+                    <p className="mt-2 text-xs text-gray-700 dark:text-gray-300">
+                      IA detectó: IPC, inflación, deflactor del PIB, tasa de inflación, sesgos de
+                      medición.
                     </p>
                   </div>
 
-                  <div className="rounded-2xl bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-fuchsia-500/10 border border-white/40 dark:border-gray-800 p-4">
+                  <div className="rounded-2xl bg-gradient-to-br from-indigo-500/12 via-purple-500/10 to-cyan-500/10 border border-white/50 dark:border-white/10 p-4">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-200">
                         Resumen automático (preview)
@@ -446,7 +553,7 @@ export default function HomeClient() {
                       <span className="text-[11px] text-gray-600 dark:text-gray-300">~ 12s</span>
                     </div>
 
-                    <ul className="mt-3 space-y-2 text-xs text-gray-700 dark:text-gray-200">
+                    <ul className="mt-3 space-y-2 text-xs text-gray-800 dark:text-gray-200">
                       <li className="flex gap-2">
                         <span className="mt-1 w-1.5 h-1.5 rounded-full bg-indigo-500" />
                         El IPC mide el costo de una canasta de bienes/servicios en el tiempo.
@@ -463,15 +570,15 @@ export default function HomeClient() {
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="rounded-2xl bg-white/70 dark:bg-gray-900/60 border border-white/40 dark:border-gray-800 p-3 text-center">
+                    <div className="rounded-2xl bg-white/80 dark:bg-gray-900/55 border border-white/50 dark:border-white/10 p-3 text-center">
                       <p className="text-[11px] text-gray-600 dark:text-gray-300">Tareas hoy</p>
                       <p className="text-lg font-bold text-gray-900 dark:text-white">3</p>
                     </div>
-                    <div className="rounded-2xl bg-white/70 dark:bg-gray-900/60 border border-white/40 dark:border-gray-800 p-3 text-center">
+                    <div className="rounded-2xl bg-white/80 dark:bg-gray-900/55 border border-white/50 dark:border-white/10 p-3 text-center">
                       <p className="text-[11px] text-gray-600 dark:text-gray-300">Exámenes</p>
                       <p className="text-lg font-bold text-gray-900 dark:text-white">1</p>
                     </div>
-                    <div className="rounded-2xl bg-white/70 dark:bg-gray-900/60 border border-white/40 dark:border-gray-800 p-3 text-center">
+                    <div className="rounded-2xl bg-white/80 dark:bg-gray-900/55 border border-white/50 dark:border-white/10 p-3 text-center">
                       <p className="text-[11px] text-gray-600 dark:text-gray-300">Progreso</p>
                       <p className="text-lg font-bold text-gray-900 dark:text-white">72%</p>
                     </div>
@@ -480,28 +587,33 @@ export default function HomeClient() {
               </motion.div>
             </div>
 
-            <div className="mt-8">
+            <div className="mt-10">
               <AnimatedServices />
             </div>
           </div>
-        </section>
+        </Section>
 
-        {/* --- NUEVO: Antes vs Después --- */}
-        <section className="w-full max-w-6xl mx-auto px-4 pb-6">
+        {/* Antes vs Después */}
+        <Section className="pb-12">
           <motion.div
             initial={{ opacity: 0, y: 22 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="rounded-3xl border border-white/40 dark:border-white/10 bg-gradient-to-br from-indigo-50 via-white to-fuchsia-50 dark:from-gray-950 dark:via-gray-950 dark:to-indigo-950 shadow-xl px-5 sm:px-8 py-10"
+            className="rounded-3xl border border-white/50 dark:border-white/10 bg-white/70 dark:bg-gray-950/40 md:backdrop-blur-xl shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)] px-5 sm:px-8 py-10"
           >
             <div className="text-center mb-8">
-              <Badge icon={<Sparkles className="w-4 h-4" />} label="Impacto inmediato" tone="fuchsia" />
+              <Badge
+                icon={<Sparkles className="w-4 h-4" />}
+                label="Impacto inmediato"
+                tone="fuchsia"
+              />
               <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
                 Antes vs Después de StudyDocu
               </h2>
-              <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                Menos caos, más claridad. No solo guardas archivos: los conviertes en estudio accionable.
+              <p className="mt-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
+                Menos caos, más claridad. No solo guardas archivos: los conviertes en estudio
+                accionable.
               </p>
             </div>
 
@@ -511,7 +623,7 @@ export default function HomeClient() {
                   <span className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
                     Antes
                   </span>
-                  <span className="text-[11px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-200">
+                  <span className="text-[11px] px-2 py-1 rounded-full bg-gray-100/80 dark:bg-white/5 border border-gray-200/70 dark:border-white/10 text-gray-700 dark:text-gray-200">
                     Caos
                   </span>
                 </div>
@@ -537,7 +649,7 @@ export default function HomeClient() {
                   <span className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
                     Después
                   </span>
-                  <span className="text-[11px] px-2 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200/60 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-200">
+                  <span className="text-[11px] px-2 py-1 rounded-full bg-indigo-50/80 dark:bg-indigo-500/10 border border-indigo-200/60 dark:border-indigo-300/15 text-indigo-700 dark:text-indigo-200">
                     Control + IA
                   </span>
                 </div>
@@ -559,10 +671,10 @@ export default function HomeClient() {
               </SpotlightCard>
             </div>
           </motion.div>
-        </section>
+        </Section>
 
-        {/* --- NUEVO: Métricas / confianza --- */}
-        <section className="w-full max-w-6xl mx-auto px-4 pt-6 pb-2">
+        {/* Métricas */}
+        <Section className="pb-10">
           <div className="grid gap-4 md:grid-cols-4">
             <SpotlightCard className="p-5 text-center">
               <p className="text-xs text-gray-600 dark:text-gray-300">Documentos organizados</p>
@@ -592,171 +704,213 @@ export default function HomeClient() {
               </p>
             </SpotlightCard>
           </div>
+
           <p className="mt-3 text-center text-[11px] text-gray-500 dark:text-gray-400">
-            *Puedes ajustar estos valores a datos reales cuando tengas métricas internas.
+            *Ajusta estos valores a datos reales cuando tengas métricas internas.
           </p>
-        </section>
+        </Section>
 
         {/* Testimonios */}
-        <section className="relative w-full max-w-6xl mx-auto pt-8 pb-4 px-4">
+        <Section className="pb-12">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="rounded-3xl bg-gradient-to-br from-indigo-50 via-white to-fuchsia-50 dark:from-gray-900 dark:via-gray-950 dark:to-indigo-950 border border-white/50 dark:border-white/10 shadow-xl px-5 sm:px-8 py-10"
+            className="rounded-3xl bg-white/70 dark:bg-gray-950/40 md:backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)] px-5 sm:px-8 py-10"
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-3 text-gray-900 dark:text-white">
-              Lo que dicen nuestros usuarios
-            </h2>
-            <p className="text-sm sm:text-base text-center text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-              Estudiantes de distintas carreras ya usan StudyDocu para estudiar mejor, organizar sus trabajos y
-              aprobar con más tranquilidad.
-            </p>
+            <div className="text-center">
+              <Badge
+                icon={<Sparkles className="w-4 h-4" />}
+                label="Confianza real"
+                tone="emerald"
+              />
+              <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+                Lo que dicen nuestros usuarios
+              </h2>
+              <p className="mt-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+                Estudiantes de distintas carreras ya usan StudyDocu para estudiar mejor, organizar
+                sus trabajos y avanzar con más tranquilidad.
+              </p>
+            </div>
+
             <AnimatedTestimonials />
           </motion.div>
-        </section>
+        </Section>
 
         {/* Asesores */}
-        <section className="w-full max-w-6xl mx-auto pt-6 pb-6 px-4">
+        <Section className="pb-10">
           <AnimatedAsesores />
-        </section>
+        </Section>
 
-        {/* Funcionalidades principales con Spotlight Cards */}
-        <motion.section
-          id="funcionalidades"
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-6xl mx-auto py-10 px-4"
-        >
-          <div className="text-center mb-8">
-            <Badge icon={<LayoutDashboard className="w-4 h-4" />} label="Herramientas para tu día" tone="indigo" />
-            <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-              Funcionalidades que organizan tu vida académica
-            </h2>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Productividad + IA + comunidad. Todo con una interfaz moderna y profesional.
-            </p>
-          </div>
+        {/* Funcionalidades */}
+        <Section className="py-10">
+          <motion.div
+            id="funcionalidades"
+            initial={{ opacity: 0, y: 26 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="text-center mb-8">
+              <Badge
+                icon={<LayoutDashboard className="w-4 h-4" />}
+                label="Herramientas para tu día"
+                tone="indigo"
+              />
+              <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+                Funcionalidades que organizan tu vida académica
+              </h2>
+              <p className="mt-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
+                Productividad + IA + comunidad. Todo con una interfaz moderna y profesional.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-7">
-            {featureItems.map((item, i) => (
-              <motion.div
-                key={item.name}
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.035 }}
-              >
-                <SpotlightCard className="p-6 text-center">
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="h-12 w-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center">
-                      <item.icon className="w-6 h-6 text-indigo-600 dark:text-indigo-300" strokeWidth={1.5} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+              {featureItems.map((item, i) => (
+                <motion.div
+                  key={item.name}
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.03 }}
+                >
+                  <SpotlightCard className="p-6 text-center">
+                    <div className="flex items-center justify-center mb-4">
+                      <div className="h-12 w-12 rounded-2xl bg-indigo-50/80 dark:bg-indigo-500/10 border border-indigo-200/60 dark:border-indigo-300/15 flex items-center justify-center">
+                        <item.icon
+                          className="w-6 h-6 text-indigo-600 dark:text-indigo-200"
+                          strokeWidth={1.5}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{item.name}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{item.description}</p>
-                </SpotlightCard>
-              </motion.div>
-            ))}
-          </div>
-        </motion.section>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                      {item.name}
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {item.description}
+                    </p>
+                  </SpotlightCard>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </Section>
 
         {/* CTA principal */}
-        <section className="w-full max-w-4xl mx-auto text-center px-6 py-10 md:py-14">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 text-gray-900 dark:text-white">
-            ¿Listo para comenzar?
-          </h2>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-6 max-w-2xl mx-auto">
-            Crea tu cuenta en minutos, sube tus primeros apuntes y descubre cómo StudyDocu puede transformar tu manera
-            de estudiar.
-          </p>
+        <Section className="py-12">
+          <div className="text-center">
+            <Badge icon={<Sparkles className="w-4 h-4" />} label="Empieza hoy" tone="fuchsia" />
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button
-              onClick={handleStart}
-              className="px-10 py-5 text-base sm:text-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all"
-            >
-              🚀 Empezar gratis
-            </Button>
+            <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+              ¿Listo para comenzar?
+            </h2>
 
-            <Button
-              onClick={() => router.push('/explorar')}
-              variant="outline"
-              className="px-10 py-5 text-base sm:text-lg rounded-2xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border border-white/40 dark:border-gray-800"
-            >
-              Explorar documentos
-            </Button>
+            <p className="mt-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
+              Crea tu cuenta en minutos, sube tus primeros apuntes y descubre cómo StudyDocu puede
+              transformar tu manera de estudiar.
+            </p>
+
+            <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Button
+                onClick={handleStart}
+                className="px-10 py-5 text-base sm:text-lg bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 text-white rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all"
+              >
+                🚀 Empezar gratis <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+
+              <Button
+                onClick={() => router.push('/explorar')}
+                variant="outline"
+                className="px-10 py-5 text-base sm:text-lg rounded-2xl bg-white/70 dark:bg-gray-900/50 md:backdrop-blur-md border border-white/50 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/5"
+              >
+                Explorar documentos
+              </Button>
+            </div>
+
+            <p className="mt-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+              Sin tarjetas. Solo necesitas tu correo universitario o personal.
+            </p>
           </div>
-
-          <p className="mt-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-            Sin tarjetas. Solo necesitas tu correo universitario o personal.
-          </p>
-        </section>
+        </Section>
 
         {/* Más herramientas */}
-        <motion.section
-          initial={{ opacity: 0, y: 28 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-6xl mx-auto px-4 md:px-6 mt-2 pb-16"
-        >
-          <div className="text-center mb-8">
-            <Badge icon={<Brain className="w-4 h-4" />} label="Potenciado por IA" tone="fuchsia" />
-          </div>
+        <Section className="pb-16">
+          <motion.div
+            initial={{ opacity: 0, y: 22 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="rounded-3xl border border-white/50 dark:border-white/10 bg-white/70 dark:bg-gray-950/40 md:backdrop-blur-xl shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)] px-5 sm:px-8 py-10"
+          >
+            <div className="text-center mb-8">
+              <Badge
+                icon={<Brain className="w-4 h-4" />}
+                label="Potenciado por IA"
+                tone="fuchsia"
+              />
+              <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+                Más herramientas útiles para tu estudio
+              </h2>
+              <p className="mt-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
+                No solo subes documentos. StudyDocu analiza, resume y te da una vista más clara de
+                tu carga académica.
+              </p>
+            </div>
 
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-4 text-gray-900 dark:text-white">
-            Más herramientas útiles para tu estudio
-          </h2>
-
-          <p className="text-sm sm:text-base text-center text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-10">
-            No solo subes documentos. StudyDocu analiza, resume y te da una vista más clara de tu carga académica.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-7">
-            {extraItems.map((item, i) => (
-              <motion.div
-                key={item.name}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-              >
-                <SpotlightCard className="p-6 text-center">
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="h-12 w-12 rounded-2xl bg-fuchsia-50 dark:bg-fuchsia-900/40 flex items-center justify-center">
-                      <item.icon className="w-6 h-6 text-fuchsia-600 dark:text-fuchsia-200" strokeWidth={1.5} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+              {extraItems.map((item, i) => (
+                <motion.div
+                  key={item.name}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.04 }}
+                >
+                  <SpotlightCard className="p-6 text-center">
+                    <div className="flex items-center justify-center mb-4">
+                      <div className="h-12 w-12 rounded-2xl bg-fuchsia-50/80 dark:bg-fuchsia-500/10 border border-fuchsia-200/60 dark:border-fuchsia-300/15 flex items-center justify-center">
+                        <item.icon
+                          className="w-6 h-6 text-fuchsia-600 dark:text-fuchsia-200"
+                          strokeWidth={1.5}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{item.name}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{item.description}</p>
-                </SpotlightCard>
-              </motion.div>
-            ))}
-          </div>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                      {item.name}
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {item.description}
+                    </p>
+                  </SpotlightCard>
+                </motion.div>
+              ))}
+            </div>
 
-          <div className="mt-14 flex justify-center">
-            <Link href="/herramientas">
-              <Button className="text-sm sm:text-base bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border border-white/40 dark:border-gray-800 text-gray-800 dark:text-white font-medium px-8 py-3 rounded-full shadow-sm hover:bg-white/90 dark:hover:bg-gray-800/90 transition-all">
-                Ver todas las herramientas <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </Link>
-          </div>
-        </motion.section>
+            <div className="mt-12 flex justify-center">
+              <Link href="/herramientas">
+                <Button className="text-sm sm:text-base bg-white/75 dark:bg-gray-900/55 md:backdrop-blur-md border border-white/50 dark:border-white/10 text-gray-900 dark:text-white font-medium px-8 py-3 rounded-full shadow-sm hover:bg-white/90 dark:hover:bg-white/5 transition-all">
+                  Ver todas las herramientas <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          </motion.div>
+        </Section>
 
         <Footer />
 
-        {/* CTA flotante */}
+        {/* CTA flotante (premium) */}
         <div className="fixed bottom-4 left-0 right-0 z-30 pointer-events-none">
-          <div className="max-w-6xl mx-auto px-4 flex justify-center">
-            <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/40 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md shadow-xl px-3 py-2">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex justify-center">
+            <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/50 dark:border-white/10 bg-white/75 dark:bg-gray-950/45 md:backdrop-blur-md shadow-[0_20px_60px_-35px_rgba(15,23,42,0.6)] px-3 py-2">
               <Button onClick={handleStart} className="rounded-full px-4 py-2 h-auto">
                 Empezar <ArrowRight className="ml-1 w-4 h-4" />
               </Button>
-              <Button onClick={handleWhatsApp} variant="outline" className="rounded-full px-4 py-2 h-auto">
+              <Button
+                onClick={handleWhatsApp}
+                variant="outline"
+                className="rounded-full px-4 py-2 h-auto bg-white/70 dark:bg-gray-900/50 border border-white/50 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/5"
+              >
                 WhatsApp
               </Button>
             </div>

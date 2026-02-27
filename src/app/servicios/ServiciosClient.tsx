@@ -1,5 +1,4 @@
 // src/app/servicios/ServiciosClient.tsx
-
 'use client'
 
 import { useMemo, useState } from 'react'
@@ -15,7 +14,10 @@ import {
   ArrowRight,
   FileText,
   BadgeCheck,
+  ShieldCheck,
+  Layers,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 
@@ -33,6 +35,7 @@ type Servicio = {
   categoria: Exclude<Categoria, 'Todos'>
   descripcion: string
   destacado?: boolean
+  icon: LucideIcon
 }
 
 const WHATSAPP_NUMBER = '593958757302'
@@ -44,95 +47,131 @@ const buildWhatsAppUrl = (servicio?: string) => {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`
 }
 
+const categorias: Categoria[] = [
+  'Todos',
+  'Ensayos',
+  'Exámenes',
+  'Plataformas',
+  'Diseño',
+  'Normas',
+  'Asesorías',
+]
+
+const iconByCategoria: Record<Exclude<Categoria, 'Todos'>, LucideIcon> = {
+  Ensayos: FileText,
+  Exámenes: CheckCircle2,
+  Plataformas: BookOpen,
+  Diseño: Sparkles,
+  Normas: BadgeCheck,
+  Asesorías: GraduationCap,
+}
+
 const allServicios: Servicio[] = [
   {
     titulo: '📄 Ensayos académicos personalizados',
     categoria: 'Ensayos',
     descripcion: 'Redacción original, con citas y referencias en formato académico.',
     destacado: true,
+    icon: iconByCategoria.Ensayos,
   },
   {
     titulo: '📄 Ensayos en formato APA con fuentes confiables',
     categoria: 'Ensayos',
     descripcion: 'Ensayos listos para entregar, basados en bibliografía verificada.',
+    icon: iconByCategoria.Ensayos,
   },
   {
     titulo: '✍️ Resúmenes académicos claros y estructurados',
     categoria: 'Ensayos',
     descripcion: 'Síntesis de textos, libros o clases en lenguaje claro.',
+    icon: iconByCategoria.Ensayos,
   },
   {
     titulo: '📌 Tareas o deberes personalizados explicados paso a paso',
     categoria: 'Ensayos',
     descripcion: 'Te explicamos la resolución para que también aprendas.',
+    icon: iconByCategoria.Ensayos,
   },
   {
     titulo: '🧠 Exámenes bimestrales y de recuperación',
     categoria: 'Exámenes',
     descripcion: 'Acompañamiento en evaluaciones parciales y de recuperación.',
     destacado: true,
+    icon: iconByCategoria.Exámenes,
   },
   {
     titulo: '🧪 Exámenes complexivos y de validación',
     categoria: 'Exámenes',
     descripcion: 'Preparación intensiva para exámenes finales o de titulación.',
+    icon: iconByCategoria.Exámenes,
   },
   {
     titulo: '📝 Asistencia en quices y exámenes online',
     categoria: 'Exámenes',
     descripcion: 'Soporte en evaluaciones en línea con enfoque práctico.',
+    icon: iconByCategoria.Exámenes,
   },
   {
     titulo: '💻 Programación Python – UTPL',
     categoria: 'Plataformas',
     descripcion: 'Resolución y guía en tareas de programación y lógica.',
+    icon: iconByCategoria.Plataformas,
   },
   {
     titulo: '🎓 Aprobamos plataformas universitarias de todas las carreras',
     categoria: 'Plataformas',
     descripcion: 'Soporte en el uso de plataformas académicas y actividades virtuales.',
     destacado: true,
+    icon: iconByCategoria.Plataformas,
   },
   {
     titulo: '⚖️ Plataforma completa de Derecho',
     categoria: 'Plataformas',
     descripcion: 'Casos prácticos, foros, tareas y evaluaciones de Derecho.',
+    icon: iconByCategoria.Plataformas,
   },
   {
     titulo: '📊 Plataforma completa de Administración de Empresas',
     categoria: 'Plataformas',
     descripcion: 'Apoyo en proyectos, casos, Excel y actividades de administración.',
+    icon: iconByCategoria.Plataformas,
   },
   {
     titulo: '📒 Plataforma completa de Contabilidad y Auditoría',
     categoria: 'Plataformas',
     descripcion: 'Estados financieros, NIIF, análisis de casos y más.',
+    icon: iconByCategoria.Plataformas,
   },
   {
     titulo: '🧠 Plataforma completa de Psicología',
     categoria: 'Plataformas',
     descripcion: 'Actividades, casos y proyectos de varias ramas de Psicología.',
+    icon: iconByCategoria.Plataformas,
   },
   {
     titulo: '🧩 Mapas conceptuales estructurados',
     categoria: 'Diseño',
     descripcion: 'Diseño visual claro para resúmenes y exposiciones.',
+    icon: iconByCategoria.Diseño,
   },
   {
     titulo: '📊 Presentaciones PowerPoint profesionales',
     categoria: 'Diseño',
     descripcion: 'Diapositivas visuales, limpias y listas para exponer.',
+    icon: iconByCategoria.Diseño,
   },
   {
     titulo: '📚 Revisión de normas APA',
     categoria: 'Normas',
     descripcion: 'Corrección de citas, referencias y formato según normas APA.',
+    icon: iconByCategoria.Normas,
   },
   {
     titulo: '🧾 Asesorías por Zoom en tiempo real',
     categoria: 'Asesorías',
     descripcion: 'Sesiones privadas para resolver dudas específicas.',
     destacado: true,
+    icon: iconByCategoria.Asesorías,
   },
 ]
 
@@ -157,15 +196,119 @@ const otrosServicios = [
   },
 ] as const
 
-const categorias: Categoria[] = [
-  'Todos',
-  'Ensayos',
-  'Exámenes',
-  'Plataformas',
-  'Diseño',
-  'Normas',
-  'Asesorías',
-]
+function Badge({
+  children,
+  variant = 'premium',
+}: {
+  children: string
+  variant?: 'premium' | 'destacado'
+}) {
+  // Colores más pro (no chillones), y consistentes en dark mode.
+  const cls =
+    variant === 'destacado'
+      ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-200 dark:border-emerald-500/20'
+      : 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/10 dark:text-amber-200 dark:border-amber-500/20'
+
+  return (
+    <span className={`text-[10px] uppercase tracking-wide px-2 py-1 rounded-full border ${cls}`}>
+      {children}
+    </span>
+  )
+}
+
+function ServiceCard({
+  title,
+  subtitle,
+  description,
+  Icon,
+  destacado,
+  onClick,
+  buttonText = 'Solicitar asesoría',
+}: {
+  title: string
+  subtitle: string
+  description: string
+  Icon: LucideIcon
+  destacado?: boolean
+  onClick: () => void
+  buttonText?: string
+}) {
+  return (
+    <Card
+      className={[
+        'group relative rounded-2xl border bg-white/80 dark:bg-gray-900/70 backdrop-blur',
+        'border-gray-200/80 dark:border-gray-700/70',
+        'shadow-[0_8px_28px_-18px_rgba(0,0,0,0.25)] hover:shadow-[0_18px_55px_-30px_rgba(0,0,0,0.45)]',
+        'transition-all',
+        destacado
+          ? 'ring-1 ring-purple-400/40 dark:ring-purple-500/40'
+          : 'hover:border-gray-300/80 dark:hover:border-gray-600/70',
+      ].join(' ')}
+    >
+      {/* top accent */}
+      <div
+        className={[
+          'absolute inset-x-0 top-0 h-[2px] rounded-t-2xl',
+          destacado
+            ? 'bg-gradient-to-r from-purple-500 via-indigo-500 to-amber-400'
+            : 'bg-gradient-to-r from-transparent via-gray-200/70 to-transparent dark:via-gray-700/60',
+        ].join(' ')}
+      />
+
+      <CardContent className="p-5 flex flex-col gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div
+              className={[
+                'h-10 w-10 rounded-xl flex items-center justify-center',
+                'bg-purple-600/10 dark:bg-purple-400/10',
+                'ring-1 ring-purple-600/10 dark:ring-purple-400/10',
+                'transition-transform duration-300 group-hover:scale-[1.03]',
+              ].join(' ')}
+            >
+              <Icon className="text-purple-700 dark:text-purple-200" size={20} />
+            </div>
+
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-purple-700/90 dark:text-purple-200/90">
+                {subtitle}
+              </p>
+              <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 leading-snug">
+                {title}
+              </h3>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Premium en TODOS */}
+            <Badge variant="premium">Premium</Badge>
+            {destacado ? <Badge variant="destacado">Más solicitado</Badge> : null}
+          </div>
+        </div>
+
+        <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{description}</p>
+
+        <div className="pt-1">
+          <Button
+            className={[
+              'w-full rounded-xl text-white',
+              'bg-gradient-to-r from-purple-600 to-indigo-600',
+              'hover:from-purple-700 hover:to-indigo-700',
+              'shadow-[0_14px_35px_-22px_rgba(99,102,241,0.65)]',
+            ].join(' ')}
+            onClick={onClick}
+          >
+            {buttonText} <ArrowRight size={16} className="ml-2" />
+          </Button>
+
+          <p className="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
+            Respuesta rápida por WhatsApp • Enfoque en aprobación y aprendizaje
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
 export default function ServiciosClient() {
   const [visibleCount, setVisibleCount] = useState(8)
@@ -197,56 +340,56 @@ export default function ServiciosClient() {
       {/* Hero */}
       <motion.section
         className="grid gap-8 lg:grid-cols-[1.7fr,1.1fr] items-center mb-12 lg:mb-16"
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.55 }}
       >
         <div className="text-center lg:text-left">
           <div className="inline-flex items-center gap-2 justify-center lg:justify-start mb-3">
-            <Sparkles className="text-purple-500" size={24} />
-            <span className="text-purple-600 font-semibold text-xs sm:text-sm uppercase tracking-wider">
+            <Sparkles className="text-purple-600" size={22} />
+            <span className="text-purple-700 dark:text-purple-200 font-semibold text-xs sm:text-sm uppercase tracking-wider">
               Servicios académicos StudyDocu
             </span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
             Servicios académicos profesionales
-            <span className="block text-purple-600 dark:text-purple-300">
+            <span className="block text-purple-700 dark:text-purple-200">
               para estudiantes universitarios
             </span>
           </h1>
 
-          <p className="mt-3 text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-2xl">
+          <p className="mt-3 text-sm sm:text-base text-gray-600 dark:text-gray-300 max-w-2xl">
             Te acompañamos en todo tu ciclo académico: ensayos, exámenes, plataformas
             universitarias, resúmenes, normas APA y asesorías personalizadas. Enfoque fuerte para
             UTPL y universidades de Ecuador.
           </p>
 
           <div className="mt-5 flex flex-wrap gap-3 justify-center lg:justify-start">
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-              <CheckCircle2 className="text-green-500" size={18} />
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-200">
+              <ShieldCheck className="text-emerald-600 dark:text-emerald-300" size={18} />
               <span>Calidad académica verificada</span>
             </div>
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-              <Clock className="text-blue-500" size={18} />
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-200">
+              <Clock className="text-indigo-600 dark:text-indigo-300" size={18} />
               <span>Respuestas rápidas</span>
             </div>
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-              <GraduationCap className="text-amber-500" size={18} />
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-200">
+              <GraduationCap className="text-amber-600 dark:text-amber-300" size={18} />
               <span>Enfoque en aprobación y aprendizaje</span>
             </div>
           </div>
         </div>
 
-        <Card className="border-none shadow-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-amber-400 text-white relative overflow-hidden rounded-2xl">
+        <Card className="border border-gray-200/60 dark:border-gray-700/60 shadow-xl bg-gradient-to-br from-purple-600 via-indigo-600 to-amber-500 text-white relative overflow-hidden rounded-2xl">
           <div className="absolute inset-0 bg-black/10" />
           <CardContent className="relative p-6 flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-white/15 flex items-center justify-center backdrop-blur">
-                <BookOpen size={20} />
+                <Layers size={20} />
               </div>
               <div>
-                <p className="text-xs uppercase tracking-widest text-white/70">
+                <p className="text-xs uppercase tracking-widest text-white/80">
                   Acompañamiento completo
                 </p>
                 <h2 className="text-lg font-semibold">Todo en un solo lugar</h2>
@@ -255,15 +398,15 @@ export default function ServiciosClient() {
 
             <ul className="space-y-2 text-sm">
               <li className="flex gap-2">
-                <CheckCircle2 size={16} className="mt-0.5 text-emerald-300" />
+                <CheckCircle2 size={16} className="mt-0.5 text-emerald-200" />
                 Ensayos, resúmenes y presentaciones listos para entregar.
               </li>
               <li className="flex gap-2">
-                <CheckCircle2 size={16} className="mt-0.5 text-emerald-300" />
+                <CheckCircle2 size={16} className="mt-0.5 text-emerald-200" />
                 Apoyo en exámenes, quices y plataformas universitarias.
               </li>
               <li className="flex gap-2">
-                <CheckCircle2 size={16} className="mt-0.5 text-emerald-300" />
+                <CheckCircle2 size={16} className="mt-0.5 text-emerald-200" />
                 Asesorías personalizadas para tareas y proyectos complejos.
               </li>
             </ul>
@@ -276,7 +419,7 @@ export default function ServiciosClient() {
               📲 Hablar con un asesor
             </Button>
 
-            <p className="text-[11px] text-white/70">
+            <p className="text-[11px] text-white/80">
               Cuéntanos tu caso y te sugerimos el servicio adecuado para tu materia o plataforma.
             </p>
           </CardContent>
@@ -299,7 +442,7 @@ export default function ServiciosClient() {
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
               OTROS SERVICIOS
             </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
               Acompañamiento de alto nivel para trabajos de titulación y proyectos de investigación.
             </p>
           </div>
@@ -314,56 +457,32 @@ export default function ServiciosClient() {
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {otrosServicios.map((item) => {
-            const Icon = item.icon
-            return (
-              <Card
-                key={item.titulo}
-                className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur shadow-sm hover:shadow-xl transition"
-              >
-                <CardContent className="p-5 flex flex-col gap-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-purple-600/10 dark:bg-purple-400/10 flex items-center justify-center">
-                        <Icon className="text-purple-600 dark:text-purple-300" size={20} />
-                      </div>
-                      <div>
-                        <p className="text-[11px] uppercase tracking-widest text-purple-600 dark:text-purple-300">
-                          Investigación
-                        </p>
-                        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                          {item.titulo}
-                        </h3>
-                      </div>
-                    </div>
-
-                    <span className="text-[10px] uppercase tracking-wide bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200 px-2 py-1 rounded-full">
-                      Premium
-                    </span>
-                  </div>
-
-                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                    {item.descripcion}
-                  </p>
-
-                  <Button
-                    className="mt-1 rounded-xl bg-purple-600 hover:bg-purple-700 text-white"
-                    onClick={() => handleWhatsAppClick(item.titulo)}
-                  >
-                    Solicitar asesoría <ArrowRight size={16} className="ml-2" />
-                  </Button>
-                </CardContent>
-              </Card>
-            )
-          })}
+          {otrosServicios.map((item) => (
+            <motion.div
+              key={item.titulo}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.28 }}
+            >
+              <ServiceCard
+                title={item.titulo}
+                subtitle="Investigación"
+                description={item.descripcion}
+                Icon={item.icon}
+                destacado
+                onClick={() => handleWhatsAppClick(item.titulo)}
+              />
+            </motion.div>
+          ))}
         </div>
       </motion.section>
 
       {/* Filtro */}
       <section className="mb-6">
         <div className="flex items-center gap-2 mb-3">
-          <Filter size={16} className="text-purple-500" />
-          <span className="text-xs uppercase tracking-wide text-gray-600 dark:text-gray-400">
+          <Filter size={16} className="text-purple-600" />
+          <span className="text-xs uppercase tracking-wide text-gray-600 dark:text-gray-300">
             Filtrar por tipo de servicio
           </span>
           <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
@@ -381,11 +500,12 @@ export default function ServiciosClient() {
                   setFiltroCategoria(cat)
                   setVisibleCount(8)
                 }}
-                className={`px-3 py-1.5 rounded-full text-xs sm:text-sm border transition-all ${
+                className={[
+                  'px-3 py-1.5 rounded-full text-xs sm:text-sm border transition-all',
                   isActive
-                    ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                    : 'bg-white/70 dark:bg-gray-900/70 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800'
-                }`}
+                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-transparent shadow-sm'
+                    : 'bg-white/70 dark:bg-gray-900/60 text-gray-700 dark:text-gray-200 border-gray-200/80 dark:border-gray-700/70 hover:bg-gray-100 dark:hover:bg-gray-800',
+                ].join(' ')}
               >
                 {cat}
               </button>
@@ -395,50 +515,23 @@ export default function ServiciosClient() {
       </section>
 
       {/* Grid servicios */}
-      <section className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {serviciosFiltrados.map((servicio, index) => (
           <motion.div
             key={`${servicio.titulo}-${index}`}
-            initial={{ opacity: 0, y: 26 }}
+            initial={{ opacity: 0, y: 22 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.32, delay: index * 0.03 }}
+            transition={{ duration: 0.28, delay: index * 0.03 }}
           >
-            <Card
-              className={`rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:scale-[1.02] transition-transform duration-300 bg-white/80 dark:bg-gray-900/80 backdrop-blur ${
-                servicio.destacado ? 'ring-2 ring-purple-400/60 dark:ring-purple-500/70' : ''
-              }`}
-            >
-              <CardContent className="p-4 text-left flex flex-col gap-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100 rounded px-2 py-1 inline-block">
-                    {servicio.categoria}
-                  </span>
-                  {servicio.destacado && (
-                    <span className="text-[10px] uppercase tracking-wide bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200 px-2 py-1 rounded-full">
-                      Más solicitado
-                    </span>
-                  )}
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-relaxed">
-                    {servicio.titulo}
-                  </p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mt-1">
-                    {servicio.descripcion}
-                  </p>
-                </div>
-
-                <Button
-                  variant="outline"
-                  className="rounded-xl border-gray-200 dark:border-gray-700"
-                  onClick={() => handleWhatsAppClick(servicio.titulo)}
-                >
-                  Solicitar <ArrowRight size={16} className="ml-2" />
-                </Button>
-              </CardContent>
-            </Card>
+            <ServiceCard
+              title={servicio.titulo}
+              subtitle={servicio.categoria}
+              description={servicio.descripcion}
+              Icon={servicio.icon}
+              destacado={servicio.destacado}
+              onClick={() => handleWhatsAppClick(servicio.titulo)}
+            />
           </motion.div>
         ))}
       </section>
@@ -460,12 +553,12 @@ export default function ServiciosClient() {
         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">
           ¿Por qué contratar los servicios académicos de StudyDocu?
         </h2>
-        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4">
           En StudyDocu apoyamos a estudiantes de la UTPL y diversas universidades del Ecuador con un
           enfoque responsable y orientado al aprendizaje. Nuestros servicios optimizan tu tiempo y
           mejoran tu rendimiento académico.
         </p>
-        <ul className="grid gap-3 sm:grid-cols-2 text-sm text-gray-700 dark:text-gray-300">
+        <ul className="grid gap-3 sm:grid-cols-2 text-sm text-gray-700 dark:text-gray-200">
           <li>✅ Ensayos académicos en formato APA con fuentes confiables.</li>
           <li>✅ Acompañamiento en exámenes bimestrales, quices y complexivos.</li>
           <li>✅ Manejo experto de plataformas universitarias (incluida UTPL).</li>
@@ -479,7 +572,7 @@ export default function ServiciosClient() {
       <div className="mt-14 text-center">
         <Button
           onClick={() => handleWhatsAppClick()}
-          className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-lg px-10 py-4 rounded-2xl shadow-xl transition duration-300"
+          className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white text-lg px-10 py-4 rounded-2xl shadow-xl transition duration-300"
         >
           📲 Solicitar servicio por WhatsApp
         </Button>

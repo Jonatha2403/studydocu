@@ -3,7 +3,7 @@ import './globals.css'
 import localFont from 'next/font/local'
 import type { Metadata, Viewport } from 'next'
 
-import Spotlight from '@/components/Spotlight' // client component, ok
+import Spotlight from '@/components/Spotlight'
 import { UserProvider } from '@/context/UserContext'
 import ClientLayoutWrapper from '@/components/ClientLayoutWrapper'
 
@@ -20,15 +20,13 @@ const sfPro = localFont({
   preload: true,
 })
 
-/* ---------------------- METADATOS (solo en server) ---------------------- */
+/* ---------------------- METADATOS ---------------------- */
 export const metadata: Metadata = {
   metadataBase: new URL('https://studydocu.ec'),
   title: {
-    // ✅ Título base (home) + template para el resto
     default: 'StudyDocu | Plataforma académica con IA en Ecuador',
     template: '%s | StudyDocu',
   },
-  // ✅ Bing: ideal 120–155 caracteres aprox.
   description:
     'Plataforma académica con IA en Ecuador: sube, organiza y resume documentos universitarios para estudiar más rápido con StudyDocu.',
   applicationName: 'StudyDocu',
@@ -40,7 +38,6 @@ export const metadata: Metadata = {
     'resúmenes IA',
     'UTPL',
     'estudiantes Ecuador',
-    'material de estudio',
   ],
   authors: [{ name: 'StudyDocu', url: 'https://studydocu.ec' }],
   creator: 'StudyDocu',
@@ -50,8 +47,7 @@ export const metadata: Metadata = {
 
   openGraph: {
     title: 'StudyDocu | Plataforma académica con IA en Ecuador',
-    description:
-      'Sube, comparte y encuentra apuntes y documentos universitarios. Estudia mejor con herramientas de IA en StudyDocu.',
+    description: 'Sube, comparte y encuentra apuntes universitarios. Estudia mejor con IA.',
     url: 'https://studydocu.ec',
     siteName: 'StudyDocu',
     images: [
@@ -69,21 +65,13 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'StudyDocu | Plataforma académica con IA en Ecuador',
-    description:
-      'Encuentra apuntes y documentos de tu carrera. Sube archivos y deja que la IA de StudyDocu te ayude a estudiar mejor.',
+    description: 'Encuentra apuntes y documentos de tu carrera con ayuda de IA.',
     images: ['/og-image.png'],
   },
 
   robots: {
     index: true,
     follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-      'max-video-preview': -1,
-    },
   },
 
   icons: {
@@ -91,42 +79,63 @@ export const metadata: Metadata = {
       { url: '/favicon.ico', type: 'image/x-icon' },
       { url: '/favicon.png', type: 'image/png' },
     ],
-    shortcut: ['/favicon.ico'],
-    apple: ['/favicon.png'],
   },
 }
 
+/* ---------------------- VIEWPORT ---------------------- */
+/* 🔥 Mejor alineado con tu brand */
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#FFCE00' },
-    { media: '(prefers-color-scheme: dark)', color: '#0b1220' },
+    { media: '(prefers-color-scheme: light)', color: '#6366F1' }, // violet-500
+    { media: '(prefers-color-scheme: dark)', color: '#0B1020' },
   ],
 }
 
-/* ---------------------- ROOT LAYOUT (server) ---------------------- */
+/* ---------------------- ROOT LAYOUT ---------------------- */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={sfPro.variable} suppressHydrationWarning>
-      <body className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-white antialiased">
-        {/* Capas visuales globales */}
-        {/* ✅ En móvil: mantenerlo ligero (sin effects pesados) */}
-        <div className="aurora-bg hidden md:block" />
-        <div className="radial-layer hidden md:block" />
+    <html lang="es" className={`${sfPro.variable} scroll-smooth`} suppressHydrationWarning>
+      <body
+        className={`
+          min-h-screen
+          antialiased
+          text-slate-800 dark:text-white
+          
+          /* Fondo elegante light */
+          bg-gradient-to-br 
+          from-slate-50 
+          via-white 
+          to-indigo-50/60
+          
+          /* Fondo elegante dark */
+          dark:bg-gradient-to-br
+          dark:from-[#0B1020]
+          dark:via-[#0F172A]
+          dark:to-[#111827]
+        `}
+      >
+        {/* ---------------------- CAPAS VISUALES GLOBALES ---------------------- */}
 
-        {/* ✅ Fixed grid solo desktop (fixed + opacity = pesado en móvil) */}
-        <div className="bg-grid fixed inset-0 -z-50 hidden md:block opacity-[.22] dark:opacity-[.16] pointer-events-none" />
+        {/* Aurora solo desktop */}
+        <div className="aurora-bg hidden md:block opacity-70 dark:opacity-40" />
 
-        {/* ✅ Noise puede ser pesado si anima/mezcla: solo desktop */}
-        <div className="noise-layer hidden md:block" />
+        {/* Radial suave */}
+        <div className="radial-layer hidden md:block opacity-60 dark:opacity-40" />
 
-        {/* ✅ Spotlight solo desktop */}
+        {/* Grid ligero */}
+        <div className="bg-grid fixed inset-0 -z-50 hidden md:block opacity-[.18] dark:opacity-[.12] pointer-events-none" />
+
+        {/* Noise muy sutil */}
+        <div className="noise-layer hidden md:block opacity-[.35] dark:opacity-[.25]" />
+
+        {/* Spotlight solo desktop */}
         <div className="hidden md:block">
           <Spotlight />
         </div>
 
-        {/* Client boundaries */}
+        {/* ---------------------- CLIENT BOUNDARIES ---------------------- */}
         <UserProvider>
           <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
         </UserProvider>
