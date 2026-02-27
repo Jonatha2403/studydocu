@@ -5,11 +5,28 @@
 import { useMemo, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Sparkles, CheckCircle2, GraduationCap, Clock, BookOpen, Filter } from 'lucide-react'
+import {
+  Sparkles,
+  CheckCircle2,
+  GraduationCap,
+  Clock,
+  BookOpen,
+  Filter,
+  ArrowRight,
+  FileText,
+  BadgeCheck,
+} from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 
-type Categoria = 'Todos' | 'Ensayos' | 'Exámenes' | 'Plataformas' | 'Diseño' | 'Normas' | 'Asesorías'
+type Categoria =
+  | 'Todos'
+  | 'Ensayos'
+  | 'Exámenes'
+  | 'Plataformas'
+  | 'Diseño'
+  | 'Normas'
+  | 'Asesorías'
 
 type Servicio = {
   titulo: string
@@ -18,12 +35,36 @@ type Servicio = {
   destacado?: boolean
 }
 
+const WHATSAPP_NUMBER = '593958757302'
+
+const buildWhatsAppUrl = (servicio?: string) => {
+  const base = 'Hola StudyDocu, deseo contratar un servicio académico'
+  const extra = servicio ? `: ${servicio}` : ''
+  const text = encodeURIComponent(`${base}${extra}`)
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`
+}
+
 const allServicios: Servicio[] = [
   {
     titulo: '📄 Ensayos académicos personalizados',
     categoria: 'Ensayos',
     descripcion: 'Redacción original, con citas y referencias en formato académico.',
     destacado: true,
+  },
+  {
+    titulo: '📄 Ensayos en formato APA con fuentes confiables',
+    categoria: 'Ensayos',
+    descripcion: 'Ensayos listos para entregar, basados en bibliografía verificada.',
+  },
+  {
+    titulo: '✍️ Resúmenes académicos claros y estructurados',
+    categoria: 'Ensayos',
+    descripcion: 'Síntesis de textos, libros o clases en lenguaje claro.',
+  },
+  {
+    titulo: '📌 Tareas o deberes personalizados explicados paso a paso',
+    categoria: 'Ensayos',
+    descripcion: 'Te explicamos la resolución para que también aprendas.',
   },
   {
     titulo: '🧠 Exámenes bimestrales y de recuperación',
@@ -37,24 +78,20 @@ const allServicios: Servicio[] = [
     descripcion: 'Preparación intensiva para exámenes finales o de titulación.',
   },
   {
+    titulo: '📝 Asistencia en quices y exámenes online',
+    categoria: 'Exámenes',
+    descripcion: 'Soporte en evaluaciones en línea con enfoque práctico.',
+  },
+  {
     titulo: '💻 Programación Python – UTPL',
     categoria: 'Plataformas',
     descripcion: 'Resolución y guía en tareas de programación y lógica.',
   },
   {
-    titulo: '📚 Revisión de normas APA',
-    categoria: 'Normas',
-    descripcion: 'Corrección de citas, referencias y formato según normas APA.',
-  },
-  {
-    titulo: '🧩 Mapas conceptuales estructurados',
-    categoria: 'Diseño',
-    descripcion: 'Diseño visual claro para resúmenes y exposiciones.',
-  },
-  {
     titulo: '🎓 Aprobamos plataformas universitarias de todas las carreras',
     categoria: 'Plataformas',
     descripcion: 'Soporte en el uso de plataformas académicas y actividades virtuales.',
+    destacado: true,
   },
   {
     titulo: '⚖️ Plataforma completa de Derecho',
@@ -77,29 +114,19 @@ const allServicios: Servicio[] = [
     descripcion: 'Actividades, casos y proyectos de varias ramas de Psicología.',
   },
   {
-    titulo: '📄 Ensayos en formato APA con fuentes confiables',
-    categoria: 'Ensayos',
-    descripcion: 'Ensayos listos para entregar, basados en bibliografía verificada.',
-  },
-  {
-    titulo: '✍️ Resúmenes académicos claros y estructurados',
-    categoria: 'Ensayos',
-    descripcion: 'Síntesis de textos, libros o clases en lenguaje claro.',
-  },
-  {
-    titulo: '📝 Asistencia en quices y exámenes online',
-    categoria: 'Exámenes',
-    descripcion: 'Soporte en evaluaciones en línea con enfoque práctico.',
-  },
-  {
-    titulo: '📌 Tareas o deberes personalizados explicados paso a paso',
-    categoria: 'Ensayos',
-    descripcion: 'Te explicamos la resolución para que también aprendas.',
+    titulo: '🧩 Mapas conceptuales estructurados',
+    categoria: 'Diseño',
+    descripcion: 'Diseño visual claro para resúmenes y exposiciones.',
   },
   {
     titulo: '📊 Presentaciones PowerPoint profesionales',
     categoria: 'Diseño',
     descripcion: 'Diapositivas visuales, limpias y listas para exponer.',
+  },
+  {
+    titulo: '📚 Revisión de normas APA',
+    categoria: 'Normas',
+    descripcion: 'Corrección de citas, referencias y formato según normas APA.',
   },
   {
     titulo: '🧾 Asesorías por Zoom en tiempo real',
@@ -109,7 +136,36 @@ const allServicios: Servicio[] = [
   },
 ]
 
-const categorias: Categoria[] = ['Todos', 'Ensayos', 'Exámenes', 'Plataformas', 'Diseño', 'Normas', 'Asesorías']
+const otrosServicios = [
+  {
+    titulo: 'TESIS PREGRADO',
+    descripcion:
+      'Estructura, planteamiento del problema, marco teórico, metodología, análisis y formato.',
+    icon: GraduationCap,
+  },
+  {
+    titulo: 'TESIS POSGRADO',
+    descripcion:
+      'Asesoría avanzada, redacción académica, matrices, análisis y normas de publicación.',
+    icon: BadgeCheck,
+  },
+  {
+    titulo: 'TESIS DOCTORADO',
+    descripcion:
+      'Acompañamiento riguroso: estado del arte, diseño metodológico, análisis y publicación.',
+    icon: FileText,
+  },
+] as const
+
+const categorias: Categoria[] = [
+  'Todos',
+  'Ensayos',
+  'Exámenes',
+  'Plataformas',
+  'Diseño',
+  'Normas',
+  'Asesorías',
+]
 
 export default function ServiciosClient() {
   const [visibleCount, setVisibleCount] = useState(8)
@@ -129,28 +185,22 @@ export default function ServiciosClient() {
     return base.slice(0, visibleCount)
   }, [visibleCount, filtroCategoria])
 
-  const loadMore = () => {
-    setVisibleCount((prev) => prev + 8)
-  }
+  const loadMore = () => setVisibleCount((prev) => prev + 8)
 
-  const handleWhatsAppClick = () => {
+  const handleWhatsAppClick = (servicio?: string) => {
     toast.success('Redirigiendo a WhatsApp...')
-    window.open(
-      'https://wa.me/593958757302?text=Hola%20StudyDocu,%20deseo%20contratar%20un%20servicio%20acad%C3%A9mico',
-      '_blank',
-    )
+    window.open(buildWhatsAppUrl(servicio), '_blank')
   }
 
   return (
     <main className="max-w-7xl mx-auto px-4 pt-4 pb-12 lg:pt-8 lg:pb-16">
-      {/* Hero / Intro */}
+      {/* Hero */}
       <motion.section
         className="grid gap-8 lg:grid-cols-[1.7fr,1.1fr] items-center mb-12 lg:mb-16"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        {/* Columna izquierda: texto */}
         <div className="text-center lg:text-left">
           <div className="inline-flex items-center gap-2 justify-center lg:justify-start mb-3">
             <Sparkles className="text-purple-500" size={24} />
@@ -161,13 +211,15 @@ export default function ServiciosClient() {
 
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
             Servicios académicos profesionales
-            <span className="block text-purple-600 dark:text-purple-300">para estudiantes universitarios</span>
+            <span className="block text-purple-600 dark:text-purple-300">
+              para estudiantes universitarios
+            </span>
           </h1>
 
           <p className="mt-3 text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-2xl">
-            Te acompañamos en todo tu ciclo académico: ensayos, exámenes, plataformas universitarias, resúmenes,
-            normas APA y asesorías personalizadas. Diseñado especialmente para estudiantes de la UTPL y universidades
-            de Ecuador.
+            Te acompañamos en todo tu ciclo académico: ensayos, exámenes, plataformas
+            universitarias, resúmenes, normas APA y asesorías personalizadas. Enfoque fuerte para
+            UTPL y universidades de Ecuador.
           </p>
 
           <div className="mt-5 flex flex-wrap gap-3 justify-center lg:justify-start">
@@ -186,8 +238,7 @@ export default function ServiciosClient() {
           </div>
         </div>
 
-        {/* Columna derecha: card de resumen */}
-        <Card className="border-none shadow-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-amber-400 text-white relative overflow-hidden">
+        <Card className="border-none shadow-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-amber-400 text-white relative overflow-hidden rounded-2xl">
           <div className="absolute inset-0 bg-black/10" />
           <CardContent className="relative p-6 flex flex-col gap-4">
             <div className="flex items-center gap-3">
@@ -195,8 +246,10 @@ export default function ServiciosClient() {
                 <BookOpen size={20} />
               </div>
               <div>
-                <p className="text-xs uppercase tracking-widest text-white/70">Pack de servicios</p>
-                <h2 className="text-lg font-semibold">Acompañamiento académico completo</h2>
+                <p className="text-xs uppercase tracking-widest text-white/70">
+                  Acompañamiento completo
+                </p>
+                <h2 className="text-lg font-semibold">Todo en un solo lugar</h2>
               </div>
             </div>
 
@@ -215,7 +268,11 @@ export default function ServiciosClient() {
               </li>
             </ul>
 
-            <Button onClick={handleWhatsAppClick} size="lg" className="mt-2 bg-white text-gray-900 hover:bg-gray-100 rounded-xl">
+            <Button
+              onClick={() => handleWhatsAppClick()}
+              size="lg"
+              className="mt-2 bg-white text-gray-900 hover:bg-gray-100 rounded-xl"
+            >
               📲 Hablar con un asesor
             </Button>
 
@@ -226,7 +283,83 @@ export default function ServiciosClient() {
         </Card>
       </motion.section>
 
-      {/* Filtro por categoría */}
+      {/* OTROS SERVICIOS (Tesis) */}
+      <motion.section
+        className="mb-10 lg:mb-12"
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.45 }}
+      >
+        <div className="flex items-end justify-between gap-4 mb-4">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              Nuevo
+            </p>
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+              OTROS SERVICIOS
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              Acompañamiento de alto nivel para trabajos de titulación y proyectos de investigación.
+            </p>
+          </div>
+
+          <Button
+            variant="outline"
+            className="rounded-xl border-gray-200 dark:border-gray-700"
+            onClick={() => handleWhatsAppClick('Tesis (Pregrado / Posgrado / Doctorado)')}
+          >
+            Cotizar tesis <ArrowRight size={16} className="ml-2" />
+          </Button>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {otrosServicios.map((item) => {
+            const Icon = item.icon
+            return (
+              <Card
+                key={item.titulo}
+                className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur shadow-sm hover:shadow-xl transition"
+              >
+                <CardContent className="p-5 flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-purple-600/10 dark:bg-purple-400/10 flex items-center justify-center">
+                        <Icon className="text-purple-600 dark:text-purple-300" size={20} />
+                      </div>
+                      <div>
+                        <p className="text-[11px] uppercase tracking-widest text-purple-600 dark:text-purple-300">
+                          Investigación
+                        </p>
+                        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                          {item.titulo}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <span className="text-[10px] uppercase tracking-wide bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200 px-2 py-1 rounded-full">
+                      Premium
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                    {item.descripcion}
+                  </p>
+
+                  <Button
+                    className="mt-1 rounded-xl bg-purple-600 hover:bg-purple-700 text-white"
+                    onClick={() => handleWhatsAppClick(item.titulo)}
+                  >
+                    Solicitar asesoría <ArrowRight size={16} className="ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      </motion.section>
+
+      {/* Filtro */}
       <section className="mb-6">
         <div className="flex items-center gap-2 mb-3">
           <Filter size={16} className="text-purple-500" />
@@ -261,22 +394,22 @@ export default function ServiciosClient() {
         </div>
       </section>
 
-      {/* Grid de servicios */}
+      {/* Grid servicios */}
       <section className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {serviciosFiltrados.map((servicio, index) => (
           <motion.div
             key={`${servicio.titulo}-${index}`}
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 26 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.35, delay: index * 0.03 }}
+            transition={{ duration: 0.32, delay: index * 0.03 }}
           >
             <Card
-              className={`rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:scale-[1.03] transition-transform duration-300 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md ${
+              className={`rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:scale-[1.02] transition-transform duration-300 bg-white/80 dark:bg-gray-900/80 backdrop-blur ${
                 servicio.destacado ? 'ring-2 ring-purple-400/60 dark:ring-purple-500/70' : ''
               }`}
             >
-              <CardContent className="p-4 text-left flex flex-col gap-2">
+              <CardContent className="p-4 text-left flex flex-col gap-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[11px] bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100 rounded px-2 py-1 inline-block">
                     {servicio.categoria}
@@ -288,19 +421,29 @@ export default function ServiciosClient() {
                   )}
                 </div>
 
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-relaxed">
-                  {servicio.titulo}
-                </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                  {servicio.descripcion}
-                </p>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-relaxed">
+                    {servicio.titulo}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mt-1">
+                    {servicio.descripcion}
+                  </p>
+                </div>
+
+                <Button
+                  variant="outline"
+                  className="rounded-xl border-gray-200 dark:border-gray-700"
+                  onClick={() => handleWhatsAppClick(servicio.titulo)}
+                >
+                  Solicitar <ArrowRight size={16} className="ml-2" />
+                </Button>
               </CardContent>
             </Card>
           </motion.div>
         ))}
       </section>
 
-      {/* Botón "ver más" */}
+      {/* Ver más */}
       {visibleCount < totalFiltrado && (
         <div className="text-center mt-10">
           <Button
@@ -312,15 +455,15 @@ export default function ServiciosClient() {
         </div>
       )}
 
-      {/* Sección SEO: por qué elegir StudyDocu */}
+      {/* SEO */}
       <section className="mt-14 max-w-4xl mx-auto text-center lg:text-left">
         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">
           ¿Por qué contratar los servicios académicos de StudyDocu?
         </h2>
         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">
-          En StudyDocu trabajamos con estudiantes de la UTPL y de diversas universidades del Ecuador, brindando apoyo
-          académico responsable y orientado al aprendizaje. Nuestros servicios están pensados para que entiendas mejor
-          tus materias y optimices tu tiempo de estudio.
+          En StudyDocu apoyamos a estudiantes de la UTPL y diversas universidades del Ecuador con un
+          enfoque responsable y orientado al aprendizaje. Nuestros servicios optimizan tu tiempo y
+          mejoran tu rendimiento académico.
         </p>
         <ul className="grid gap-3 sm:grid-cols-2 text-sm text-gray-700 dark:text-gray-300">
           <li>✅ Ensayos académicos en formato APA con fuentes confiables.</li>
@@ -332,10 +475,10 @@ export default function ServiciosClient() {
         </ul>
       </section>
 
-      {/* CTA WhatsApp final */}
+      {/* CTA final */}
       <div className="mt-14 text-center">
         <Button
-          onClick={handleWhatsAppClick}
+          onClick={() => handleWhatsAppClick()}
           className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-lg px-10 py-4 rounded-2xl shadow-xl transition duration-300"
         >
           📲 Solicitar servicio por WhatsApp
