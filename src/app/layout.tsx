@@ -1,4 +1,4 @@
-// src/app/layout.tsx  (Server Component ✅)
+// src/app/layout.tsx (Server Component ✅)
 import './globals.css'
 import localFont from 'next/font/local'
 import type { Metadata, Viewport } from 'next'
@@ -69,10 +69,7 @@ export const metadata: Metadata = {
     images: ['/og-image.png'],
   },
 
-  robots: {
-    index: true,
-    follow: true,
-  },
+  robots: { index: true, follow: true },
 
   icons: {
     icon: [
@@ -83,12 +80,11 @@ export const metadata: Metadata = {
 }
 
 /* ---------------------- VIEWPORT ---------------------- */
-/* 🔥 Mejor alineado con tu brand */
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#6366F1' }, // violet-500
+    { media: '(prefers-color-scheme: light)', color: '#6366F1' },
     { media: '(prefers-color-scheme: dark)', color: '#0B1020' },
   ],
 }
@@ -98,44 +94,35 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={`${sfPro.variable} scroll-smooth`} suppressHydrationWarning>
       <body
-        className={`
-          min-h-screen
-          antialiased
-          text-slate-800 dark:text-white
-          
-          /* Fondo elegante light */
-          bg-gradient-to-br 
-          from-slate-50 
-          via-white 
-          to-indigo-50/60
-          
-          /* Fondo elegante dark */
-          dark:bg-gradient-to-br
-          dark:from-[#0B1020]
-          dark:via-[#0F172A]
-          dark:to-[#111827]
-        `}
+        className={[
+          // base
+          'min-h-screen antialiased selection:bg-indigo-500/20 selection:text-slate-900',
+          // typography
+          'text-slate-900 dark:text-slate-50',
+          // backgrounds (light default)
+          'bg-gradient-to-br from-slate-50 via-white to-indigo-50/60 bg-fixed',
+          // backgrounds (dark)
+          'dark:bg-gradient-to-br dark:from-[#0B1020] dark:via-[#0F172A] dark:to-[#111827]',
+        ].join(' ')}
       >
-        {/* ---------------------- CAPAS VISUALES GLOBALES ---------------------- */}
-
-        {/* Aurora solo desktop */}
-        <div className="aurora-bg hidden md:block opacity-70 dark:opacity-40" />
-
-        {/* Radial suave */}
-        <div className="radial-layer hidden md:block opacity-60 dark:opacity-40" />
-
-        {/* Grid ligero */}
-        <div className="bg-grid fixed inset-0 -z-50 hidden md:block opacity-[.18] dark:opacity-[.12] pointer-events-none" />
-
-        {/* Noise muy sutil */}
-        <div className="noise-layer hidden md:block opacity-[.35] dark:opacity-[.25]" />
+        {/* Capas visuales globales */}
+        <div aria-hidden className="pointer-events-none">
+          {/* Aurora */}
+          <div className="aurora-bg hidden md:block opacity-70 dark:opacity-40" />
+          {/* Radial */}
+          <div className="radial-layer hidden md:block opacity-60 dark:opacity-40" />
+          {/* Grid */}
+          <div className="bg-grid fixed inset-0 -z-50 hidden md:block opacity-[.18] dark:opacity-[.12]" />
+          {/* Noise */}
+          <div className="noise-layer hidden md:block opacity-[.35] dark:opacity-[.25]" />
+        </div>
 
         {/* Spotlight solo desktop */}
-        <div className="hidden md:block">
+        <div className="hidden md:block" aria-hidden>
           <Spotlight />
         </div>
 
-        {/* ---------------------- CLIENT BOUNDARIES ---------------------- */}
+        {/* Providers + Layout cliente */}
         <UserProvider>
           <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
         </UserProvider>

@@ -1,47 +1,60 @@
-'use client';
+'use client'
 
-import { useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
-import BodyLayout from './BodyLayout';
+import { ReactNode, useEffect, useMemo } from 'react'
+import { usePathname } from 'next/navigation'
+import { AnimatePresence, LazyMotion, domAnimation, m, useReducedMotion } from 'framer-motion'
+import BodyLayout from './BodyLayout'
 
 /**
- * Wrapper que:
- * - aplica animaciones suaves entre rutas (excepto en dashboard/admin)
- * - asegura scroll al tope en cada cambio
+ * ClientLayoutWrapper
+ * - Aplica animaciones suaves entre rutas (excepto dashboard/admin)
+ * - Restablece scroll al tope en cada cambio de página
+ * - Optimiza performance con LazyMotion
+ * - Respeta "prefers-reduced-motion"
  */
-export default function ClientLayoutWrapper({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const pathname = usePathname();
-  const isDashboard =
-    pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin');
+export default function ClientLayoutWrapper({ children }: { children: ReactNode }) {
+  const pathname = usePathname()
+  const reduceMotion = useReducedMotion()
 
-  // 🔝 Restablece scroll al cambiar de página
+  const isDashboard = useMemo(() => {
+    if (!pathname) return false
+    return pathname.startsWith('/dashboard') || pathname.startsWith('/admin')
+  }, [pathname])
+
+  // 🔝 Scroll al tope en cada cambio (solo en rutas normales)
   useEffect(() => {
-    if (!isDashboard) window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [pathname, isDashboard]);
+    if (isDashboard) return
+    // Mejor instantáneo para UX, evita "rebotes" al navegar
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [pathname, isDashboard])
 
-  // ✨ Si es dashboard, se renderiza sin efectos visuales
-  if (isDashboard) return <>{children}</>;
+  // Si es dashboard/admin, render sin wrappers ni animaciones
+  if (isDashboard) return <>{children}</>
 
-  // 💫 Animación global entre rutas normales
+  // Variantes de animación (si reduceMotion, se desactiva movimiento)
+  const variants = {
+    initial: reduceMotion ? { opacity: 0 } : { opacity: 0, y: 10 },
+    animate: reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 },
+    exit: reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 },
+  }
+
   return (
     <BodyLayout>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={pathname}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.25, ease: 'easeOut' }}
-          className="min-h-screen will-change-transform"
-        >
-          {children}
-        </motion.div>
-      </AnimatePresence>
+      <LazyMotion features={domAnimation}>
+        <AnimatePresence mode="wait" initial={false}>
+          <m.div
+            key={pathname}
+            variants={variants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="min-h-screen will-change-transform"
+          >
+            {children}
+          </m.div>
+        </AnimatePresence>
+      </LazyMotion>
     </BodyLayout>
-  );
+  )
 }
