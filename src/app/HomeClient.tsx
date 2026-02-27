@@ -175,6 +175,11 @@ function GradientCard({
   )
 }
 
+/**
+ * ✅ Spotlight optimizado:
+ * - En móvil se desactiva (no hay mouse, y consume de más)
+ * - En desktop mantiene el efecto premium
+ */
 function SpotlightCard({
   children,
   className = '',
@@ -183,6 +188,12 @@ function SpotlightCard({
   className?: string
 }) {
   const ref = useRef<HTMLDivElement | null>(null)
+  const [enabled, setEnabled] = useState(true)
+
+  useEffect(() => {
+    setEnabled(window.innerWidth >= 768)
+  }, [])
+
   const mx = useMotionValue(0)
   const my = useMotionValue(0)
   const sx = useSpring(mx, { stiffness: 220, damping: 30 })
@@ -196,6 +207,7 @@ function SpotlightCard({
     <div
       ref={ref}
       onMouseMove={(e) => {
+        if (!enabled) return
         const rect = ref.current?.getBoundingClientRect()
         if (!rect) return
         mx.set(e.clientX - rect.left)
@@ -210,16 +222,23 @@ function SpotlightCard({
         className,
       ].join(' ')}
     >
-      <motion.div
-        aria-hidden
-        className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity"
-        style={{ background: bg }}
-      />
+      {enabled && (
+        <motion.div
+          aria-hidden
+          className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity"
+          style={{ background: bg }}
+        />
+      )}
       <div className="relative">{children}</div>
     </div>
   )
 }
 
+/**
+ * ✅ CountUp optimizado:
+ * - En móvil NO anima (evita raf + cálculos)
+ * - En desktop sí anima
+ */
 function CountUp({
   to,
   suffix = '',
@@ -230,8 +249,18 @@ function CountUp({
   durationMs?: number
 }) {
   const [val, setVal] = useState(0)
+  const [enabled, setEnabled] = useState(true)
 
   useEffect(() => {
+    setEnabled(window.innerWidth >= 768)
+  }, [])
+
+  useEffect(() => {
+    if (!enabled) {
+      setVal(to)
+      return
+    }
+
     let raf = 0
     const start = performance.now()
     const from = 0
@@ -246,7 +275,7 @@ function CountUp({
 
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [to, durationMs])
+  }, [to, durationMs, enabled])
 
   return (
     <span className="tabular-nums">
@@ -261,19 +290,35 @@ function CountUp({
 ------------------------------ */
 export default function HomeClient() {
   const [showConfetti, setShowConfetti] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
   const { user } = useUserContext()
   const router = useRouter()
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     // Mantengo tu lógica actual (ideal sería next-themes, pero no lo toco)
     const isDark = localStorage.getItem('theme') === 'dark'
     document.documentElement.classList.toggle('dark', isDark)
 
+    const mobile = window.innerWidth < 768
+
     if (!localStorage.getItem('visited')) {
       toast.success('🎉 ¡Logro desbloqueado! Primer ingreso a StudyDocu')
-      setShowConfetti(true)
+
+      // ✅ Confetti solo en desktop (Lottie full-screen es pesado en móvil)
+      if (!mobile) {
+        setShowConfetti(true)
+        setTimeout(() => setShowConfetti(false), 4500)
+      }
+
       localStorage.setItem('visited', 'true')
-      setTimeout(() => setShowConfetti(false), 4500)
     }
   }, [])
 
@@ -348,7 +393,7 @@ export default function HomeClient() {
       />
 
       <main className="relative z-10 w-full min-h-screen flex flex-col items-center bg-transparent">
-        {/* Fondo premium sutil (no interfiere con tu RootLayout) */}
+        {/* Fondo premium sutil */}
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_15%_20%,rgba(99,102,241,0.18),transparent_60%)] dark:bg-[radial-gradient(900px_500px_at_15%_20%,rgba(99,102,241,0.14),transparent_60%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_85%_25%,rgba(168,85,247,0.16),transparent_60%)] dark:bg-[radial-gradient(900px_500px_at_85%_25%,rgba(168,85,247,0.12),transparent_60%)]" />
@@ -356,7 +401,7 @@ export default function HomeClient() {
           <div className="absolute inset-0 opacity-70 dark:opacity-40 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.55),transparent_24%,transparent_76%,rgba(255,255,255,0.28))] dark:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.05),transparent_25%,transparent_75%,rgba(255,255,255,0.03))]" />
         </div>
 
-        {/* Confetti */}
+        {/* Confetti (solo desktop) */}
         {showConfetti && (
           <div className="fixed inset-0 z-40 pointer-events-none">
             <Lottie
@@ -421,7 +466,7 @@ export default function HomeClient() {
           </GradientCard>
         </Section>
 
-        {/* Fundador (PRO, sin duplicados) */}
+        {/* Fundador */}
         <Section className="pb-14">
           <GradientCard>
             <div className="px-6 sm:px-10 py-8">
@@ -463,7 +508,16 @@ export default function HomeClient() {
 
         {/* Producto/Demo */}
         <Section className="-mt-4 md:-mt-10 pb-12">
-          <div className="rounded-3xl border border-white/50 dark:border-white/10 bg-white/70 dark:bg-gray-950/40 shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)] md:backdrop-blur-xl px-5 sm:px-8 py-8 sm:py-10">
+          <div
+            className={[
+              'rounded-3xl border border-white/50 dark:border-white/10',
+              // ✅ Más liviano en móvil
+              'bg-white/55 dark:bg-gray-950/28',
+              'shadow-[0_12px_40px_-30px_rgba(15,23,42,0.45)] md:shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)]',
+              'md:backdrop-blur-xl',
+              'px-5 sm:px-8 py-8 sm:py-10',
+            ].join(' ')}
+          >
             <div className="grid gap-10 lg:grid-cols-[1.2fr,0.8fr] items-start">
               <div className="text-center lg:text-left">
                 <Badge
@@ -495,7 +549,7 @@ export default function HomeClient() {
                   <Button
                     onClick={handleWhatsApp}
                     variant="outline"
-                    className="px-7 py-5 rounded-2xl text-sm sm:text-base bg-white/70 dark:bg-gray-900/50 md:backdrop-blur-md border border-white/50 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/5"
+                    className="px-7 py-5 rounded-2xl text-sm sm:text-base bg-white/65 dark:bg-gray-900/35 md:backdrop-blur-md border border-white/50 dark:border-white/10 hover:bg-white/85 dark:hover:bg-white/5"
                   >
                     Hablar por WhatsApp
                   </Button>
@@ -514,46 +568,53 @@ export default function HomeClient() {
                 </div>
               </div>
 
-              {/* Demo mock */}
+              {/* ✅ Demo mock (glass para no tapar tanto el fondo/animaciones) */}
               <motion.div
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={isMobile ? undefined : { opacity: 0, y: 18 }}
+                whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
-                className="rounded-3xl overflow-hidden border border-white/50 dark:border-white/10 bg-white/70 dark:bg-gray-950/50 md:backdrop-blur-md shadow-lg"
+                className={[
+                  'rounded-3xl overflow-hidden border border-white/50 dark:border-white/10',
+                  // 👇 más transparente para dejar ver el fondo detrás
+                  'bg-white/35 dark:bg-gray-950/18',
+                  'shadow-lg',
+                  // blur solo desktop (en móvil pesa)
+                  'md:backdrop-blur-xl',
+                ].join(' ')}
               >
-                <div className="p-4 border-b border-white/50 dark:border-white/10 flex items-center justify-between">
+                <div className="p-4 border-b border-white/40 dark:border-white/10 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
                     <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
                   </div>
-                  <span className="text-xs text-gray-600 dark:text-gray-300">
+                  <span className="text-xs text-gray-700 dark:text-gray-200">
                     Vista previa · Resumen IA
                   </span>
                 </div>
 
                 <div className="p-5 grid gap-4">
-                  <div className="rounded-2xl bg-white/80 dark:bg-gray-900/55 border border-white/50 dark:border-white/10 p-4">
+                  <div className="rounded-2xl bg-white/55 dark:bg-gray-900/25 border border-white/40 dark:border-white/10 p-4 md:backdrop-blur-md">
                     <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
                       <FileText className="w-4 h-4 text-indigo-500" />
                       Macroeconomía · Unidad 6.pdf
                     </div>
-                    <p className="mt-2 text-xs text-gray-700 dark:text-gray-300">
+                    <p className="mt-2 text-xs text-gray-700 dark:text-gray-200">
                       IA detectó: IPC, inflación, deflactor del PIB, tasa de inflación, sesgos de
                       medición.
                     </p>
                   </div>
 
-                  <div className="rounded-2xl bg-gradient-to-br from-indigo-500/12 via-purple-500/10 to-cyan-500/10 border border-white/50 dark:border-white/10 p-4">
+                  <div className="rounded-2xl bg-gradient-to-br from-indigo-500/12 via-purple-500/10 to-cyan-500/10 border border-white/40 dark:border-white/10 p-4 md:backdrop-blur-md">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-200">
                         Resumen automático (preview)
                       </span>
-                      <span className="text-[11px] text-gray-600 dark:text-gray-300">~ 12s</span>
+                      <span className="text-[11px] text-gray-700 dark:text-gray-200">~ 12s</span>
                     </div>
 
-                    <ul className="mt-3 space-y-2 text-xs text-gray-800 dark:text-gray-200">
+                    <ul className="mt-3 space-y-2 text-xs text-gray-900 dark:text-gray-100">
                       <li className="flex gap-2">
                         <span className="mt-1 w-1.5 h-1.5 rounded-full bg-indigo-500" />
                         El IPC mide el costo de una canasta de bienes/servicios en el tiempo.
@@ -570,16 +631,16 @@ export default function HomeClient() {
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="rounded-2xl bg-white/80 dark:bg-gray-900/55 border border-white/50 dark:border-white/10 p-3 text-center">
-                      <p className="text-[11px] text-gray-600 dark:text-gray-300">Tareas hoy</p>
+                    <div className="rounded-2xl bg-white/55 dark:bg-gray-900/25 border border-white/40 dark:border-white/10 p-3 text-center md:backdrop-blur-md">
+                      <p className="text-[11px] text-gray-700 dark:text-gray-200">Tareas hoy</p>
                       <p className="text-lg font-bold text-gray-900 dark:text-white">3</p>
                     </div>
-                    <div className="rounded-2xl bg-white/80 dark:bg-gray-900/55 border border-white/50 dark:border-white/10 p-3 text-center">
-                      <p className="text-[11px] text-gray-600 dark:text-gray-300">Exámenes</p>
+                    <div className="rounded-2xl bg-white/55 dark:bg-gray-900/25 border border-white/40 dark:border-white/10 p-3 text-center md:backdrop-blur-md">
+                      <p className="text-[11px] text-gray-700 dark:text-gray-200">Exámenes</p>
                       <p className="text-lg font-bold text-gray-900 dark:text-white">1</p>
                     </div>
-                    <div className="rounded-2xl bg-white/80 dark:bg-gray-900/55 border border-white/50 dark:border-white/10 p-3 text-center">
-                      <p className="text-[11px] text-gray-600 dark:text-gray-300">Progreso</p>
+                    <div className="rounded-2xl bg-white/55 dark:bg-gray-900/25 border border-white/40 dark:border-white/10 p-3 text-center md:backdrop-blur-md">
+                      <p className="text-[11px] text-gray-700 dark:text-gray-200">Progreso</p>
                       <p className="text-lg font-bold text-gray-900 dark:text-white">72%</p>
                     </div>
                   </div>
@@ -596,11 +657,17 @@ export default function HomeClient() {
         {/* Antes vs Después */}
         <Section className="pb-12">
           <motion.div
-            initial={{ opacity: 0, y: 22 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={isMobile ? undefined : { opacity: 0, y: 22 }}
+            whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="rounded-3xl border border-white/50 dark:border-white/10 bg-white/70 dark:bg-gray-950/40 md:backdrop-blur-xl shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)] px-5 sm:px-8 py-10"
+            className={[
+              'rounded-3xl border border-white/50 dark:border-white/10',
+              'bg-white/55 dark:bg-gray-950/28',
+              'md:backdrop-blur-xl',
+              'shadow-[0_12px_40px_-30px_rgba(15,23,42,0.45)] md:shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)]',
+              'px-5 sm:px-8 py-10',
+            ].join(' ')}
           >
             <div className="text-center mb-8">
               <Badge
@@ -713,11 +780,17 @@ export default function HomeClient() {
         {/* Testimonios */}
         <Section className="pb-12">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={isMobile ? undefined : { opacity: 0, y: 24 }}
+            whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="rounded-3xl bg-white/70 dark:bg-gray-950/40 md:backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)] px-5 sm:px-8 py-10"
+            className={[
+              'rounded-3xl border border-white/50 dark:border-white/10',
+              'bg-white/55 dark:bg-gray-950/28',
+              'md:backdrop-blur-xl',
+              'shadow-[0_12px_40px_-30px_rgba(15,23,42,0.45)] md:shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)]',
+              'px-5 sm:px-8 py-10',
+            ].join(' ')}
           >
             <div className="text-center">
               <Badge
@@ -747,8 +820,8 @@ export default function HomeClient() {
         <Section className="py-10">
           <motion.div
             id="funcionalidades"
-            initial={{ opacity: 0, y: 26 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={isMobile ? undefined : { opacity: 0, y: 26 }}
+            whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
@@ -770,10 +843,10 @@ export default function HomeClient() {
               {featureItems.map((item, i) => (
                 <motion.div
                   key={item.name}
-                  initial={{ opacity: 0, y: 14 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={isMobile ? undefined : { opacity: 0, y: 14 }}
+                  whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.03 }}
+                  transition={{ delay: isMobile ? 0 : i * 0.03 }}
                 >
                   <SpotlightCard className="p-6 text-center">
                     <div className="flex items-center justify-center mb-4">
@@ -822,7 +895,7 @@ export default function HomeClient() {
               <Button
                 onClick={() => router.push('/explorar')}
                 variant="outline"
-                className="px-10 py-5 text-base sm:text-lg rounded-2xl bg-white/70 dark:bg-gray-900/50 md:backdrop-blur-md border border-white/50 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/5"
+                className="px-10 py-5 text-base sm:text-lg rounded-2xl bg-white/65 dark:bg-gray-900/35 md:backdrop-blur-md border border-white/50 dark:border-white/10 hover:bg-white/85 dark:hover:bg-white/5"
               >
                 Explorar documentos
               </Button>
@@ -837,11 +910,17 @@ export default function HomeClient() {
         {/* Más herramientas */}
         <Section className="pb-16">
           <motion.div
-            initial={{ opacity: 0, y: 22 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={isMobile ? undefined : { opacity: 0, y: 22 }}
+            whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="rounded-3xl border border-white/50 dark:border-white/10 bg-white/70 dark:bg-gray-950/40 md:backdrop-blur-xl shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)] px-5 sm:px-8 py-10"
+            className={[
+              'rounded-3xl border border-white/50 dark:border-white/10',
+              'bg-white/55 dark:bg-gray-950/28',
+              'md:backdrop-blur-xl',
+              'shadow-[0_12px_40px_-30px_rgba(15,23,42,0.45)] md:shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)]',
+              'px-5 sm:px-8 py-10',
+            ].join(' ')}
           >
             <div className="text-center mb-8">
               <Badge
@@ -862,10 +941,10 @@ export default function HomeClient() {
               {extraItems.map((item, i) => (
                 <motion.div
                   key={item.name}
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={isMobile ? undefined : { opacity: 0, y: 12 }}
+                  whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.04 }}
+                  transition={{ delay: isMobile ? 0 : i * 0.04 }}
                 >
                   <SpotlightCard className="p-6 text-center">
                     <div className="flex items-center justify-center mb-4">
@@ -889,7 +968,7 @@ export default function HomeClient() {
 
             <div className="mt-12 flex justify-center">
               <Link href="/herramientas">
-                <Button className="text-sm sm:text-base bg-white/75 dark:bg-gray-900/55 md:backdrop-blur-md border border-white/50 dark:border-white/10 text-gray-900 dark:text-white font-medium px-8 py-3 rounded-full shadow-sm hover:bg-white/90 dark:hover:bg-white/5 transition-all">
+                <Button className="text-sm sm:text-base bg-white/65 dark:bg-gray-900/35 md:backdrop-blur-md border border-white/50 dark:border-white/10 text-gray-900 dark:text-white font-medium px-8 py-3 rounded-full shadow-sm hover:bg-white/85 dark:hover:bg-white/5 transition-all">
                   Ver todas las herramientas <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </Link>
@@ -899,17 +978,17 @@ export default function HomeClient() {
 
         <Footer />
 
-        {/* CTA flotante (premium) */}
+        {/* CTA flotante */}
         <div className="fixed bottom-4 left-0 right-0 z-30 pointer-events-none">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 flex justify-center">
-            <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/50 dark:border-white/10 bg-white/75 dark:bg-gray-950/45 md:backdrop-blur-md shadow-[0_20px_60px_-35px_rgba(15,23,42,0.6)] px-3 py-2">
+            <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/50 dark:border-white/10 bg-white/70 dark:bg-gray-950/35 md:backdrop-blur-md shadow-[0_20px_60px_-35px_rgba(15,23,42,0.6)] px-3 py-2">
               <Button onClick={handleStart} className="rounded-full px-4 py-2 h-auto">
                 Empezar <ArrowRight className="ml-1 w-4 h-4" />
               </Button>
               <Button
                 onClick={handleWhatsApp}
                 variant="outline"
-                className="rounded-full px-4 py-2 h-auto bg-white/70 dark:bg-gray-900/50 border border-white/50 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/5"
+                className="rounded-full px-4 py-2 h-auto bg-white/65 dark:bg-gray-900/35 border border-white/50 dark:border-white/10 hover:bg-white/85 dark:hover:bg-white/5"
               >
                 WhatsApp
               </Button>
