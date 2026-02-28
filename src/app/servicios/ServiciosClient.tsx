@@ -1,6 +1,6 @@
-// src/app/servicios/ServiciosClient.tsx
 'use client'
 
+import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -175,24 +175,32 @@ const allServicios: Servicio[] = [
   },
 ]
 
+/**
+ * 🔥 OTROS SERVICIOS (TESIS)
+ * ✅ Ahora enlaza a /tesis-pregrado (página pilar)
+ * ✅ Anclas listas para futuro
+ */
 const otrosServicios = [
   {
     titulo: 'TESIS PREGRADO',
     descripcion:
       'Estructura, planteamiento del problema, marco teórico, metodología, análisis y formato.',
     icon: GraduationCap,
+    href: '/tesis-pregrado#pregrado',
   },
   {
     titulo: 'TESIS POSGRADO',
     descripcion:
       'Asesoría avanzada, redacción académica, matrices, análisis y normas de publicación.',
     icon: BadgeCheck,
+    href: '/tesis-pregrado#maestria',
   },
   {
     titulo: 'TESIS DOCTORADO',
     descripcion:
       'Acompañamiento riguroso: estado del arte, diseño metodológico, análisis y publicación.',
     icon: FileText,
+    href: '/tesis-pregrado#doctorado',
   },
 ] as const
 
@@ -222,6 +230,7 @@ function ServiceCard({
   Icon,
   destacado,
   onClick,
+  href,
   buttonText = 'Solicitar asesoría',
 }: {
   title: string
@@ -229,7 +238,8 @@ function ServiceCard({
   description: string
   Icon: LucideIcon
   destacado?: boolean
-  onClick: () => void
+  onClick?: () => void
+  href?: string
   buttonText?: string
 }) {
   return (
@@ -287,17 +297,34 @@ function ServiceCard({
         <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{description}</p>
 
         <div className="pt-1">
-          <Button
-            className={[
-              'w-full rounded-xl text-white',
-              'bg-gradient-to-r from-indigo-600 to-violet-600',
-              'hover:from-indigo-700 hover:to-violet-700',
-              'shadow-[0_14px_35px_-22px_rgba(99,102,241,0.65)]',
-            ].join(' ')}
-            onClick={onClick}
-          >
-            {buttonText} <ArrowRight size={16} className="ml-2" />
-          </Button>
+          {/* ✅ Si hay href, es navegación. Si no, WhatsApp */}
+          {href ? (
+            <Button
+              asChild
+              className={[
+                'w-full rounded-xl text-white',
+                'bg-gradient-to-r from-indigo-600 to-violet-600',
+                'hover:from-indigo-700 hover:to-violet-700',
+                'shadow-[0_14px_35px_-22px_rgba(99,102,241,0.65)]',
+              ].join(' ')}
+            >
+              <Link href={href}>
+                {buttonText} <ArrowRight size={16} className="ml-2" />
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              className={[
+                'w-full rounded-xl text-white',
+                'bg-gradient-to-r from-indigo-600 to-violet-600',
+                'hover:from-indigo-700 hover:to-violet-700',
+                'shadow-[0_14px_35px_-22px_rgba(99,102,241,0.65)]',
+              ].join(' ')}
+              onClick={onClick}
+            >
+              {buttonText} <ArrowRight size={16} className="ml-2" />
+            </Button>
+          )}
 
           <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
             Respuesta rápida por WhatsApp • Enfoque en aprobación y aprendizaje
@@ -469,7 +496,8 @@ export default function ServiciosClient() {
                 description={item.descripcion}
                 Icon={item.icon}
                 destacado
-                onClick={() => handleWhatsAppClick(item.titulo)}
+                href={item.href}
+                buttonText="Ver detalles"
               />
             </motion.div>
           ))}
@@ -512,7 +540,7 @@ export default function ServiciosClient() {
         </div>
       </section>
 
-      {/* Grid servicios (✅ ahora solo 3 columnas máximo, uniforme como arriba) */}
+      {/* Grid servicios */}
       <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {serviciosFiltrados.map((servicio, index) => (
           <motion.div
@@ -538,7 +566,7 @@ export default function ServiciosClient() {
       {visibleCount < totalFiltrado && (
         <div className="text-center mt-10">
           <Button
-            onClick={loadMore}
+            onClick={() => setVisibleCount((prev) => prev + 9)}
             className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 px-6 py-3 rounded-xl shadow-sm transition"
           >
             Ver más servicios
