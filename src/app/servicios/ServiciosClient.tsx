@@ -1,3 +1,4 @@
+// src/app/servicios/ServiciosClient.tsx
 'use client'
 
 import Link from 'next/link'
@@ -38,6 +39,7 @@ type Servicio = {
   icon: LucideIcon
 }
 
+/* ---------------- WhatsApp ---------------- */
 const WHATSAPP_NUMBER = '593958757302'
 
 const buildWhatsAppUrl = (servicio?: string) => {
@@ -177,8 +179,7 @@ const allServicios: Servicio[] = [
 
 /**
  * 🔥 OTROS SERVICIOS (TESIS)
- * ✅ Ahora enlaza a /tesis-pregrado (página pilar)
- * ✅ Anclas listas para futuro
+ * ✅ enlaza a /tesis-pregrado (página pilar)
  */
 const otrosServicios = [
   {
@@ -229,7 +230,6 @@ function ServiceCard({
   description,
   Icon,
   destacado,
-  onClick,
   href,
   buttonText = 'Solicitar asesoría',
 }: {
@@ -238,10 +238,12 @@ function ServiceCard({
   description: string
   Icon: LucideIcon
   destacado?: boolean
-  onClick?: () => void
   href?: string
   buttonText?: string
 }) {
+  // ✅ Si NO hay href, el botón abre WhatsApp con el título del servicio
+  const waUrl = buildWhatsAppUrl(title)
+
   return (
     <Card
       className={[
@@ -297,34 +299,26 @@ function ServiceCard({
         <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{description}</p>
 
         <div className="pt-1">
-          {/* ✅ Si hay href, es navegación. Si no, WhatsApp */}
-          {href ? (
-            <Button
-              asChild
-              className={[
-                'w-full rounded-xl text-white',
-                'bg-gradient-to-r from-indigo-600 to-violet-600',
-                'hover:from-indigo-700 hover:to-violet-700',
-                'shadow-[0_14px_35px_-22px_rgba(99,102,241,0.65)]',
-              ].join(' ')}
-            >
+          {/* ✅ Si hay href, navega interno. Si no, abre WhatsApp */}
+          <Button
+            asChild
+            className={[
+              'w-full rounded-xl text-white',
+              'bg-gradient-to-r from-indigo-600 to-violet-600',
+              'hover:from-indigo-700 hover:to-violet-700',
+              'shadow-[0_14px_35px_-22px_rgba(99,102,241,0.65)]',
+            ].join(' ')}
+          >
+            {href ? (
               <Link href={href}>
                 {buttonText} <ArrowRight size={16} className="ml-2" />
               </Link>
-            </Button>
-          ) : (
-            <Button
-              className={[
-                'w-full rounded-xl text-white',
-                'bg-gradient-to-r from-indigo-600 to-violet-600',
-                'hover:from-indigo-700 hover:to-violet-700',
-                'shadow-[0_14px_35px_-22px_rgba(99,102,241,0.65)]',
-              ].join(' ')}
-              onClick={onClick}
-            >
-              {buttonText} <ArrowRight size={16} className="ml-2" />
-            </Button>
-          )}
+            ) : (
+              <Link href={waUrl} target="_blank" rel="noopener noreferrer">
+                {buttonText} <ArrowRight size={16} className="ml-2" />
+              </Link>
+            )}
+          </Button>
 
           <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
             Respuesta rápida por WhatsApp • Enfoque en aprobación y aprendizaje
@@ -353,12 +347,15 @@ export default function ServiciosClient() {
     return base.slice(0, visibleCount)
   }, [visibleCount, filtroCategoria])
 
-  // ✅ Ahora SÍ se usa (en el botón "Ver más servicios")
   const loadMore = () => setVisibleCount((prev) => prev + 9)
 
-  const handleWhatsAppClick = (servicio?: string) => {
+  // ✅ Para los CTAs grandes (hero / cotizar / final)
+  const waGeneral = buildWhatsAppUrl()
+  const waTesis = buildWhatsAppUrl('Tesis (Pregrado / Posgrado / Doctorado)')
+
+  const goWhatsApp = (url: string) => {
     toast.success('Redirigiendo a WhatsApp...')
-    window.open(buildWhatsAppUrl(servicio), '_blank')
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   return (
@@ -437,12 +434,20 @@ export default function ServiciosClient() {
               </li>
             </ul>
 
+            {/* ✅ Link directo (mejor que window.open para evitar bloqueos) */}
             <Button
-              onClick={() => handleWhatsAppClick()}
+              asChild
               size="lg"
               className="mt-2 bg-white text-slate-900 hover:bg-slate-100 rounded-xl"
             >
-              📲 Hablar con un asesor
+              <Link
+                href={waGeneral}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => toast.success('Redirigiendo a WhatsApp...')}
+              >
+                📲 Hablar con un asesor
+              </Link>
             </Button>
 
             <p className="text-[11px] text-white/80">
@@ -473,10 +478,11 @@ export default function ServiciosClient() {
             </p>
           </div>
 
+          {/* ✅ Cotizar tesis -> WhatsApp */}
           <Button
             variant="outline"
             className="rounded-xl border-slate-200 dark:border-slate-700"
-            onClick={() => handleWhatsAppClick('Tesis (Pregrado / Posgrado / Doctorado)')}
+            onClick={() => goWhatsApp(waTesis)}
           >
             Cotizar tesis <ArrowRight size={16} className="ml-2" />
           </Button>
@@ -557,7 +563,6 @@ export default function ServiciosClient() {
               description={servicio.descripcion}
               Icon={servicio.icon}
               destacado={servicio.destacado}
-              onClick={() => handleWhatsAppClick(servicio.titulo)}
             />
           </motion.div>
         ))}
@@ -598,10 +603,17 @@ export default function ServiciosClient() {
       {/* CTA final */}
       <div className="mt-14 text-center">
         <Button
-          onClick={() => handleWhatsAppClick()}
+          asChild
           className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white text-lg px-10 py-4 rounded-2xl shadow-xl transition duration-300"
         >
-          📲 Solicitar servicio por WhatsApp
+          <Link
+            href={waGeneral}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => toast.success('Redirigiendo a WhatsApp...')}
+          >
+            📲 Solicitar servicio por WhatsApp
+          </Link>
         </Button>
         <p className="mt-3 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
           Respuesta rápida. Cuéntanos qué necesitas y te ofrecemos la mejor opción académica.

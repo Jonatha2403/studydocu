@@ -95,6 +95,11 @@ const relatedPages = [
   },
 ]
 
+/* ---------------- WhatsApp helper ---------------- */
+const WHATSAPP_NUMBER = '593958757302'
+const buildWhatsAppLink = (message: string) =>
+  `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
+
 export default function TesisUTPLPage() {
   const faqJsonLd = {
     '@context': 'https://schema.org',
@@ -108,6 +113,20 @@ export default function TesisUTPLPage() {
       },
     })),
   }
+
+  // ✅ Mensajes por CTA
+  const waSolicitarAsesoria = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Necesito asesoría para mi TESIS UTPL (pregrado/maestría/doctorado). Estoy en la etapa de ___. Mi carrera es ___ y necesito apoyo con APA/metodología/análisis/defensa.'
+  )
+  const waAgendarOrientacion = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Quiero AGENDAR una orientación para mi TESIS UTPL. Nivel: ___ (pregrado/maestría/doctorado). Tema (breve): ___. Enfoque: ___ (cuali/cuanti/mixto).'
+  )
+  const waAvanzarUTPL = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Quiero avanzar con mi TESIS UTPL. Estoy en la etapa de ___. ¿Me ayudan con coherencia, APA, metodología, análisis y preparación para defensa?'
+  )
+  const waContactar = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Quiero contactarlos por asesoría de TESIS UTPL. ¿Tienen disponibilidad hoy?'
+  )
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
@@ -159,8 +178,11 @@ export default function TesisUTPLPage() {
               </p>
 
               <div className="mt-7 flex flex-col sm:flex-row gap-3">
+                {/* ✅ Solicitar asesoría -> WhatsApp */}
                 <Link
-                  href="/contacto"
+                  href={waSolicitarAsesoria}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-white font-semibold hover:bg-black transition shadow-sm"
                 >
                   Solicitar asesoría <ArrowRight className="h-4 w-4" />
@@ -229,8 +251,11 @@ export default function TesisUTPLPage() {
                   />
 
                   <div className="pt-2">
+                    {/* ✅ Agendar orientación -> WhatsApp */}
                     <Link
-                      href="/contacto"
+                      href={waAgendarOrientacion}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-white font-semibold hover:bg-blue-800 transition"
                     >
                       Agendar orientación <ArrowRight className="h-4 w-4" />
@@ -389,8 +414,11 @@ export default function TesisUTPLPage() {
               <IncludeItem text="Preparación para defensa: guion, diapositivas y preguntas" />
 
               <div className="pt-3">
+                {/* ✅ Avanzar -> WhatsApp */}
                 <Link
-                  href="/contacto"
+                  href={waAvanzarUTPL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-white font-semibold hover:bg-black transition"
                 >
                   Quiero avanzar con mi tesis UTPL <ArrowRight className="h-4 w-4" />
@@ -430,8 +458,11 @@ export default function TesisUTPLPage() {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
+              {/* ✅ Contactar -> WhatsApp */}
               <Link
-                href="/contacto"
+                href={waContactar}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-slate-900 font-semibold hover:bg-slate-100 transition"
               >
                 Contactar <ArrowRight className="h-4 w-4" />

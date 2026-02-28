@@ -92,6 +92,11 @@ const relatedPages = [
   },
 ]
 
+/* ---------------- WhatsApp helper ---------------- */
+const WHATSAPP_NUMBER = '5939XXXXXXXX' // ✅ cambia por tu número real (sin + y sin espacios)
+const buildWhatsAppLink = (message: string) =>
+  `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
+
 export default function AyudaEnTesisEcuadorPage() {
   const faqJsonLd = {
     '@context': 'https://schema.org',
@@ -102,6 +107,17 @@ export default function AyudaEnTesisEcuadorPage() {
       acceptedAnswer: { '@type': 'Answer', text: item.a },
     })),
   }
+
+  // Mensajes por botón (puedes ajustar)
+  const waSolicitarAsesoria = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Quiero solicitar asesoría para mi tesis en Ecuador. ¿Me ayudas con información de pasos, tiempos y costos?'
+  )
+  const waAgendarOrientacion = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Quiero agendar una orientación para mi tesis. Mi universidad es ___ y mi carrera es ___.'
+  )
+  const waContactar = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Quiero contactarlos por ayuda en tesis. ¿Tienen disponibilidad hoy?'
+  )
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
@@ -153,8 +169,11 @@ export default function AyudaEnTesisEcuadorPage() {
               </p>
 
               <div className="mt-7 flex flex-col sm:flex-row gap-3">
+                {/* ✅ Solicitar asesoría -> WhatsApp */}
                 <Link
-                  href="/contacto"
+                  href={waSolicitarAsesoria}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-white font-semibold hover:bg-black transition shadow-sm"
                 >
                   Solicitar asesoría <ArrowRight className="h-4 w-4" />
@@ -225,8 +244,11 @@ export default function AyudaEnTesisEcuadorPage() {
                   />
 
                   <div className="pt-2">
+                    {/* ✅ Agendar orientación -> WhatsApp */}
                     <Link
-                      href="/contacto"
+                      href={waAgendarOrientacion}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-white font-semibold hover:bg-blue-800 transition"
                     >
                       Agendar orientación <ArrowRight className="h-4 w-4" />
@@ -383,12 +405,16 @@ export default function AyudaEnTesisEcuadorPage() {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
+              {/* ✅ Contactar -> WhatsApp */}
               <Link
-                href="/contacto"
+                href={waContactar}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-slate-900 font-semibold hover:bg-slate-100 transition"
               >
                 Contactar <ArrowRight className="h-4 w-4" />
               </Link>
+
               <Link
                 href="/servicios"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 px-6 py-3 text-white font-semibold hover:bg-white/10 transition"

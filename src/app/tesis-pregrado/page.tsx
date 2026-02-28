@@ -97,6 +97,11 @@ const relatedPages = [
   },
 ]
 
+/* ---------------- WhatsApp helper ---------------- */
+const WHATSAPP_NUMBER = '593958757302'
+const buildWhatsAppLink = (message: string) =>
+  `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
+
 export default function TesisPregradoPage() {
   const faqJsonLd = {
     '@context': 'https://schema.org',
@@ -107,6 +112,29 @@ export default function TesisPregradoPage() {
       acceptedAnswer: { '@type': 'Answer', text: item.a },
     })),
   }
+
+  // ✅ Mensajes por botón / sección
+  const waSolicitarAsesoria = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Necesito asesoría para mi TESIS DE PREGRADO. Quiero apoyo en tema, propuesta, marco teórico, metodología, APA y defensa. Mi universidad/carrera es ___.'
+  )
+  const waAgendarOrientacion = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Quiero AGENDAR una orientación para tesis de PREGRADO. Tema (breve): ___. Enfoque (cuali/cuanti/mixto): ___.'
+  )
+  const waApoyoPregrado = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Quiero apoyo en TESIS DE PREGRADO. Estoy en la etapa de ___ (tema/propuesta/marco teórico/metodología/resultados/defensa). ¿Cómo empezamos?'
+  )
+  const waApoyoMaestria = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Quiero apoyo en TESIS DE MAESTRÍA (desde tesis-pregrado). Estoy en la etapa de ___. ¿Me ayudan con estado del arte, método, instrumentos, análisis y APA?'
+  )
+  const waApoyoDoctorado = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Quiero apoyo en TESIS DE DOCTORADO (desde tesis-pregrado). Necesito orientación en aporte, estado del arte, validación metodológica, análisis y defensa.'
+  )
+  const waAvanzarTesis = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Quiero avanzar mi tesis. Estoy en la etapa de ___. Mi universidad/carrera es ___.'
+  )
+  const waContactar = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Quiero contactarlos por asesoría de tesis. ¿Tienen disponibilidad hoy?'
+  )
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
@@ -158,8 +186,11 @@ export default function TesisPregradoPage() {
               </p>
 
               <div className="mt-7 flex flex-col sm:flex-row gap-3">
+                {/* ✅ Solicitar asesoría -> WhatsApp */}
                 <Link
-                  href="/contacto"
+                  href={waSolicitarAsesoria}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-white font-semibold hover:bg-black transition shadow-sm"
                 >
                   Solicitar asesoría <ArrowRight className="h-4 w-4" />
@@ -252,8 +283,11 @@ export default function TesisPregradoPage() {
                   />
 
                   <div className="pt-2">
+                    {/* ✅ Agendar orientación -> WhatsApp */}
                     <Link
-                      href="/contacto"
+                      href={waAgendarOrientacion}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-white font-semibold hover:bg-blue-800 transition"
                     >
                       Agendar orientación <ArrowRight className="h-4 w-4" />
@@ -354,10 +388,12 @@ export default function TesisPregradoPage() {
                   <IncludeItem text="Revisión de formato y normas APA" />
                 </div>
 
-                {/* ✅ BOTONES ALINEADOS (MISMO NIVEL) */}
                 <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                  {/* ✅ WhatsApp */}
                   <Link
-                    href="/contacto"
+                    href={waApoyoPregrado}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-white font-semibold hover:bg-black transition"
                   >
                     Solicitar apoyo en pregrado <ArrowRight className="h-4 w-4" />
@@ -404,10 +440,12 @@ export default function TesisPregradoPage() {
                   <IncludeItem text="Redacción técnica y formato APA" />
                 </div>
 
-                {/* ✅ BOTONES ALINEADOS (MISMO NIVEL) */}
                 <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                  {/* ✅ WhatsApp */}
                   <Link
-                    href="/contacto"
+                    href={waApoyoMaestria}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-white font-semibold hover:bg-black transition"
                   >
                     Solicitar apoyo en maestría <ArrowRight className="h-4 w-4" />
@@ -455,10 +493,12 @@ export default function TesisPregradoPage() {
                   <IncludeItem text="Preparación de defensa (guion y posibles preguntas)" />
                 </div>
 
-                {/* ✅ BOTONES ALINEADOS (MISMO NIVEL) */}
                 <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                  {/* ✅ WhatsApp */}
                   <Link
-                    href="/contacto"
+                    href={waApoyoDoctorado}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-white font-semibold hover:bg-black transition"
                   >
                     Solicitar apoyo en doctorado <ArrowRight className="h-4 w-4" />
@@ -521,8 +561,11 @@ export default function TesisPregradoPage() {
               <IncludeItem text="Preparación para defensa: guion y preguntas" />
 
               <div className="pt-3">
+                {/* ✅ Quiero avanzar mi tesis -> WhatsApp */}
                 <Link
-                  href="/contacto"
+                  href={waAvanzarTesis}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-white font-semibold hover:bg-black transition"
                 >
                   Quiero avanzar mi tesis <ArrowRight className="h-4 w-4" />
@@ -585,12 +628,16 @@ export default function TesisPregradoPage() {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
+              {/* ✅ Contactar -> WhatsApp */}
               <Link
-                href="/contacto"
+                href={waContactar}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-slate-900 font-semibold hover:bg-slate-100 transition"
               >
                 Contactar <ArrowRight className="h-4 w-4" />
               </Link>
+
               <Link
                 href="/servicios"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 px-6 py-3 text-white font-semibold hover:bg-white/10 transition"

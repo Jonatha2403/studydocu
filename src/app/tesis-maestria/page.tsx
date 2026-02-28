@@ -70,6 +70,11 @@ const faq = [
   },
 ]
 
+/* ---------------- WhatsApp helper ---------------- */
+const WHATSAPP_NUMBER = '593958757302'
+const buildWhatsAppLink = (message: string) =>
+  `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
+
 export default function TesisMaestriaPage() {
   const faqJsonLd = {
     '@context': 'https://schema.org',
@@ -80,6 +85,20 @@ export default function TesisMaestriaPage() {
       acceptedAnswer: { '@type': 'Answer', text: item.a },
     })),
   }
+
+  // ✅ Mensajes por botón
+  const waSolicitarAsesoria = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Necesito asesoría para mi tesis de MAESTRÍA. Quiero apoyo en estado del arte, metodología, instrumentos, análisis y APA. Mi universidad/programa es ___.'
+  )
+  const waAgendarOrientacion = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Quiero AGENDAR una orientación para tesis de maestría. Tema (breve): ___. Enfoque (cuali/cuanti/mixto): ___.'
+  )
+  const waAvanzarTesis = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Quiero avanzar mi tesis de MAESTRÍA. Estoy en la etapa de ___ (tema/problema/estado del arte/metodología/resultados/discusión/defensa). ¿Cómo empezamos?'
+  )
+  const waContactar = buildWhatsAppLink(
+    'Hola StudyDocu 👋 Quiero contactarlos por asesoría de tesis de maestría. ¿Tienen disponibilidad hoy?'
+  )
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
@@ -128,8 +147,11 @@ export default function TesisMaestriaPage() {
               </p>
 
               <div className="mt-7 flex flex-col sm:flex-row gap-3">
+                {/* ✅ Solicitar asesoría -> WhatsApp */}
                 <Link
-                  href="/contacto"
+                  href={waSolicitarAsesoria}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-white font-semibold hover:bg-black transition shadow-sm"
                 >
                   Solicitar asesoría <ArrowRight className="h-4 w-4" />
@@ -199,8 +221,11 @@ export default function TesisMaestriaPage() {
                   />
 
                   <div className="pt-2">
+                    {/* ✅ Agendar orientación -> WhatsApp */}
                     <Link
-                      href="/contacto"
+                      href={waAgendarOrientacion}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-700 px-5 py-3 text-white font-semibold hover:bg-indigo-800 transition"
                     >
                       Agendar orientación <ArrowRight className="h-4 w-4" />
@@ -291,8 +316,11 @@ export default function TesisMaestriaPage() {
               <IncludeItem text="Formato APA: citas, referencias, tablas y figuras" />
 
               <div className="pt-3">
+                {/* ✅ Quiero avanzar mi tesis -> WhatsApp */}
                 <Link
-                  href="/contacto"
+                  href={waAvanzarTesis}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-white font-semibold hover:bg-black transition"
                 >
                   Quiero avanzar mi tesis <ArrowRight className="h-4 w-4" />
@@ -331,12 +359,16 @@ export default function TesisMaestriaPage() {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
+              {/* ✅ Contactar -> WhatsApp */}
               <Link
-                href="/contacto"
+                href={waContactar}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-slate-900 font-semibold hover:bg-slate-100 transition"
               >
                 Contactar <ArrowRight className="h-4 w-4" />
               </Link>
+
               <Link
                 href="/servicios"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 px-6 py-3 text-white font-semibold hover:bg-white/10 transition"
