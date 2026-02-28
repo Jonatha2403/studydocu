@@ -2,7 +2,22 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Script from 'next/script'
+import type { ReactNode } from 'react'
 import { ArrowRight, CheckCircle2, ShieldCheck, Sparkles, ClipboardList } from 'lucide-react'
+
+/** ✅ CAMBIA TU NÚMERO AQUÍ (sin +, sin espacios) */
+const WHATSAPP_NUMBER = '593958757302'
+
+function buildWhatsAppLink(message: string) {
+  const text = encodeURIComponent(message)
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`
+}
+
+const WHATSAPP_MSG_APOYO =
+  'Hola StudyDocu, necesito apoyo para mis exámenes bimestrales/parciales. ¿Me ayudan con explicación paso a paso y práctica guiada?'
+
+const WHATSAPP_MSG_AGENDAR =
+  'Hola StudyDocu, quiero agendar una orientación para prepararme para mis exámenes bimestrales/parciales. ¿Qué horarios tienen disponibles?'
 
 export const metadata: Metadata = {
   title: 'Exámenes Bimestrales en Ecuador | Apoyo Académico – StudyDocu',
@@ -67,6 +82,9 @@ export default function ExamenesBimestralesPage() {
     })),
   }
 
+  const whatsappApoyoHref = buildWhatsAppLink(WHATSAPP_MSG_APOYO)
+  const whatsappAgendarHref = buildWhatsAppLink(WHATSAPP_MSG_AGENDAR)
+
   return (
     <main className="min-h-screen bg-white text-slate-900">
       {/* FAQ Schema (Rich Results) */}
@@ -115,12 +133,15 @@ export default function ExamenesBimestralesPage() {
               </p>
 
               <div className="mt-7 flex flex-col sm:flex-row gap-3">
-                <Link
-                  href="/contacto"
+                {/* ✅ WhatsApp: Solicitar apoyo */}
+                <a
+                  href={whatsappApoyoHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-white font-semibold hover:bg-black transition shadow-sm"
                 >
                   Solicitar apoyo <ArrowRight className="h-4 w-4" />
-                </Link>
+                </a>
 
                 <Link
                   href="/servicios"
@@ -169,12 +190,16 @@ export default function ExamenesBimestralesPage() {
                   />
 
                   <div className="pt-2">
-                    <Link
-                      href="/contacto"
+                    {/* ✅ WhatsApp: Agendar orientación */}
+                    <a
+                      href={whatsappAgendarHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-700 px-5 py-3 text-white font-semibold hover:bg-indigo-800 transition"
                     >
                       Agendar orientación <ArrowRight className="h-4 w-4" />
-                    </Link>
+                    </a>
+
                     <p className="mt-3 text-xs text-slate-500 text-center">
                       Orientación académica independiente. No afiliados a universidades.
                     </p>
@@ -235,7 +260,7 @@ function Bullet({ text }: { text: string }) {
   )
 }
 
-function MiniItem({ title, desc, icon }: { title: string; desc: string; icon: React.ReactNode }) {
+function MiniItem({ title, desc, icon }: { title: string; desc: string; icon: ReactNode }) {
   return (
     <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <div className="rounded-lg border border-slate-200 bg-white p-2">{icon}</div>

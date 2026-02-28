@@ -93,7 +93,7 @@ const relatedPages = [
 ]
 
 /* ---------------- WhatsApp helper ---------------- */
-const WHATSAPP_NUMBER = '5939XXXXXXXX' // ✅ cambia por tu número real (sin + y sin espacios)
+const WHATSAPP_NUMBER = '593958757302' // ✅ cambia por tu número real (sin + y sin espacios)
 const buildWhatsAppLink = (message: string) =>
   `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
 

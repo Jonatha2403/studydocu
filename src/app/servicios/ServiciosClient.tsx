@@ -37,6 +37,15 @@ type Servicio = {
   descripcion: string
   destacado?: boolean
   icon: LucideIcon
+
+  /** ✅ NUEVO: si existe, el botón navega a esta página */
+  href?: string
+  /** ✅ NUEVO: texto del botón cuando tiene href */
+  buttonText?: string
+
+  /** ✅ NUEVO: link secundario (ej: Validación aparte) */
+  secondaryHref?: string
+  secondaryText?: string
 }
 
 /* ---------------- WhatsApp ---------------- */
@@ -94,25 +103,43 @@ const allServicios: Servicio[] = [
     descripcion: 'Te explicamos la resolución para que también aprendas.',
     icon: iconByCategoria.Ensayos,
   },
+
+  /* =======================
+     ✅ EXÁMENES (ENLAZADOS)
+     ======================= */
+
   {
     titulo: '🧠 Exámenes bimestrales y de recuperación',
     categoria: 'Exámenes',
-    descripcion: 'Acompañamiento en evaluaciones parciales y de recuperación.',
+    descripcion: 'Acompañamiento en parciales, bimestrales, quices y recuperaciones.',
     destacado: true,
     icon: iconByCategoria.Exámenes,
+    href: '/examenes-bimestrales',
+    buttonText: 'Ver detalles',
   },
   {
     titulo: '🧪 Exámenes complexivos y de validación',
     categoria: 'Exámenes',
-    descripcion: 'Preparación intensiva para exámenes finales o de titulación.',
+    descripcion: 'Preparación intensiva con repaso por áreas, simulacros y guía paso a paso.',
     icon: iconByCategoria.Exámenes,
+    href: '/examen-complexivo',
+    buttonText: 'Ver complexivo',
+    secondaryHref: '/examenes-validacion',
+    secondaryText: 'Ver validación',
   },
   {
     titulo: '📝 Asistencia en quices y exámenes online',
     categoria: 'Exámenes',
-    descripcion: 'Soporte en evaluaciones en línea con enfoque práctico.',
+    descripcion: 'Soporte en evaluaciones online con enfoque práctico y claridad.',
     icon: iconByCategoria.Exámenes,
+    href: '/examenes-bimestrales',
+    buttonText: 'Ver detalles',
   },
+
+  /* =======================
+     OTROS SERVICIOS
+     ======================= */
+
   {
     titulo: '💻 Programación Python – UTPL',
     categoria: 'Plataformas',
@@ -232,6 +259,8 @@ function ServiceCard({
   destacado,
   href,
   buttonText = 'Solicitar asesoría',
+  secondaryHref,
+  secondaryText,
 }: {
   title: string
   subtitle: string
@@ -240,8 +269,9 @@ function ServiceCard({
   destacado?: boolean
   href?: string
   buttonText?: string
+  secondaryHref?: string
+  secondaryText?: string
 }) {
-  // ✅ Si NO hay href, el botón abre WhatsApp con el título del servicio
   const waUrl = buildWhatsAppUrl(title)
 
   return (
@@ -256,7 +286,6 @@ function ServiceCard({
           : 'hover:border-slate-300/80 dark:hover:border-slate-600/70',
       ].join(' ')}
     >
-      {/* top accent */}
       <div
         className={[
           'absolute inset-x-0 top-0 h-[2px] rounded-t-2xl',
@@ -299,7 +328,6 @@ function ServiceCard({
         <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{description}</p>
 
         <div className="pt-1">
-          {/* ✅ Si hay href, navega interno. Si no, abre WhatsApp */}
           <Button
             asChild
             className={[
@@ -319,6 +347,18 @@ function ServiceCard({
               </Link>
             )}
           </Button>
+
+          {/* ✅ link secundario opcional */}
+          {secondaryHref && secondaryText ? (
+            <div className="mt-2 text-center">
+              <Link
+                href={secondaryHref}
+                className="text-[12px] font-medium text-indigo-700 hover:text-indigo-800 dark:text-indigo-200 dark:hover:text-indigo-100 underline underline-offset-4"
+              >
+                {secondaryText}
+              </Link>
+            </div>
+          ) : null}
 
           <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
             Respuesta rápida por WhatsApp • Enfoque en aprobación y aprendizaje
@@ -347,9 +387,6 @@ export default function ServiciosClient() {
     return base.slice(0, visibleCount)
   }, [visibleCount, filtroCategoria])
 
-  const loadMore = () => setVisibleCount((prev) => prev + 9)
-
-  // ✅ Para los CTAs grandes (hero / cotizar / final)
   const waGeneral = buildWhatsAppUrl()
   const waTesis = buildWhatsAppUrl('Tesis (Pregrado / Posgrado / Doctorado)')
 
@@ -434,7 +471,6 @@ export default function ServiciosClient() {
               </li>
             </ul>
 
-            {/* ✅ Link directo (mejor que window.open para evitar bloqueos) */}
             <Button
               asChild
               size="lg"
@@ -478,7 +514,6 @@ export default function ServiciosClient() {
             </p>
           </div>
 
-          {/* ✅ Cotizar tesis -> WhatsApp */}
           <Button
             variant="outline"
             className="rounded-xl border-slate-200 dark:border-slate-700"
@@ -563,6 +598,12 @@ export default function ServiciosClient() {
               description={servicio.descripcion}
               Icon={servicio.icon}
               destacado={servicio.destacado}
+              href={servicio.href}
+              buttonText={
+                servicio.buttonText ?? (servicio.href ? 'Ver detalles' : 'Solicitar asesoría')
+              }
+              secondaryHref={servicio.secondaryHref}
+              secondaryText={servicio.secondaryText}
             />
           </motion.div>
         ))}
@@ -572,7 +613,7 @@ export default function ServiciosClient() {
       {visibleCount < totalFiltrado && (
         <div className="text-center mt-10">
           <Button
-            onClick={loadMore}
+            onClick={() => setVisibleCount((prev) => prev + 9)}
             className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 px-6 py-3 rounded-xl shadow-sm transition"
           >
             Ver más servicios
