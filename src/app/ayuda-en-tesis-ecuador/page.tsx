@@ -1,4 +1,6 @@
+// src/app/ayuda-en-tesis-ecuador/page.tsx
 import type { Metadata } from 'next'
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import Script from 'next/script'
 import {
@@ -12,6 +14,8 @@ import {
   Sparkles,
   GraduationCap,
   Building2,
+  School,
+  BadgeCheck,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -64,6 +68,27 @@ const faq = [
   {
     q: '¿Es obligatorio usar normas APA?',
     a: 'En muchas universidades sí. Las normas APA se aplican a citas, referencias, tablas, figuras y presentación formal. Te ayudamos a corregir y ordenar todo el formato.',
+  },
+]
+
+const relatedPages = [
+  {
+    href: '/tesis-pregrado',
+    title: 'Tesis Pregrado',
+    desc: 'Estructura, metodología y APA.',
+    Icon: School,
+  },
+  {
+    href: '/tesis-maestria',
+    title: 'Tesis Maestría',
+    desc: 'Rigor metodológico + análisis avanzado.',
+    Icon: BadgeCheck,
+  },
+  {
+    href: '/tesis-utpl',
+    title: 'Tesis UTPL',
+    desc: 'Pregrado, maestría y doctorado UTPL.',
+    Icon: GraduationCap,
   },
 ]
 
@@ -120,7 +145,6 @@ export default function AyudaEnTesisEcuadorPage() {
                 <span className="text-blue-700">acompañamiento profesional por etapas</span>
               </h1>
 
-              {/* Snippet-friendly paragraph */}
               <p className="mt-5 text-lg text-slate-700 leading-relaxed max-w-2xl">
                 Si necesitas ayuda con tu tesis en Ecuador, en StudyDocu te acompañamos desde el
                 tema y la propuesta hasta la redacción final y la defensa. Trabajamos con estructura
@@ -174,7 +198,7 @@ export default function AyudaEnTesisEcuadorPage() {
                     <h2 className="text-lg font-semibold">¿Qué podemos ayudarte a resolver?</h2>
                   </div>
                   <p className="mt-2 text-sm text-slate-600">
-                    Enfoque corporativo y académico, adaptado a universidades del Ecuador.
+                    Enfoque académico, adaptado a universidades del Ecuador.
                   </p>
                 </div>
 
@@ -214,29 +238,40 @@ export default function AyudaEnTesisEcuadorPage() {
                 </div>
               </div>
 
-              {/* Internal links */}
+              {/* ✅ Internal links PRO cards */}
               <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-sm text-slate-700">Más páginas útiles:</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Link
-                    className="text-sm rounded-full border border-slate-200 bg-white px-3 py-1 hover:bg-slate-50 transition"
-                    href="/tesis-pregrado"
-                  >
-                    Tesis Pregrado
-                  </Link>
-                  <Link
-                    className="text-sm rounded-full border border-slate-200 bg-white px-3 py-1 hover:bg-slate-50 transition"
-                    href="/tesis-utpl"
-                  >
-                    Tesis UTPL
-                  </Link>
-                  <Link
-                    className="text-sm rounded-full border border-slate-200 bg-white px-3 py-1 hover:bg-slate-50 transition"
-                    href="/servicios"
-                  >
-                    Servicios
-                  </Link>
+                <p className="text-sm text-slate-700 font-medium">Más páginas útiles</p>
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {relatedPages.map(({ href, title, desc, Icon }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="h-10 w-10 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center">
+                          <Icon className="h-5 w-5 text-slate-900" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-slate-900">{title}</p>
+                          <p className="mt-1 text-xs text-slate-600 leading-snug">{desc}</p>
+                          <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-blue-700">
+                            Ver página <ArrowRight className="h-3.5 w-3.5" />
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5">
+                <Link
+                  href="/servicios"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 font-semibold hover:bg-slate-50 transition"
+                >
+                  Ver todos los servicios <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
             </div>
           </div>
@@ -278,17 +313,17 @@ export default function AyudaEnTesisEcuadorPage() {
           <LevelCard
             title="Pregrado"
             desc="Tema, propuesta, marco teórico, metodología, resultados y APA."
-            href="/tesis-pregrado#pregrado"
+            href="/tesis-pregrado"
           />
           <LevelCard
             title="Maestría"
             desc="Estado del arte, método riguroso, análisis y redacción técnica."
-            href="/tesis-pregrado#maestria"
+            href="/tesis-maestria"
           />
           <LevelCard
             title="Doctorado"
             desc="Aporte científico, validación metodológica y defensa doctoral."
-            href="/tesis-pregrado#doctorado"
+            href="/tesis-doctorado"
           />
         </div>
 
@@ -375,7 +410,7 @@ export default function AyudaEnTesisEcuadorPage() {
 
 /* ---------- UI helpers ---------- */
 
-function TrustItem({ icon, text }: { icon: React.ReactNode; text: string }) {
+function TrustItem({ icon, text }: { icon: ReactNode; text: string }) {
   return (
     <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mt-0.5">{icon}</div>
@@ -417,7 +452,7 @@ function LevelCard({ title, desc, href }: { title: string; desc: string; href: s
   )
 }
 
-function MiniItem({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
+function MiniItem({ icon, title, desc }: { icon: ReactNode; title: string; desc: string }) {
   return (
     <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <div className="rounded-lg border border-slate-200 bg-white p-2">{icon}</div>

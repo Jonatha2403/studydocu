@@ -1,4 +1,6 @@
+// src/app/tesis-utpl/page.tsx
 import type { Metadata } from 'next'
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import Script from 'next/script'
 import {
@@ -11,6 +13,9 @@ import {
   Target,
   Sparkles,
   ArrowRight,
+  School,
+  BadgeCheck,
+  Globe2,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -63,6 +68,30 @@ const faq = [
   {
     q: '¿Pueden ayudar en pregrado, maestría y doctorado UTPL?',
     a: 'Sí. Adaptamos el acompañamiento al nivel (pregrado, maestría o doctorado) y al enfoque metodológico (cualitativo, cuantitativo o mixto).',
+  },
+]
+
+const relatedPages = [
+  {
+    href: '/tesis-pregrado',
+    title: 'Tesis Pregrado (Ecuador)',
+    desc: 'Estructura, metodología y APA.',
+    Icon: School,
+    tone: 'hover:border-blue-500 hover:shadow-blue-100/60',
+  },
+  {
+    href: '/tesis-maestria',
+    title: 'Tesis Maestría',
+    desc: 'Rigor metodológico + análisis avanzado.',
+    Icon: BadgeCheck,
+    tone: 'hover:border-purple-500 hover:shadow-purple-100/60',
+  },
+  {
+    href: '/ayuda-en-tesis-ecuador',
+    title: 'Ayuda en Tesis Ecuador',
+    desc: 'Acompañamiento por etapas y defensa.',
+    Icon: Globe2,
+    tone: 'hover:border-emerald-500 hover:shadow-emerald-100/60',
   },
 ]
 
@@ -122,7 +151,6 @@ export default function TesisUTPLPage() {
                 <span className="text-blue-700">pregrado, maestría y doctorado</span>
               </h1>
 
-              {/* “Snippet-friendly” paragraph (40–60 words aprox.) */}
               <p className="mt-5 text-lg text-slate-700 leading-relaxed max-w-2xl">
                 La tesis UTPL es un trabajo de investigación y redacción académica que exige una
                 estructura clara, metodología adecuada y cumplimiento de normas APA. En StudyDocu
@@ -214,27 +242,34 @@ export default function TesisUTPLPage() {
                 </div>
               </div>
 
+              {/* ✅ También te puede interesar (PRO cards) */}
               <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-sm text-slate-700">También te puede interesar:</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Link
-                    className="text-sm rounded-full border border-slate-200 bg-white px-3 py-1 hover:bg-slate-50 transition"
-                    href="/tesis-pregrado"
-                  >
-                    Tesis Pregrado (Ecuador)
-                  </Link>
-                  <Link
-                    className="text-sm rounded-full border border-slate-200 bg-white px-3 py-1 hover:bg-slate-50 transition"
-                    href="/tesis-maestria"
-                  >
-                    Tesis Maestría
-                  </Link>
-                  <Link
-                    className="text-sm rounded-full border border-slate-200 bg-white px-3 py-1 hover:bg-slate-50 transition"
-                    href="/ayuda-en-tesis-ecuador"
-                  >
-                    Ayuda en Tesis Ecuador
-                  </Link>
+                <p className="text-sm text-slate-700 font-medium">También te puede interesar</p>
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {relatedPages.map(({ href, title, desc, Icon, tone }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={[
+                        'group rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition',
+                        'hover:shadow-md',
+                        tone,
+                      ].join(' ')}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="h-10 w-10 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center">
+                          <Icon className="h-5 w-5 text-slate-900" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-slate-900">{title}</p>
+                          <p className="mt-1 text-xs text-slate-600 leading-snug">{desc}</p>
+                          <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-blue-700">
+                            Ver página <ArrowRight className="h-3.5 w-3.5" />
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               </div>
             </div>
@@ -411,7 +446,6 @@ export default function TesisUTPLPage() {
           </div>
         </div>
 
-        {/* Small disclaimer */}
         <p className="mt-6 text-xs text-slate-500">
           Nota: StudyDocu ofrece orientación académica independiente. No somos una entidad afiliada
           a la UTPL.
@@ -423,7 +457,7 @@ export default function TesisUTPLPage() {
 
 /* ---------- Components ---------- */
 
-function TrustItem({ icon, text }: { icon: React.ReactNode; text: string }) {
+function TrustItem({ icon, text }: { icon: ReactNode; text: string }) {
   return (
     <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mt-0.5">{icon}</div>
@@ -441,7 +475,7 @@ function MiniPlan({
   title: string
   desc: string
   href: string
-  icon: React.ReactNode
+  icon: ReactNode
 }) {
   return (
     <a

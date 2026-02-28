@@ -1,4 +1,6 @@
+// src/app/tesis-pregrado/page.tsx
 import type { Metadata } from 'next'
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import Script from 'next/script'
 import {
@@ -11,6 +13,9 @@ import {
   Target,
   FileText,
   Sparkles,
+  School,
+  BadgeCheck,
+  Globe2,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -62,6 +67,33 @@ const faq = [
   {
     q: '¿Cuánto tiempo toma hacer una tesis de pregrado?',
     a: 'Depende del alcance y la metodología. En promedio toma de 3 a 6 meses si se trabaja con entregas por etapas y revisiones continuas.',
+  },
+]
+
+const relatedPages = [
+  {
+    href: '/tesis-utpl',
+    title: 'Tesis UTPL',
+    desc: 'Orientación enfocada en lineamientos UTPL.',
+    Icon: School,
+    tone: 'hover:border-blue-500 hover:shadow-blue-100/60',
+    accent: 'text-blue-700',
+  },
+  {
+    href: '/tesis-maestria',
+    title: 'Tesis Maestría',
+    desc: 'Rigor metodológico + análisis avanzado.',
+    Icon: BadgeCheck,
+    tone: 'hover:border-purple-500 hover:shadow-purple-100/60',
+    accent: 'text-purple-700',
+  },
+  {
+    href: '/ayuda-en-tesis-ecuador',
+    title: 'Ayuda en Tesis Ecuador',
+    desc: 'Asesoría nacional por etapas y APA.',
+    Icon: Globe2,
+    tone: 'hover:border-emerald-500 hover:shadow-emerald-100/60',
+    accent: 'text-emerald-700',
   },
 ]
 
@@ -142,7 +174,7 @@ export default function TesisPregradoPage() {
                 </Link>
               </div>
 
-              {/* Jump links (anclas) */}
+              {/* Jump links */}
               <div className="mt-6 flex flex-wrap gap-2">
                 <a
                   href="#pregrado"
@@ -234,27 +266,36 @@ export default function TesisPregradoPage() {
                 </div>
               </div>
 
+              {/* Related pages */}
               <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-sm text-slate-700">Páginas relacionadas:</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Link
-                    className="text-sm rounded-full border border-slate-200 bg-white px-3 py-1 hover:bg-slate-50 transition"
-                    href="/tesis-utpl"
-                  >
-                    Tesis UTPL
-                  </Link>
-                  <Link
-                    className="text-sm rounded-full border border-slate-200 bg-white px-3 py-1 hover:bg-slate-50 transition"
-                    href="/tesis-maestria"
-                  >
-                    Tesis Maestría
-                  </Link>
-                  <Link
-                    className="text-sm rounded-full border border-slate-200 bg-white px-3 py-1 hover:bg-slate-50 transition"
-                    href="/ayuda-en-tesis-ecuador"
-                  >
-                    Ayuda en Tesis Ecuador
-                  </Link>
+                <p className="text-sm text-slate-700 font-medium">Páginas relacionadas</p>
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {relatedPages.map(({ href, title, desc, Icon, tone, accent }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={[
+                        'group rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition',
+                        'hover:shadow-md',
+                        tone,
+                      ].join(' ')}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="h-10 w-10 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center">
+                          <Icon className={['h-5 w-5', accent].join(' ')} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-slate-900 group-hover:text-slate-950">
+                            {title}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-600 leading-snug">{desc}</p>
+                          <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-blue-700">
+                            Ver página <ArrowRight className="h-3.5 w-3.5" />
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               </div>
             </div>
@@ -298,8 +339,7 @@ export default function TesisPregradoPage() {
             <div className="p-6 border-b border-slate-200">
               <h2 className="text-2xl font-semibold">Tesis de Pregrado</h2>
               <p className="mt-2 text-slate-600">
-                Acompañamiento integral para tu trabajo de titulación: estructura, redacción,
-                metodología y normas APA.
+                Acompañamiento integral: estructura, redacción, metodología y normas APA.
               </p>
             </div>
 
@@ -322,12 +362,12 @@ export default function TesisPregradoPage() {
                   >
                     Solicitar apoyo en pregrado <ArrowRight className="h-4 w-4" />
                   </Link>
-                  <a
-                    href="#maestria"
+                  <Link
+                    href="/tesis-maestria"
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-slate-900 font-semibold hover:bg-slate-50 transition"
                   >
-                    Ver Posgrado / Maestría
-                  </a>
+                    Ver Tesis Maestría
+                  </Link>
                 </div>
               </div>
 
@@ -348,8 +388,7 @@ export default function TesisPregradoPage() {
             <div className="p-6 border-b border-slate-200">
               <h2 className="text-2xl font-semibold">Tesis de Posgrado / Maestría</h2>
               <p className="mt-2 text-slate-600">
-                Enfoque avanzado: revisión bibliográfica especializada, diseño metodológico y
-                análisis robusto.
+                Enfoque avanzado: estado del arte, diseño metodológico y análisis robusto.
               </p>
             </div>
 
@@ -371,20 +410,20 @@ export default function TesisPregradoPage() {
                   >
                     Solicitar apoyo en maestría <ArrowRight className="h-4 w-4" />
                   </Link>
-                  <a
-                    href="#doctorado"
+                  <Link
+                    href="/tesis-doctorado"
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-slate-900 font-semibold hover:bg-slate-50 transition"
                   >
-                    Ver Doctorado
-                  </a>
+                    Ver Tesis Doctorado
+                  </Link>
                 </div>
               </div>
 
               <div className="lg:col-span-5 rounded-2xl border border-slate-200 bg-slate-50 p-5">
                 <p className="font-semibold">Tip académico</p>
                 <p className="mt-2 text-sm text-slate-700">
-                  En maestría, la consistencia entre objetivos, variables y método es clave.
-                  Trabajamos para que tu tesis sea defendible y con argumentación sólida.
+                  En maestría, la consistencia entre objetivos, variables/categorías e instrumentos
+                  es clave. Trabajamos para que tu tesis sea defendible y con argumentación sólida.
                 </p>
               </div>
             </div>
@@ -413,12 +452,18 @@ export default function TesisPregradoPage() {
                   <IncludeItem text="Preparación de defensa (guion y posibles preguntas)" />
                 </div>
 
-                <div className="mt-6">
+                <div className="mt-6 flex flex-col sm:flex-row gap-3">
                   <Link
                     href="/contacto"
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-white font-semibold hover:bg-black transition"
                   >
                     Solicitar apoyo en doctorado <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    href="/tesis-doctorado"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-slate-900 font-semibold hover:bg-slate-50 transition"
+                  >
+                    Ver página Doctorado
                   </Link>
                 </div>
               </div>
@@ -426,15 +471,15 @@ export default function TesisPregradoPage() {
               <div className="lg:col-span-5 rounded-2xl border border-slate-200 bg-slate-50 p-5">
                 <p className="font-semibold">Enfoque doctoral</p>
                 <p className="mt-2 text-sm text-slate-700">
-                  Un doctorado requiere un aporte original y un diseño metodológico sólido. Te
-                  acompañamos para fortalecer el argumento, la evidencia y la defensa.
+                  Un doctorado requiere aporte original y un método sólido. Te acompañamos para
+                  fortalecer el argumento, la evidencia y la defensa.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Structure + Includes (extra general) */}
+        {/* Structure + Includes */}
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="p-6 border-b border-slate-200">
@@ -482,7 +527,7 @@ export default function TesisPregradoPage() {
           </div>
         </div>
 
-        {/* Universities (generic, no affiliation) */}
+        {/* Universities */}
         <div className="mt-10 rounded-2xl border border-slate-200 bg-slate-50 p-6">
           <h2 className="text-xl font-semibold">Universidades que atendemos en Ecuador</h2>
           <p className="mt-2 text-slate-700">
@@ -562,7 +607,7 @@ export default function TesisPregradoPage() {
 
 /* ---------- UI helpers ---------- */
 
-function TrustItem({ icon, text }: { icon: React.ReactNode; text: string }) {
+function TrustItem({ icon, text }: { icon: ReactNode; text: string }) {
   return (
     <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mt-0.5">{icon}</div>
@@ -594,7 +639,7 @@ function IncludeItem({ text }: { text: string }) {
   )
 }
 
-function MiniItem({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
+function MiniItem({ icon, title, desc }: { icon: ReactNode; title: string; desc: string }) {
   return (
     <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <div className="rounded-lg border border-slate-200 bg-white p-2">{icon}</div>
