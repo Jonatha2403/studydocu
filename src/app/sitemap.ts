@@ -1,22 +1,22 @@
 import type { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://studydocu.ec'
+  const baseUrl = 'https://www.studydocu.ec'
 
   const routes = [
     // 🔝 Páginas principales
     { path: '/', priority: 1 },
     { path: '/servicios', priority: 0.95 },
     { path: '/explorar', priority: 0.9 },
-    { path: '/buscar', priority: 0.9 }, // 🔎 Buscador
+    { path: '/buscar', priority: 0.9 },
     { path: '/planes', priority: 0.8 },
 
-    // 🧠 EXÁMENES (nuevo cluster SEO)
+    // 🧠 EXÁMENES
     { path: '/examenes-bimestrales', priority: 0.95 },
     { path: '/examen-complexivo', priority: 0.95 },
     { path: '/examenes-validacion', priority: 0.95 },
 
-    // 🔥 Cluster fuerte de tesis
+    // 🔥 TESIS
     { path: '/tesis-pregrado', priority: 0.9 },
     { path: '/tesis-maestria', priority: 0.9 },
     { path: '/tesis-doctorado', priority: 0.9 },

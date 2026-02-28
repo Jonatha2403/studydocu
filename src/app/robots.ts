@@ -5,19 +5,12 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-
-        // ✅ Permitimos todo el sitio público
         allow: '/',
-
-        // 🚫 Bloqueamos áreas privadas o técnicas
         disallow: ['/api/', '/auth/', '/dashboard/', '/admin/', '/_next/static/', '/_next/image/'],
       },
     ],
 
-    // 🔥 Sitemap principal
-    sitemap: 'https://studydocu.ec/sitemap.xml',
-
-    // (Opcional pero profesional)
-    host: 'https://studydocu.ec',
+    sitemap: 'https://www.studydocu.ec/sitemap.xml',
+    host: 'https://www.studydocu.ec',
   }
 }
