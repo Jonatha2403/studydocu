@@ -353,6 +353,7 @@ export default function ServiciosClient() {
     return base.slice(0, visibleCount)
   }, [visibleCount, filtroCategoria])
 
+  // ✅ Ahora SÍ se usa (en el botón "Ver más servicios")
   const loadMore = () => setVisibleCount((prev) => prev + 9)
 
   const handleWhatsAppClick = (servicio?: string) => {
@@ -566,7 +567,7 @@ export default function ServiciosClient() {
       {visibleCount < totalFiltrado && (
         <div className="text-center mt-10">
           <Button
-            onClick={() => setVisibleCount((prev) => prev + 9)}
+            onClick={loadMore}
             className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 px-6 py-3 rounded-xl shadow-sm transition"
           >
             Ver más servicios
