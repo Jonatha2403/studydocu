@@ -30,6 +30,20 @@ const nextConfig: NextConfig = {
   // 🔁 Redirects
   async redirects() {
     return [
+      // ✅ FORZAR WWW (SEO)  studydocu.ec -> www.studydocu.ec
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'studydocu.ec',
+          },
+        ],
+        destination: 'https://www.studydocu.ec/:path*',
+        permanent: true,
+      },
+
+      // ✅ Tu redirect actual
       {
         source: '/dashboard/perfil/mi-cuenta',
         destination: '/dashboard/perfil',
