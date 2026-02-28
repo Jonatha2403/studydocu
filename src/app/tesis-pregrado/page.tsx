@@ -110,7 +110,7 @@ export default function TesisPregradoPage() {
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      {/* FAQ Schema (Rich Results) */}
+      {/* FAQ Schema */}
       <Script
         id="faq-jsonld-tesis-pregrado"
         type="application/ld+json"
@@ -150,7 +150,6 @@ export default function TesisPregradoPage() {
                 <span className="text-blue-700">estructura, metodología y APA</span>
               </h1>
 
-              {/* Snippet-friendly paragraph */}
               <p className="mt-5 text-lg text-slate-700 leading-relaxed max-w-2xl">
                 La tesis de pregrado es un trabajo de titulación que exige una estructura clara,
                 investigación con fuentes confiables y una metodología defendible. En StudyDocu
@@ -355,6 +354,7 @@ export default function TesisPregradoPage() {
                   <IncludeItem text="Revisión de formato y normas APA" />
                 </div>
 
+                {/* ✅ BOTONES ALINEADOS (MISMO NIVEL) */}
                 <div className="mt-6 flex flex-col sm:flex-row gap-3">
                   <Link
                     href="/contacto"
@@ -362,11 +362,12 @@ export default function TesisPregradoPage() {
                   >
                     Solicitar apoyo en pregrado <ArrowRight className="h-4 w-4" />
                   </Link>
+
                   <Link
-                    href="/tesis-maestria"
+                    href="/tesis-pregrado#pregrado"
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-slate-900 font-semibold hover:bg-slate-50 transition"
                   >
-                    Ver Tesis Maestría
+                    Ver Tesis Pregrado
                   </Link>
                 </div>
               </div>
@@ -403,6 +404,7 @@ export default function TesisPregradoPage() {
                   <IncludeItem text="Redacción técnica y formato APA" />
                 </div>
 
+                {/* ✅ BOTONES ALINEADOS (MISMO NIVEL) */}
                 <div className="mt-6 flex flex-col sm:flex-row gap-3">
                   <Link
                     href="/contacto"
@@ -410,11 +412,12 @@ export default function TesisPregradoPage() {
                   >
                     Solicitar apoyo en maestría <ArrowRight className="h-4 w-4" />
                   </Link>
+
                   <Link
-                    href="/tesis-doctorado"
+                    href="/tesis-maestria"
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-slate-900 font-semibold hover:bg-slate-50 transition"
                   >
-                    Ver Tesis Doctorado
+                    Ver Tesis Maestría
                   </Link>
                 </div>
               </div>
@@ -452,6 +455,7 @@ export default function TesisPregradoPage() {
                   <IncludeItem text="Preparación de defensa (guion y posibles preguntas)" />
                 </div>
 
+                {/* ✅ BOTONES ALINEADOS (MISMO NIVEL) */}
                 <div className="mt-6 flex flex-col sm:flex-row gap-3">
                   <Link
                     href="/contacto"
@@ -459,11 +463,12 @@ export default function TesisPregradoPage() {
                   >
                     Solicitar apoyo en doctorado <ArrowRight className="h-4 w-4" />
                   </Link>
+
                   <Link
                     href="/tesis-doctorado"
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-slate-900 font-semibold hover:bg-slate-50 transition"
                   >
-                    Ver página Doctorado
+                    Ver Tesis Doctorado
                   </Link>
                 </div>
               </div>
