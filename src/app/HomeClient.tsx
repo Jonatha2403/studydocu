@@ -243,8 +243,6 @@ function CountUp({
 export default function HomeClient() {
   const [showConfetti, setShowConfetti] = useState(false)
   const [isMobile, setIsMobile] = useState(true)
-
-  // CTA flotante: visible solo después de scroll, se oculta cerca del footer
   const [showFloatingCTA, setShowFloatingCTA] = useState(false)
   const [hideFloatingCTA, setHideFloatingCTA] = useState(false)
 
@@ -262,7 +260,6 @@ export default function HomeClient() {
     return () => mq.removeEventListener?.('change', sync)
   }, [])
 
-  // ✅ Mostrar CTA flotante luego de scroll (móvil/desktop)
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY || 0
@@ -273,7 +270,6 @@ export default function HomeClient() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // ✅ Ocultar CTA flotante al acercarse al footer (para que no tape)
   useEffect(() => {
     const el = footerSentinelRef.current
     if (!el) return
@@ -282,10 +278,7 @@ export default function HomeClient() {
       (entries) => {
         setHideFloatingCTA(entries[0]?.isIntersecting ?? false)
       },
-      {
-        threshold: 0.01,
-        rootMargin: isMobile ? '180px 0px 0px 0px' : '220px 0px 0px 0px',
-      }
+      { threshold: 0.01, rootMargin: isMobile ? '180px 0px 0px 0px' : '220px 0px 0px 0px' }
     )
 
     obs.observe(el)
@@ -298,8 +291,6 @@ export default function HomeClient() {
 
     if (!localStorage.getItem('visited')) {
       toast.success('🎉 ¡Logro desbloqueado! Primer ingreso a StudyDocu')
-
-      // confetti solo desktop y sin reduce motion
       if (!isMobile && !reduceMotion) {
         setShowConfetti(true)
         setTimeout(() => setShowConfetti(false), 4200)
@@ -318,7 +309,6 @@ export default function HomeClient() {
     )
   }
 
-  // ✅ Schema Markup
   const schemaGraph = useMemo(
     () => ({
       '@context': 'https://schema.org',
@@ -372,8 +362,6 @@ export default function HomeClient() {
   const motionEnabled = !reduceMotion && !isMobile
   const fadeFrom = motionEnabled ? { opacity: 0, y: 14 } : undefined
   const fadeTo = motionEnabled ? { opacity: 1, y: 0 } : undefined
-
-  // Métricas: animar solo desktop
   const countEnabled = !isMobile && !reduceMotion
 
   return (
@@ -385,15 +373,13 @@ export default function HomeClient() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
       />
 
-      <main className="relative w-full min-h-screen flex flex-col items-center bg-white text-slate-900">
-        {/* Background enterprise sutil (ligero) */}
+      <main className="relative w-full min-h-screen flex flex-col items-center bg-background text-slate-900">
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute inset-0 bg-[radial-gradient(800px_420px_at_18%_12%,rgba(37,99,235,0.10),transparent_60%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(780px_420px_at_85%_18%,rgba(6,182,212,0.08),transparent_60%)]" />
-          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(248,250,252,1),rgba(255,255,255,0.65),rgba(255,255,255,1))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--background)),hsl(var(--background)/0.70),hsl(var(--background)))]" />
         </div>
 
-        {/* Confetti (solo desktop) */}
         {showConfetti && (
           <div className="fixed inset-0 z-40 pointer-events-none">
             <Lottie
@@ -405,7 +391,6 @@ export default function HomeClient() {
           </div>
         )}
 
-        {/* HERO (lo pasas luego) */}
         <HeroAI />
 
         {/* ✅ Qué es */}
@@ -566,7 +551,6 @@ export default function HomeClient() {
                     </div>
                   </div>
 
-                  {/* Demo mock (enterprise) */}
                   <div className="rounded-3xl border border-slate-200 bg-white shadow-[0_12px_28px_-22px_rgba(2,6,23,0.25)] overflow-hidden">
                     <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -632,7 +616,6 @@ export default function HomeClient() {
                   </div>
                 </div>
 
-                {/* ✅ AnimatedServices SOLO desktop */}
                 {!isMobile && (
                   <div className="mt-10">
                     <AnimatedServices />
@@ -763,7 +746,6 @@ export default function HomeClient() {
           </p>
         </Section>
 
-        {/* ✅ Testimonios y Asesores SOLO desktop */}
         {!isMobile && (
           <>
             <Section className="pb-12">
@@ -825,7 +807,6 @@ export default function HomeClient() {
               </p>
             </div>
 
-            {/* En móvil mostramos menos items para no hacerlo pesado */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
               {(isMobile ? featureItems.slice(0, 8) : featureItems).map((item, i) => (
                 <motion.div
@@ -972,15 +953,11 @@ export default function HomeClient() {
           </motion.div>
         </Section>
 
-        {/* ✅ Sentinel: para ocultar CTA antes del footer */}
         <div ref={footerSentinelRef} className="w-full h-1" />
-
-        {/* ✅ Espacio extra final (por el CTA flotante) */}
         <div className="h-24 sm:h-28" />
 
         <Footer />
 
-        {/* ✅ CTA flotante PRO (móvil: 1 botón + ícono WhatsApp) */}
         {showFloatingCTA && !hideFloatingCTA && (
           <div className="fixed bottom-4 left-0 right-0 z-30 pointer-events-none">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 flex justify-center">
@@ -999,7 +976,6 @@ export default function HomeClient() {
                   Empezar <ArrowRight className="ml-1 w-4 h-4" />
                 </Button>
 
-                {/* WhatsApp: solo icono en móvil, texto en desktop */}
                 <Button
                   onClick={handleWhatsApp}
                   variant="outline"

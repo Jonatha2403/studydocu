@@ -152,7 +152,7 @@ export default function HeroAI() {
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(820px_420px_at_18%_12%,rgba(37,99,235,0.12),transparent_60%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(780px_420px_at_88%_18%,rgba(6,182,212,0.10),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(248,250,252,1),rgba(255,255,255,0.78),rgba(255,255,255,1))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--background)),hsl(var(--background)/0.78),hsl(var(--background)))]" />
       </div>
 
       {/* ✅ Partículas (desktop only) */}
