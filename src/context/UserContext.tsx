@@ -1,8 +1,16 @@
 // src/context/UserContext.tsx
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import type { User, Session } from '@supabase/supabase-js'
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
 
 export interface PerfilExtendido {
@@ -31,21 +39,54 @@ interface UserContextType {
   perfil: PerfilExtendido | null
   loading: boolean
   perfilError: boolean
-  refrescarUsuario: () => void
+  refrescarUsuario: () => Promise<void>
+  clearCache: () => void
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
 export const useUserContext = () => {
   const ctx = useContext(UserContext)
-  if (!ctx) {
-    throw new Error('useUserContext debe usarse dentro de un UserProvider')
-  }
+  if (!ctx) throw new Error('useUserContext debe usarse dentro de un UserProvider')
   return ctx
 }
 
-// Solo para debug en desarrollo (opcional)
-async function validarEsquemaProfiles() {
+/**
+ * ✅ Cache liviano y seguro:
+ * - Se guarda por userId
+ * - TTL para evitar datos “viejos” eternos
+ */
+const CACHE_KEY = 'studydocu:perfil:v1'
+const CACHE_TTL_MS = 1000 * 60 * 30 // 30 min
+
+type PerfilCachePayload = {
+  userId: string
+  savedAt: number
+  perfil: PerfilExtendido
+}
+
+function safeParseJSON<T>(value: string | null): T | null {
+  if (!value) return null
+  try {
+    return JSON.parse(value) as T
+  } catch {
+    return null
+  }
+}
+
+function getNivelYMedalla(points?: number) {
+  const p = points ?? 0
+
+  if (p >= 500) return { nivel: 'Experto', medalla: '🥇 Oro' }
+  if (p >= 200) return { nivel: 'Avanzado', medalla: '🥈 Plata' }
+  if (p >= 50) return { nivel: 'Explorador', medalla: '🥉 Bronce' }
+  return { nivel: 'Nuevo', medalla: '🥉 Bronce' }
+}
+
+// Solo para debug en desarrollo (opcional). No bloquea la carga.
+async function validarEsquemaProfilesDevOnly() {
+  if (process.env.NODE_ENV !== 'development') return
+
   const expectedColumns = [
     'id',
     'email',
@@ -64,18 +105,14 @@ async function validarEsquemaProfiles() {
   ]
 
   try {
-    const { data, error } = await supabase.rpc('pg_table_def', {
-      table_name_input: 'profiles',
-    })
+    const { data, error } = await supabase.rpc('pg_table_def', { table_name_input: 'profiles' })
     if (error) throw error
 
     const found = (data ?? []).map((c: any) => c.column_name)
     const missing = expectedColumns.filter((c) => !found.includes(c))
-    if (missing.length) {
-      console.warn('⚠️ Columnas faltantes o mal nombradas en "profiles":', missing)
-    }
+    if (missing.length) console.warn('⚠️ Columnas faltantes en "profiles":', missing)
   } catch (e) {
-    console.error('❌ Error validando esquema profiles:', e)
+    console.warn('⚠️ No se pudo validar esquema profiles (dev only):', e)
   }
 }
 
@@ -86,143 +123,144 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [perfilError, setPerfilError] = useState(false)
 
-  // ✅ Memoizado para que sea estable y no moleste a exhaustive-deps
+  // ✅ evita llamadas simultáneas (focus + onAuthStateChange)
+  const inFlightRef = useRef<Promise<void> | null>(null)
+
+  const clearCache = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(CACHE_KEY)
+    }
+  }, [])
+
   const limpiarEstado = useCallback(() => {
     setUser(null)
     setSession(null)
     setPerfil(null)
     setPerfilError(false)
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('perfil')
-    }
-  }, [])
+    clearCache()
+  }, [clearCache])
 
-  // ✅ Memoizado para que useEffect pueda depender de él sin warnings
   const cargarDatos = useCallback(async () => {
-    setLoading(true)
-    setPerfilError(false)
+    // Dedup: si ya hay una carga corriendo, espera esa misma
+    if (inFlightRef.current) return inFlightRef.current
 
-    try {
-      if (process.env.NODE_ENV === 'development') {
-        await validarEsquemaProfiles()
-      }
+    const task = (async () => {
+      setLoading(true)
+      setPerfilError(false)
 
-      // 1) Obtener sesión actual
-      const {
-        data: { session: currentSession },
-        error: sessionErr,
-      } = await supabase.auth.getSession()
+      try {
+        // Dev-only validation (no bloquea si falla)
+        void validarEsquemaProfilesDevOnly()
 
-      console.log('🔐 getSession en UserContext =>', {
-        sessionErr,
-        hasSession: !!currentSession,
-      })
+        // 1) Sesión actual
+        const {
+          data: { session: currentSession },
+          error: sessionErr,
+        } = await supabase.auth.getSession()
 
-      if (sessionErr || !currentSession?.user) {
-        limpiarEstado()
-        return
-      }
+        if (sessionErr || !currentSession?.user) {
+          limpiarEstado()
+          return
+        }
 
-      setUser(currentSession.user)
-      setSession(currentSession)
+        setUser(currentSession.user)
+        setSession(currentSession)
 
-      // 2) Cache SOLO si coincide el id
-      if (typeof window !== 'undefined') {
-        const cache = localStorage.getItem('perfil')
-        if (cache) {
-          try {
-            const parsed = JSON.parse(cache)
-            if (parsed?.id === currentSession.user.id) {
-              setPerfil(parsed)
-            } else {
-              localStorage.removeItem('perfil')
-            }
-          } catch {
-            localStorage.removeItem('perfil')
+        // 2) Cache (si coincide userId y no está expirado)
+        if (typeof window !== 'undefined') {
+          const cached = safeParseJSON<PerfilCachePayload>(localStorage.getItem(CACHE_KEY))
+          const isValid =
+            cached &&
+            cached.userId === currentSession.user.id &&
+            Date.now() - cached.savedAt <= CACHE_TTL_MS
+
+          if (isValid) {
+            setPerfil(cached!.perfil)
+          } else if (cached) {
+            localStorage.removeItem(CACHE_KEY)
           }
         }
-      }
 
-      // 3) Perfil desde BD
-      const { data: perfilData, error: perfilErr } = await supabase
-        .from('profiles')
-        .select(
+        // 3) Perfil desde BD
+        const { data: perfilData, error: perfilErr } = await supabase
+          .from('profiles')
+          .select(
+            `
+            id, username, email, points, subscription_active, universidad,
+            nombre_completo, carrera, avatar_url, role, intereses,
+            onboarding_complete
           `
-          id, username, email, points, subscription_active, universidad,
-          nombre_completo, carrera, avatar_url, role, intereses,
-          onboarding_complete
-        `
-        )
-        .eq('id', currentSession.user.id)
-        .maybeSingle()
+          )
+          .eq('id', currentSession.user.id)
+          .maybeSingle()
 
-      if (perfilErr || !perfilData) {
-        console.error('❌ Error cargando perfil:', perfilErr)
+        if (perfilErr || !perfilData) {
+          console.error('❌ Error cargando perfil:', perfilErr)
+          setPerfilError(true)
+          setPerfil(null)
+          return
+        }
+
+        // 4) Tags (si falla, no rompe)
+        const { data: tagsRaw, error: tagsErr } = await supabase
+          .from('user_tags')
+          .select('tag')
+          .eq('user_id', currentSession.user.id)
+
+        if (tagsErr) console.warn('⚠️ Error cargando tags:', tagsErr)
+
+        const tags = tagsRaw?.map((t) => t.tag) ?? []
+
+        // 5) Nivel / medalla
+        const { nivel, medalla } = getNivelYMedalla(perfilData.points)
+
+        const perfilExtendido: PerfilExtendido = {
+          ...perfilData,
+          nivel,
+          medalla,
+          verificado: Boolean(currentSession.user.email_confirmed_at),
+          has_new_rewards: false,
+          tags,
+        }
+
+        setPerfil(perfilExtendido)
+
+        // 6) Guardar cache con TTL
+        if (typeof window !== 'undefined') {
+          const payload: PerfilCachePayload = {
+            userId: currentSession.user.id,
+            savedAt: Date.now(),
+            perfil: perfilExtendido,
+          }
+          localStorage.setItem(CACHE_KEY, JSON.stringify(payload))
+        }
+      } catch (err) {
+        console.error('❌ Error al cargar datos del usuario:', err)
         setPerfilError(true)
-        setPerfil(null)
-        return
+      } finally {
+        setLoading(false)
       }
+    })()
 
-      // 4) Tags
-      const { data: tagsRaw } = await supabase
-        .from('user_tags')
-        .select('tag')
-        .eq('user_id', currentSession.user.id)
-
-      const tags = tagsRaw?.map((t) => t.tag) ?? []
-
-      // 5) Nivel / medalla
-      const puntos = perfilData.points ?? 0
-      let nivel = 'Nuevo'
-      let medalla = '🥉 Bronce'
-
-      if (puntos >= 500) {
-        nivel = 'Experto'
-        medalla = '🥇 Oro'
-      } else if (puntos >= 200) {
-        nivel = 'Avanzado'
-        medalla = '🥈 Plata'
-      } else if (puntos >= 50) {
-        nivel = 'Explorador'
-      }
-
-      const perfilExtendido: PerfilExtendido = {
-        ...perfilData,
-        nivel,
-        medalla,
-        verificado: Boolean(currentSession.user.email_confirmed_at),
-        has_new_rewards: false,
-        tags,
-      }
-
-      setPerfil(perfilExtendido)
-
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('perfil', JSON.stringify(perfilExtendido))
-      }
-
-      console.log('🟢 Perfil extendido cargado:', perfilExtendido)
-    } catch (err) {
-      console.error('❌ Error al cargar datos del usuario:', err)
-      setPerfilError(true)
-    } finally {
-      setLoading(false)
-    }
+    inFlightRef.current = task
+    await task.finally(() => {
+      inFlightRef.current = null
+    })
   }, [limpiarEstado])
 
   // Carga inicial + listener auth
   useEffect(() => {
     void cargarDatos()
 
-    const { data: listener } = supabase.auth.onAuthStateChange((event, newSession) => {
-      console.log('[onAuthStateChange]', event, !!newSession)
-
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      // SIGNED_OUT: limpia
       if (event === 'SIGNED_OUT') {
         limpiarEstado()
         setLoading(false)
         return
       }
 
+      // SIGNED_IN / TOKEN_REFRESHED: recarga
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         void cargarDatos()
       }
@@ -233,27 +271,27 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [cargarDatos, limpiarEstado])
 
-  // Refrescar al volver al tab/ventana
+  // Refrescar al volver al tab/ventana (solo si la pestaña vuelve visible)
   useEffect(() => {
-    const onFocus = () => {
-      void cargarDatos()
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') void cargarDatos()
     }
-    window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [cargarDatos])
 
-  return (
-    <UserContext.Provider
-      value={{
-        user,
-        session,
-        perfil,
-        loading,
-        perfilError,
-        refrescarUsuario: cargarDatos,
-      }}
-    >
-      {children}
-    </UserContext.Provider>
+  const value = useMemo<UserContextType>(
+    () => ({
+      user,
+      session,
+      perfil,
+      loading,
+      perfilError,
+      refrescarUsuario: cargarDatos,
+      clearCache,
+    }),
+    [user, session, perfil, loading, perfilError, cargarDatos, clearCache]
   )
+
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>
 }
