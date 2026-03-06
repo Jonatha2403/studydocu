@@ -106,7 +106,11 @@ export default function OnboardingPage() {
   useEffect(() => {
     // Si un usuario ya completó onboarding y entra manualmente a esta ruta, lo llevamos al dashboard.
     // Cuando está en el paso 4 (final), evitamos redirección automática para no crear rebotes visuales.
-    if (perfil?.onboarding_complete === true && step < 4) router.replace('/dashboard')
+    const hasIntereses =
+      Array.isArray((perfil as any)?.intereses) &&
+      (perfil as any).intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
+    if (perfil?.onboarding_complete === true && hasIntereses && step < 4)
+      router.replace('/dashboard')
   }, [perfil, step, router])
 
   useEffect(() => {

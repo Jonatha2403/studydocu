@@ -67,12 +67,15 @@ export async function middleware(req: NextRequest) {
     if (user) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('onboarding_complete')
+        .select('onboarding_complete,intereses')
         .eq('id', user.id)
         .maybeSingle()
       const onboardingComplete: boolean | undefined = profile?.onboarding_complete
+      const hasIntereses =
+        Array.isArray(profile?.intereses) &&
+        profile.intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
 
-      if (onboardingComplete === true) {
+      if (onboardingComplete === true && hasIntereses) {
         return NextResponse.redirect(new URL('/dashboard', req.url))
       }
       return NextResponse.redirect(new URL('/onboarding', req.url))
@@ -109,7 +112,7 @@ export async function middleware(req: NextRequest) {
   // 5) Reglas adicionales (admin / premium / onboarding)
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role,subscription_status,onboarding_complete')
+    .select('role,subscription_status,onboarding_complete,intereses')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -117,6 +120,9 @@ export async function middleware(req: NextRequest) {
   const subscription_status: string | undefined =
     profile?.subscription_status || user.user_metadata?.subscription_status
   const onboarding_complete: boolean | undefined = profile?.onboarding_complete
+  const hasIntereses =
+    Array.isArray(profile?.intereses) &&
+    profile.intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
 
   // 5a) Admin gate
   if (pathname.startsWith('/admin') && role !== 'admin') {
@@ -137,7 +143,11 @@ export async function middleware(req: NextRequest) {
   }
 
   // 5c) Onboarding gate (solo para páginas protegidas, no APIs)
-  if (isProtectedPage && !ONBOARDING_SAFE_ROUTES.has(pathname) && onboarding_complete !== true) {
+  if (
+    isProtectedPage &&
+    !ONBOARDING_SAFE_ROUTES.has(pathname) &&
+    (onboarding_complete !== true || !hasIntereses)
+  ) {
     const ob = new URL('/onboarding', req.url)
     ob.searchParams.set('callbackUrl', pathname + (url.search || ''))
     return NextResponse.redirect(ob)
