@@ -90,7 +90,7 @@ export async function middleware(req: NextRequest) {
 
   // Traer perfil para role, subscription_status y onboarding_complete
   const profileUrl = new URL(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/profiles?select=role,subscription_status,onboarding_complete&id=eq.${user.id}`
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/profiles?select=role,subscription_status,onboarding_complete,intereses&id=eq.${user.id}`
   )
 
   const profileRes = await fetch(profileUrl, {
@@ -106,6 +106,7 @@ export async function middleware(req: NextRequest) {
   const subscription_status: string | undefined =
     profile.subscription_status || user.user_metadata?.subscription_status
   const onboarding_complete: boolean | undefined = profile.onboarding_complete
+  const hasIntereses = Array.isArray(profile.intereses) && profile.intereses.length > 0
 
   // 5a) Admin gate
   if (pathname.startsWith('/admin') && role !== 'admin') {
@@ -126,7 +127,11 @@ export async function middleware(req: NextRequest) {
   }
 
   // 5c) Onboarding gate (solo para páginas protegidas, no APIs)
-  if (isProtectedPage && !ONBOARDING_SAFE_ROUTES.has(pathname) && onboarding_complete !== true) {
+  if (
+    isProtectedPage &&
+    !ONBOARDING_SAFE_ROUTES.has(pathname) &&
+    (onboarding_complete !== true || !hasIntereses)
+  ) {
     const ob = new URL('/onboarding', req.url)
     ob.searchParams.set('callbackUrl', pathname + (url.search || ''))
     return NextResponse.redirect(ob)

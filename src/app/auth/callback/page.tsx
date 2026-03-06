@@ -94,7 +94,7 @@ export default function AuthCallbackPage() {
         if (user?.id) {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('id,onboarding_complete')
+            .select('id,onboarding_complete,intereses')
             .eq('id', user.id)
             .maybeSingle()
 
@@ -122,7 +122,16 @@ export default function AuthCallbackPage() {
             return
           }
 
-          if (profile.onboarding_complete !== true) {
+          const hasIntereses = Array.isArray(profile.intereses) && profile.intereses.length > 0
+
+          if (profile.onboarding_complete !== true || !hasIntereses) {
+            // Normaliza estado por si algún trigger/valor por defecto marcó onboarding en true sin preguntas.
+            if (profile.onboarding_complete === true && !hasIntereses) {
+              await supabase
+                .from('profiles')
+                .update({ onboarding_complete: false })
+                .eq('id', user.id)
+            }
             hardRedirect('/onboarding')
             return
           }
