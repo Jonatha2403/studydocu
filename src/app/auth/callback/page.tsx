@@ -33,6 +33,19 @@ export default function AuthCallbackPage() {
           const { error: exErr } = await supabase.auth.exchangeCodeForSession(code)
           if (exErr) {
             console.error('[AUTH_CALLBACK] exchangeCodeForSession:', exErr)
+            const msg = (exErr.message || '').toLowerCase()
+            const isPkceVerifierError =
+              msg.includes('code verifier') || msg.includes('both auth code and code verifier')
+
+            // Fallback: en algunos flujos OAuth la sesión ya está creada aunque falle el exchange PKCE.
+            if (isPkceVerifierError) {
+              const { data: sessionData } = await supabase.auth.getSession()
+              if (sessionData?.session) {
+                hardRedirect(next)
+                return
+              }
+            }
+
             const reason = encodeURIComponent(exErr.message || 'exchange_failed')
             hardRedirect(`/iniciar-sesion?error=auth_callback&reason=${reason}`)
             return
