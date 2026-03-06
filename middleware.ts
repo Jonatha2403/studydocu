@@ -48,6 +48,13 @@ export async function middleware(req: NextRequest) {
   const url = req.nextUrl
   const pathname = url.pathname
 
+  // Si OAuth vuelve por error al root con ?code=..., reenviar al callback correcto.
+  if (pathname === '/' && url.searchParams.has('code')) {
+    const cb = new URL('/auth/callback', req.url)
+    cb.search = url.search
+    return NextResponse.redirect(cb)
+  }
+
   // 1) Permitir root y rutas públicas/estáticas básicas
   if (pathname === '/') return res
   if (PUBLIC_ROUTES.has(pathname)) return res
