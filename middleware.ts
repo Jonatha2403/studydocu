@@ -22,6 +22,8 @@ const PUBLIC_ROUTES = new Set([
   '/reset-password', // antigua
 ])
 
+const AUTH_PAGES = new Set(['/iniciar-sesion', '/registrarse'])
+
 // Rutas protegidas (requieren sesión)
 const PROTECTED_PREFIXES = [
   '/dashboard',
@@ -43,6 +45,21 @@ const ONBOARDING_SAFE_ROUTES = new Set(['/onboarding'])
 const pathStartsWithAny = (path: string, prefixes: string[]) =>
   prefixes.some((p) => path === p || path.startsWith(p + '/'))
 
+async function fetchUserProfile(userId: string, accessToken: string) {
+  const profileUrl = new URL(
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/profiles?select=role,subscription_status,onboarding_complete,intereses&id=eq.${userId}`
+  )
+
+  const profileRes = await fetch(profileUrl, {
+    headers: {
+      apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+
+  return (await profileRes.json())?.[0] || {}
+}
+
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
   const url = req.nextUrl
@@ -53,6 +70,27 @@ export async function middleware(req: NextRequest) {
     const cb = new URL('/auth/callback', req.url)
     cb.search = url.search
     return NextResponse.redirect(cb)
+  }
+
+  // Si ya está autenticado, no debe quedarse en login/registro.
+  if (AUTH_PAGES.has(pathname)) {
+    const supabase = createMiddlewareClient({ req, res })
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (user) {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const accessToken = sessionData.session?.access_token ?? ''
+      const profile = await fetchUserProfile(user.id, accessToken)
+      const onboardingComplete: boolean | undefined = profile.onboarding_complete
+      const hasIntereses = Array.isArray(profile.intereses) && profile.intereses.length > 0
+
+      if (onboardingComplete === true && hasIntereses) {
+        return NextResponse.redirect(new URL('/dashboard', req.url))
+      }
+      return NextResponse.redirect(new URL('/onboarding', req.url))
+    }
   }
 
   // 1) Permitir root y rutas públicas/estáticas básicas
@@ -88,19 +126,7 @@ export async function middleware(req: NextRequest) {
 
   // 5) Reglas adicionales (admin / premium / onboarding)
 
-  // Traer perfil para role, subscription_status y onboarding_complete
-  const profileUrl = new URL(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/profiles?select=role,subscription_status,onboarding_complete,intereses&id=eq.${user.id}`
-  )
-
-  const profileRes = await fetch(profileUrl, {
-    headers: {
-      apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-      Authorization: `Bearer ${accessToken}`,
-    },
-  })
-
-  const profile = (await profileRes.json())?.[0] || {}
+  const profile = await fetchUserProfile(user.id, accessToken)
 
   const role: string | undefined = profile.role || user.user_metadata?.role
   const subscription_status: string | undefined =
