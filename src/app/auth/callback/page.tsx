@@ -33,7 +33,8 @@ export default function AuthCallbackPage() {
           const { error: exErr } = await supabase.auth.exchangeCodeForSession(code)
           if (exErr) {
             console.error('[AUTH_CALLBACK] exchangeCodeForSession:', exErr)
-            hardRedirect('/iniciar-sesion?error=auth_callback')
+            const reason = encodeURIComponent(exErr.message || 'exchange_failed')
+            hardRedirect(`/iniciar-sesion?error=auth_callback&reason=${reason}`)
             return
           }
         } else {
@@ -51,7 +52,8 @@ export default function AuthCallbackPage() {
               })
               if (setErr) {
                 console.error('[AUTH_CALLBACK] setSession:', setErr)
-                hardRedirect('/iniciar-sesion?error=auth_callback')
+                const reason = encodeURIComponent(setErr.message || 'set_session_failed')
+                hardRedirect(`/iniciar-sesion?error=auth_callback&reason=${reason}`)
                 return
               }
             }
@@ -75,7 +77,8 @@ export default function AuthCallbackPage() {
         hardRedirect(next)
       } catch (e) {
         console.error('[AUTH_CALLBACK] fatal:', e)
-        hardRedirect('/iniciar-sesion?error=auth_callback')
+        const reason = encodeURIComponent((e as Error)?.message || 'fatal_callback_error')
+        hardRedirect(`/iniciar-sesion?error=auth_callback&reason=${reason}`)
       }
     }
 
