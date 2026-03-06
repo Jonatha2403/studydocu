@@ -91,10 +91,11 @@ export default function LoginForm() {
   }
 
   const loginWithGoogle = async () => {
+    const next = callbackUrl?.startsWith('/') ? callbackUrl : '/dashboard'
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${location.origin}/verificado-oauth`,
+        redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     })
     if (error) toast.error(`Error con Google: ${error.message}`)
@@ -198,7 +199,10 @@ export default function LoginForm() {
               Recuérdame
             </label>
 
-            <Link href="/auth/reset-password" className="text-cyan-600 hover:underline dark:text-cyan-300">
+            <Link
+              href="/auth/reset-password"
+              className="text-cyan-600 hover:underline dark:text-cyan-300"
+            >
               ¿Olvidaste tu contraseña?
             </Link>
           </div>

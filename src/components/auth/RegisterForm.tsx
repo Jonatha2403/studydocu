@@ -78,10 +78,11 @@ export default function RegisterForm() {
   /* ------------------------------ OAuth buttons ------------------------------ */
   const handleOAuth = async (provider: 'google') => {
     const origin = window.location.origin
+    const next = encodeURIComponent('/dashboard')
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${origin}/auth/callback`,
+        redirectTo: `${origin}/auth/callback?next=${next}`,
       },
     })
     if (error) toast.error(`Error con ${provider}: ${error.message}`)

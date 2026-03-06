@@ -7,7 +7,6 @@ const PUBLIC_ROUTES = new Set([
   '/iniciar-sesion', // login
   '/registrarse',
   '/verificado',
-  '/verificado-oauth',
   '/explorar',
   '/error',
   '/unauthorized',
@@ -84,7 +83,7 @@ export async function middleware(req: NextRequest) {
 
   // Traer perfil para role, subscription_status y onboarding_complete
   const profileUrl = new URL(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/perfiles?select=role,subscription_status,onboarding_complete&id=eq.${user.id}`,
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/perfiles?select=role,subscription_status,onboarding_complete&id=eq.${user.id}`
   )
 
   const profileRes = await fetch(profileUrl, {
@@ -112,11 +111,7 @@ export async function middleware(req: NextRequest) {
   const isPremium = sub === 'activa' || sub === 'premium'
 
   if (
-    pathStartsWithAny(pathname, [
-      '/premium',
-      '/documentos-premium',
-      '/asesoria-premium',
-    ]) &&
+    pathStartsWithAny(pathname, ['/premium', '/documentos-premium', '/asesoria-premium']) &&
     !isPremium
   ) {
     const upgrade = new URL('/upgrade', req.url)
@@ -124,11 +119,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // 5c) Onboarding gate (solo para páginas protegidas, no APIs)
-  if (
-    isProtectedPage &&
-    !ONBOARDING_SAFE_ROUTES.has(pathname) &&
-    onboarding_complete === false
-  ) {
+  if (isProtectedPage && !ONBOARDING_SAFE_ROUTES.has(pathname) && onboarding_complete === false) {
     const ob = new URL('/onboarding', req.url)
     ob.searchParams.set('callbackUrl', pathname + (url.search || ''))
     return NextResponse.redirect(ob)

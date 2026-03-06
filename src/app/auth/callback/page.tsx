@@ -17,7 +17,7 @@ export default function AuthCallbackPage() {
         const type = searchParams?.get('type') ?? null
         const code = searchParams?.get('code') ?? null
         const error = searchParams?.get('error') ?? null
-        const rawNext = searchParams?.get('next') ?? '/'
+        const rawNext = searchParams?.get('next') ?? '/dashboard'
         const next = rawNext.startsWith('/') ? rawNext : '/'
 
         if (error) {
