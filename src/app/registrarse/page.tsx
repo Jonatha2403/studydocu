@@ -4,6 +4,7 @@
 import { motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
 import RegisterForm from '@/components/auth/RegisterForm'
 import { useUserContext } from '@/context/UserContext'
 
@@ -75,6 +76,17 @@ export default function RegisterPage() {
     const t = setInterval(() => setQIdx((i) => (i + 1) % QUOTES.length), 4200)
     return () => clearInterval(t)
   }, [])
+
+  if (loading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-indigo-600" />
+          <p className="text-sm text-muted-foreground">Cargando StudyDocu...</p>
+        </div>
+      </main>
+    )
+  }
 
   if (!loading && user) {
     return (

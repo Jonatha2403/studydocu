@@ -24,6 +24,9 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
   const [isOnline, setIsOnline] = useState(true)
 
   const pathname = usePathname() ?? ''
+  const isDashboardOrAdmin = pathname.startsWith('/dashboard') || pathname.startsWith('/admin')
+  const isAuthFlowRoute =
+    pathname.startsWith('/onboarding') || pathname.startsWith('/auth/callback')
 
   useEffect(() => {
     let mounted = true
@@ -102,8 +105,8 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
           </div>
         )}
 
-        {/* ✅ Mostrar navbar solo fuera de dashboard/admin */}
-        {!pathname.startsWith('/dashboard') && !pathname.startsWith('/admin') && (
+        {/* Flujo limpio en callback/onboarding: sin chrome global para evitar parpadeos visuales */}
+        {!isDashboardOrAdmin && !isAuthFlowRoute && (
           <Navbar userId={userId ?? undefined} sessionLoading={sessionLoading} />
         )}
 
@@ -114,60 +117,66 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
           <LoadingOverlay />
         ) : (
           <main className="flex-grow w-full m-0 p-0 scroll-smooth">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={pathname}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.4 }}
-              >
-                {children}
-              </motion.div>
-            </AnimatePresence>
+            {isAuthFlowRoute ? (
+              children
+            ) : (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={pathname}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  {children}
+                </motion.div>
+              </AnimatePresence>
+            )}
           </main>
         )}
 
-        <footer className="w-full text-muted-foreground border-t border-border bg-white/80 dark:bg-gray-900/80 backdrop-blur-md py-10">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 flex flex-col lg:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <Image
-                src="/icon.png"
-                alt="Logo StudyDocu"
-                width={40}
-                height={40}
-                priority
-                className="rounded-md shadow"
-              />
-              <span className="text-lg font-bold text-gray-800 dark:text-white">StudyDocu</span>
-            </div>
+        {!isAuthFlowRoute && (
+          <footer className="w-full text-muted-foreground border-t border-border bg-white/80 dark:bg-gray-900/80 backdrop-blur-md py-10">
+            <div className="max-w-7xl mx-auto px-4 md:px-8 flex flex-col lg:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-3">
+                <Image
+                  src="/icon.png"
+                  alt="Logo StudyDocu"
+                  width={40}
+                  height={40}
+                  priority
+                  className="rounded-md shadow"
+                />
+                <span className="text-lg font-bold text-gray-800 dark:text-white">StudyDocu</span>
+              </div>
 
-            <div className="flex flex-wrap justify-center gap-4 text-sm">
-              <Link href="/sobre-nosotros" className="hover:text-primary transition">
-                Sobre nosotros
-              </Link>
-              <Link href="/terminos" className="hover:text-primary transition">
-                Términos
-              </Link>
-              <Link href="/privacidad" className="hover:text-primary transition">
-                Privacidad
-              </Link>
-              <Link href="/contacto" className="hover:text-primary transition">
-                Contacto
-              </Link>
-            </div>
+              <div className="flex flex-wrap justify-center gap-4 text-sm">
+                <Link href="/sobre-nosotros" className="hover:text-primary transition">
+                  Sobre nosotros
+                </Link>
+                <Link href="/terminos" className="hover:text-primary transition">
+                  Términos
+                </Link>
+                <Link href="/privacidad" className="hover:text-primary transition">
+                  Privacidad
+                </Link>
+                <Link href="/contacto" className="hover:text-primary transition">
+                  Contacto
+                </Link>
+              </div>
 
-            <div className="text-xs text-gray-500 dark:text-gray-400 text-center lg:text-right">
-              <p>
-                © {new Date().getFullYear()}{' '}
-                <span className="font-semibold text-primary">StudyDocu</span>
-              </p>
-              <p>Hecho con 💙 por estudiantes para estudiantes</p>
+              <div className="text-xs text-gray-500 dark:text-gray-400 text-center lg:text-right">
+                <p>
+                  © {new Date().getFullYear()}{' '}
+                  <span className="font-semibold text-primary">StudyDocu</span>
+                </p>
+                <p>Hecho con 💙 por estudiantes para estudiantes</p>
+              </div>
             </div>
-          </div>
-        </footer>
+          </footer>
+        )}
 
-        <MobileDock />
+        {!isAuthFlowRoute && <MobileDock />}
       </div>
     </ToastProvider>
   )

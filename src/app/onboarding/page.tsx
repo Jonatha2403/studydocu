@@ -118,12 +118,34 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     if (userLoading) return
-    if (!user) {
-      router.replace('/registrarse')
+    if (user) {
+      setChecking(false)
       return
     }
-    setChecking(false)
-  }, [userLoading, user, router])
+
+    let mounted = true
+    const verifySessionBeforeRedirect = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (!mounted) return
+
+      // Evita falso rebote a /registrarse cuando la sesión aún se está hidratando tras OAuth.
+      if (session?.user) {
+        await refrescarUsuario()
+        setChecking(false)
+        return
+      }
+
+      router.replace('/registrarse')
+    }
+
+    void verifySessionBeforeRedirect()
+    return () => {
+      mounted = false
+    }
+  }, [userLoading, user, router, refrescarUsuario])
 
   useEffect(() => {
     const isVerified = Boolean((user as any)?.confirmed_at || user?.email_confirmed_at)
@@ -230,7 +252,16 @@ export default function OnboardingPage() {
     }
   }
 
-  if (checking) return null
+  if (checking) {
+    return (
+      <main className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-white to-gray-100 dark:from-black dark:to-gray-900">
+        <div className="text-center">
+          <Loader2 className="mx-auto mb-3 h-10 w-10 animate-spin text-indigo-600" />
+          <p className="text-sm text-gray-500 dark:text-gray-400">Preparando tu onboarding...</p>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-white to-gray-100 dark:from-black dark:to-gray-900 relative overflow-hidden">

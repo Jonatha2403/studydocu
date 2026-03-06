@@ -10,6 +10,8 @@ import { UserProvider } from '@/context/UserContext'
 export default function BodyLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isDashboard = pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin')
+  const isAuthFlowRoute =
+    pathname?.startsWith('/onboarding') || pathname?.startsWith('/auth/callback')
 
   return (
     <div className="min-h-screen relative">
@@ -26,7 +28,7 @@ export default function BodyLayout({ children }: { children: React.ReactNode }) 
         {!isDashboard ? (
           <>
             <LayoutClient key={pathname}>{children}</LayoutClient>
-            <FloatingButtonsGroup />
+            {!isAuthFlowRoute && <FloatingButtonsGroup />}
           </>
         ) : (
           children
