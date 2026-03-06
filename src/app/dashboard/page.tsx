@@ -140,19 +140,7 @@ export default function DashboardPage() {
   }, [user, perfil])
 
   useEffect(() => {
-    if (!sessionLoading && user && perfil) {
-      const onboardingOk = (perfil as any).onboarding_complete === true
-      if (!onboardingOk) {
-        router.replace('/onboarding?callbackUrl=/dashboard')
-      }
-    }
-  }, [sessionLoading, user, perfil, router])
-
-  useEffect(() => {
     if (user && perfil) {
-      const onboardingOk = (perfil as any).onboarding_complete === true
-      if (!onboardingOk) return
-
       fetchStats()
       const toastShown = sessionStorage.getItem('welcome_toast_shown')
       if (!toastShown) {

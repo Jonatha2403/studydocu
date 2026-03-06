@@ -104,8 +104,10 @@ export default function OnboardingPage() {
   const callbackUrl = callbackRaw.startsWith('/') ? callbackRaw : '/dashboard'
 
   useEffect(() => {
-    if (perfil?.onboarding_complete === true) router.replace('/dashboard')
-  }, [perfil, router])
+    // Si un usuario ya completó onboarding y entra manualmente a esta ruta, lo llevamos al dashboard.
+    // Cuando está en el paso 4 (final), evitamos redirección automática para no crear rebotes visuales.
+    if (perfil?.onboarding_complete === true && step < 4) router.replace('/dashboard')
+  }, [perfil, step, router])
 
   useEffect(() => {
     const storedStep = sessionStorage.getItem('onboarding_step')
