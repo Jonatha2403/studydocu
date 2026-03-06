@@ -142,7 +142,8 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!sessionLoading && user && perfil) {
       const hasIntereses =
-        Array.isArray((perfil as any).intereses) && (perfil as any).intereses.length > 0
+        Array.isArray((perfil as any).intereses) &&
+        (perfil as any).intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
       const onboardingOk = (perfil as any).onboarding_complete === true && hasIntereses
       if (!onboardingOk) {
         router.replace('/onboarding?callbackUrl=/dashboard')
@@ -152,6 +153,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user && perfil) {
+      const hasIntereses =
+        Array.isArray((perfil as any).intereses) &&
+        (perfil as any).intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
+      const onboardingOk = (perfil as any).onboarding_complete === true && hasIntereses
+      if (!onboardingOk) return
+
       fetchStats()
       const toastShown = sessionStorage.getItem('welcome_toast_shown')
       if (!toastShown) {

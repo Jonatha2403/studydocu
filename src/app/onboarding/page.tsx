@@ -101,7 +101,10 @@ export default function OnboardingPage() {
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    if (perfil?.onboarding_complete) router.replace('/dashboard')
+    const hasIntereses =
+      Array.isArray((perfil as any)?.intereses) &&
+      (perfil as any).intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
+    if (perfil?.onboarding_complete === true && hasIntereses) router.replace('/dashboard')
   }, [perfil, router])
 
   useEffect(() => {
@@ -205,14 +208,12 @@ export default function OnboardingPage() {
       await supabase.from('user_tags').delete().eq('user_id', user.id)
       await supabase.from('user_tags').insert(intereses.map((tag) => ({ user_id: user.id, tag })))
 
-      supabase
-        .from('audit_logs')
-        .insert({
-          user_id: user.id,
-          action: 'onboarding_complete',
-          description: 'El usuario completó el onboarding y seleccionó intereses.',
-          metadata: { intereses },
-        })
+      supabase.from('audit_logs').insert({
+        user_id: user.id,
+        action: 'onboarding_complete',
+        description: 'El usuario completó el onboarding y seleccionó intereses.',
+        metadata: { intereses },
+      })
       supabase
         .from('user_achievements')
         .insert({ user_id: user.id, achievement_key: 'bienvenida', unlocked: true })

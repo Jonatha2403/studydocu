@@ -122,7 +122,9 @@ export default function AuthCallbackPage() {
             return
           }
 
-          const hasIntereses = Array.isArray(profile.intereses) && profile.intereses.length > 0
+          const hasIntereses =
+            Array.isArray(profile.intereses) &&
+            profile.intereses.some((v) => String(v ?? '').trim().length > 0)
 
           if (profile.onboarding_complete !== true || !hasIntereses) {
             // Normaliza estado por si algún trigger/valor por defecto marcó onboarding en true sin preguntas.
