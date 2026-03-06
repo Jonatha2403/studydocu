@@ -82,8 +82,50 @@ export default function AuthCallbackPage() {
         }
 
         if (type === 'signup') {
-          hardRedirect(next)
+          hardRedirect('/onboarding')
           return
+        }
+
+        // Regla global: si no completó onboarding, enviarlo a preguntas antes del dashboard.
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (user?.id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id,onboarding_complete')
+            .eq('id', user.id)
+            .maybeSingle()
+
+          if (!profile) {
+            const usernameBase =
+              String(user.user_metadata?.username || user.email?.split('@')[0] || 'user')
+                .toLowerCase()
+                .replace(/\s+/g, '_')
+                .replace(/[^a-z0-9_]/g, '')
+                .slice(0, 20) || 'user'
+
+            await supabase.from('profiles').insert({
+              id: user.id,
+              email: user.email ?? null,
+              username: `${usernameBase}_${user.id.slice(0, 6)}`,
+              nombre_completo: user.user_metadata?.nombre_completo ?? null,
+              role: user.user_metadata?.role ?? 'estudiante',
+              points: 0,
+              subscription_active: false,
+              onboarding_complete: false,
+              created_at: new Date().toISOString(),
+            })
+
+            hardRedirect('/onboarding')
+            return
+          }
+
+          if (profile.onboarding_complete !== true) {
+            hardRedirect('/onboarding')
+            return
+          }
         }
 
         // default
