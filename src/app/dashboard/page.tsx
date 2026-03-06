@@ -186,7 +186,7 @@ export default function DashboardPage() {
     : []
 
   // 🔄 Mientras se carga sesión/datos o se está redirigiendo sin usuario
-  if (sessionLoading || loading || (!user && !error)) {
+  if (sessionLoading || (!user && !error)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] text-gray-500 dark:text-gray-400">
         <Loader2 className="animate-spin w-8 h-8 mb-4 text-blue-600" />
@@ -205,15 +205,10 @@ export default function DashboardPage() {
   }
 
   // En este punto, normalmente ya hay usuario gracias al redirect
-  if (!user || !stats) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] text-gray-500 dark:text-gray-400">
-        <p className="text-lg">No se encontraron datos para mostrar.</p>
-      </div>
-    )
-  }
+  if (!user) return null
 
-  const medalla = getMedalla(stats.puntos)
+  const puntosUi = stats?.puntos ?? ((perfil as any)?.points || 0)
+  const medalla = getMedalla(puntosUi)
 
   return (
     <div className="w-full pt-4 pb-16 px-4 sm:px-6 lg:px-8">
@@ -270,7 +265,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Próximo hito */}
-        <NextMilestone puntos={stats.puntos} />
+        <NextMilestone puntos={puntosUi} />
       </div>
 
       {/* Banner premium contextual */}
@@ -316,7 +311,7 @@ export default function DashboardPage() {
 
       {/* Chips de logros */}
       <div className="flex flex-wrap gap-2 mb-4">
-        {buildAchievementChips(stats.puntos).map((t) => (
+        {buildAchievementChips(puntosUi).map((t) => (
           <span
             key={t}
             className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 dark:bg-zinc-800 dark:text-blue-300"
@@ -327,23 +322,27 @@ export default function DashboardPage() {
       </div>
 
       {/* Progreso global */}
-      <ProgressBar puntos={stats.puntos} />
+      <ProgressBar puntos={puntosUi} />
 
       {/* Estadísticas rápidas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <StatCard
           label="Total Documentos"
-          value={stats.documentosTotales}
+          value={loading ? '...' : (stats?.documentosTotales ?? 0)}
           icon={<FileText size={16} />}
         />
-        <StatCard label="Categorías Únicas" value={pieData.length} icon={<Layers size={16} />} />
+        <StatCard
+          label="Categorías Únicas"
+          value={loading ? '...' : pieData.length}
+          icon={<Layers size={16} />}
+        />
         <StatCard
           label="Puntos Acumulados"
           value={
             <div className="flex items-center gap-3">
-              <span>{stats.puntos}</span>
+              <span>{loading ? '...' : puntosUi}</span>
               <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
-                {(Math.min(stats.puntos / 500, 1) * 100).toFixed(0)}%
+                {loading ? '...' : `${(Math.min(puntosUi / 500, 1) * 100).toFixed(0)}%`}
               </span>
             </div>
           }
@@ -405,7 +404,7 @@ export default function DashboardPage() {
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <NoDataMessage />
+            <NoDataMessage loading={loading} />
           )}
         </ChartCard>
 
@@ -430,7 +429,7 @@ export default function DashboardPage() {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <NoDataMessage />
+            <NoDataMessage loading={loading} />
           )}
         </ChartCard>
       </div>
@@ -439,7 +438,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         {/* Subidos/creados recientemente */}
         <ChartCard title="🕘 Recientes">
-          {stats.recientes && stats.recientes.length ? (
+          {stats?.recientes && stats.recientes.length ? (
             <ul className="divide-y divide-gray-200 dark:divide-zinc-800">
               {stats.recientes.map((d) => (
                 <li key={d.id} className="py-3 flex items-center justify-between">
@@ -466,7 +465,7 @@ export default function DashboardPage() {
               ))}
             </ul>
           ) : (
-            <NoDataMessage />
+            <NoDataMessage loading={loading} />
           )}
         </ChartCard>
 
@@ -500,9 +499,7 @@ export default function DashboardPage() {
               ))}
             </ul>
           ) : (
-            <p className="text-center text-gray-500 dark:text-gray-400 py-10">
-              Sin descargas registradas.
-            </p>
+            <NoDataMessage loading={loading} compact emptyText="Sin descargas registradas." />
           )}
         </ChartCard>
       </div>
@@ -557,10 +554,26 @@ function ProgressBar({ puntos }: { puntos: number }) {
   )
 }
 
-function NoDataMessage() {
+function NoDataMessage({
+  loading = false,
+  compact = false,
+  emptyText = 'A�n no hay datos',
+}: {
+  loading?: boolean
+  compact?: boolean
+  emptyText?: string
+}) {
+  if (loading) {
+    return (
+      <div className={`text-center ${compact ? 'py-8' : 'py-10'}`}>
+        <p className="text-gray-500 dark:text-gray-400">Cargando datos...</p>
+      </div>
+    )
+  }
+
   return (
-    <div className="text-center py-10">
-      <p className="text-gray-500 dark:text-gray-400 mb-3">Aún no hay datos</p>
+    <div className={`text-center ${compact ? 'py-8' : 'py-10'}`}>
+      <p className="text-gray-500 dark:text-gray-400 mb-3">{emptyText}</p>
       <a
         href="/subir"
         className="inline-block px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"

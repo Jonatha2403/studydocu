@@ -416,7 +416,7 @@ export default function OnboardingPage() {
                   </p>
                   <div className="mt-6">
                     <button
-                      onClick={() => window.location.replace(callbackUrl)}
+                      onClick={() => router.replace(callbackUrl)}
                       className="rounded-xl bg-indigo-600 px-6 py-2 text-white hover:opacity-90"
                     >
                       Ir al dashboard
