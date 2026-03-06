@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Lottie from 'lottie-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Script from 'next/script'
 import { toast } from 'sonner'
@@ -302,7 +302,17 @@ export default function HomeClient() {
 
   const { user } = useUserContext()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const reduceMotion = useReducedMotion()
+
+  // Fallback robusto: si OAuth regresa al root con ?code=..., enrutar al callback real.
+  useEffect(() => {
+    const code = searchParams?.get('code')
+    if (!code) return
+    const params = new URLSearchParams(searchParams?.toString() || '')
+    if (!params.get('next')) params.set('next', '/dashboard')
+    window.location.replace(`/auth/callback?${params.toString()}`)
+  }, [searchParams])
 
   // ✅ isMobile sin resize listener pesado (matchMedia)
   useEffect(() => {
