@@ -9,7 +9,7 @@ import Lottie from 'lottie-react'
 import { CheckCircle, MailCheck, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/client'
 import { useUserContext } from '@/context/UserContext'
 import Particles from '@/components/ParticlesBackground'
 import rocketSuccess from '@/assets/animations/success.json'
@@ -92,7 +92,7 @@ function TagChip({
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { user, perfil, refrescarUsuario } = useUserContext()
+  const { user, perfil, refrescarUsuario, loading: userLoading } = useUserContext()
 
   const [step, setStep] = useState(1)
   const [intereses, setIntereses] = useState<string[]>([])
@@ -117,13 +117,13 @@ export default function OnboardingPage() {
   }, [step])
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data } = await supabase.auth.getSession()
-      if (!data.session) router.replace('/registrarse')
-      else setChecking(false)
+    if (userLoading) return
+    if (!user) {
+      router.replace('/registrarse')
+      return
     }
-    checkUser()
-  }, [])
+    setChecking(false)
+  }, [userLoading, user, router])
 
   useEffect(() => {
     const isVerified = Boolean((user as any)?.confirmed_at || user?.email_confirmed_at)
