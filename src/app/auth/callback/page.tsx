@@ -20,7 +20,7 @@ export default function AuthCallbackPage() {
         const code = searchParams?.get('code') ?? null
         const error = searchParams?.get('error') ?? null
         const rawNext = searchParams?.get('next') ?? '/dashboard'
-        const next = rawNext.startsWith('/') ? rawNext : '/'
+        const next = rawNext.startsWith('/') && rawNext !== '/' ? rawNext : '/dashboard'
 
         if (error) {
           toast.error(error)
