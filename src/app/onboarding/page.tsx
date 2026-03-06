@@ -26,8 +26,8 @@ const INTEREST_TAGS = [
 
 const MOTIVATIONAL: Record<number, string> = {
   1: 'Un paso más para comenzar tu viaje de aprendizaje 🚀',
-  2: '¡Selecciona tus intereses favoritos! 📚',
-  3: 'Guardando tus preferencias para personalizar tu experiencia',
+  2: 'Tu correo ya está verificado. Continuemos.',
+  3: '¡Selecciona tus intereses favoritos! 📚',
   4: '¡Estás dentro! Disfruta de todo lo que StudyDocu tiene para ti',
 }
 
@@ -100,7 +100,8 @@ export default function OnboardingPage() {
   const [emailVerified, setEmailVerified] = useState(false)
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
-  const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard'
+  const callbackRaw = searchParams?.get('callbackUrl') || '/dashboard'
+  const callbackUrl = callbackRaw.startsWith('/') ? callbackRaw : '/dashboard'
 
   useEffect(() => {
     if (perfil?.onboarding_complete === true) router.replace('/dashboard')
@@ -173,14 +174,19 @@ export default function OnboardingPage() {
     } else toast.error('Aún no has verificado tu correo')
   }
 
+  const pasarAIntereses = () => {
+    setStep(3)
+  }
+
   const finalizarSeleccion = () => {
     if (intereses.length === 0) return toast.error('Selecciona al menos un interés')
-    setStep(3)
+    void completarOnboarding()
   }
 
   const completarOnboarding = async () => {
     if (!user?.id) return
     setLoading(true)
+    setStep(4)
     try {
       await refrescarUsuario()
 
@@ -226,6 +232,9 @@ export default function OnboardingPage() {
       if (updateError) throw updateError
       if (!updatedProfile) throw new Error('No se pudo actualizar el perfil de onboarding.')
 
+      // Refresca contexto para evitar que dashboard crea que onboarding sigue incompleto.
+      await refrescarUsuario()
+
       await supabase.from('user_tags').delete().eq('user_id', user.id)
       await supabase.from('user_tags').insert(intereses.map((tag) => ({ user_id: user.id, tag })))
 
@@ -241,11 +250,11 @@ export default function OnboardingPage() {
       supabase.from('ai_context').insert({ user_id: user.id, context: intereses.join(', ') })
 
       toast.success('Preferencias guardadas ✅')
-      setStep(4)
       sessionStorage.removeItem('onboarding_step')
     } catch (err) {
       console.error('❌ Error en onboarding:', err)
       toast.error('Ocurrió un error inesperado')
+      setStep(3)
     } finally {
       setLoading(false)
     }
@@ -309,7 +318,7 @@ export default function OnboardingPage() {
 
           {step === 2 && emailVerified && (
             <motion.section
-              key="interests"
+              key="verified"
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -100 }}
@@ -317,6 +326,32 @@ export default function OnboardingPage() {
               className="rounded-3xl bg-white dark:bg-gray-900 p-8 shadow-xl text-center"
             >
               <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">{MOTIVATIONAL[2]}</p>
+              <CheckCircle className="mx-auto mb-4 h-16 w-16 text-green-500" />
+              <h2 className="mb-2 text-2xl font-bold text-gray-800 dark:text-white">
+                Correo verificado ✅
+              </h2>
+              <p className="mb-6 text-gray-600 dark:text-gray-400">
+                Todo listo. Ahora elige tus intereses para personalizar tu experiencia.
+              </p>
+              <button
+                onClick={pasarAIntereses}
+                className="rounded-xl bg-indigo-600 px-6 py-2 text-white hover:opacity-90"
+              >
+                Continuar
+              </button>
+            </motion.section>
+          )}
+
+          {step === 3 && (
+            <motion.section
+              key="interests"
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -100 }}
+              transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+              className="rounded-3xl bg-white dark:bg-gray-900 p-8 shadow-xl text-center"
+            >
+              <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">{MOTIVATIONAL[3]}</p>
               <h2 className="mb-6 text-2xl font-semibold text-gray-800 dark:text-white">
                 ¿Qué temas te interesan más?
               </h2>
@@ -338,36 +373,7 @@ export default function OnboardingPage() {
                 onClick={finalizarSeleccion}
                 className="rounded-xl bg-indigo-600 px-6 py-2 text-white hover:opacity-90 disabled:opacity-40"
               >
-                Finalizar selección
-              </button>
-            </motion.section>
-          )}
-
-          {step === 3 && (
-            <motion.section
-              key="saving"
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-              className="rounded-3xl bg-white dark:bg-gray-900 p-8 shadow-xl text-center"
-            >
-              <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">{MOTIVATIONAL[3]}</p>
-              {loading ? (
-                <Loader2 className="mx-auto mb-6 h-16 w-16 animate-spin text-indigo-600" />
-              ) : (
-                <CheckCircle className="mx-auto mb-6 h-16 w-16 text-green-500" />
-              )}
-              <h2 className="mb-2 text-2xl font-bold text-gray-800 dark:text-white">
-                ¡Todo listo!
-              </h2>
-              <p className="mb-6 text-gray-500 dark:text-gray-400">Guardando tus preferencias...</p>
-              <button
-                onClick={completarOnboarding}
-                disabled={loading}
-                className="rounded-xl bg-purple-600 px-6 py-2 text-white hover:opacity-90 disabled:opacity-50"
-              >
-                {loading ? 'Guardando...' : 'Empezar ahora 🚀'}
+                {loading ? 'Guardando...' : 'Finalizar selección'}
               </button>
             </motion.section>
           )}
@@ -381,23 +387,41 @@ export default function OnboardingPage() {
               transition={{ type: 'spring', stiffness: 120, damping: 20 }}
               className="relative overflow-hidden rounded-3xl bg-white dark:bg-gray-900 p-8 shadow-xl text-center"
             >
-              <Confetti recycle={false} numberOfPieces={300} className="pointer-events-none" />
-              <Lottie animationData={rocketSuccess} loop={false} className="mx-auto h-56 w-56" />
-              <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">{MOTIVATIONAL[4]}</p>
-              <h2 className="mb-2 text-2xl font-bold text-gray-800 dark:text-white">
-                ¡Bienvenido a StudyDocu!
-              </h2>
-              <p className="text-gray-500 dark:text-gray-400">
-                🎖 Ganaste tu primera medalla por registrarte. Redirigiéndote a tu dashboard...
-              </p>
-              <div className="mt-6">
-                <button
-                  onClick={() => window.location.replace(callbackUrl)}
-                  className="rounded-xl bg-indigo-600 px-6 py-2 text-white hover:opacity-90"
-                >
-                  Ir al dashboard
-                </button>
-              </div>
+              {loading ? (
+                <>
+                  <Loader2 className="mx-auto mb-6 h-14 w-14 animate-spin text-indigo-600" />
+                  <h2 className="mb-2 text-2xl font-bold text-gray-800 dark:text-white">
+                    Guardando tus preferencias...
+                  </h2>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Estamos preparando tu dashboard personalizado.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Confetti recycle={false} numberOfPieces={300} className="pointer-events-none" />
+                  <Lottie
+                    animationData={rocketSuccess}
+                    loop={false}
+                    className="mx-auto h-56 w-56"
+                  />
+                  <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">{MOTIVATIONAL[4]}</p>
+                  <h2 className="mb-2 text-2xl font-bold text-gray-800 dark:text-white">
+                    ¡Bienvenido a StudyDocu!
+                  </h2>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    🎖 Ganaste tu primera medalla por registrarte. Redirigiéndote a tu dashboard...
+                  </p>
+                  <div className="mt-6">
+                    <button
+                      onClick={() => window.location.replace(callbackUrl)}
+                      className="rounded-xl bg-indigo-600 px-6 py-2 text-white hover:opacity-90"
+                    >
+                      Ir al dashboard
+                    </button>
+                  </div>
+                </>
+              )}
             </motion.section>
           )}
         </AnimatePresence>

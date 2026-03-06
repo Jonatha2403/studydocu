@@ -45,21 +45,6 @@ const ONBOARDING_SAFE_ROUTES = new Set(['/onboarding'])
 const pathStartsWithAny = (path: string, prefixes: string[]) =>
   prefixes.some((p) => path === p || path.startsWith(p + '/'))
 
-async function fetchUserProfile(userId: string, accessToken: string) {
-  const profileUrl = new URL(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/profiles?select=role,subscription_status,onboarding_complete,intereses&id=eq.${userId}`
-  )
-
-  const profileRes = await fetch(profileUrl, {
-    headers: {
-      apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-      Authorization: `Bearer ${accessToken}`,
-    },
-  })
-
-  return (await profileRes.json())?.[0] || {}
-}
-
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
   const url = req.nextUrl
@@ -80,10 +65,12 @@ export async function middleware(req: NextRequest) {
     } = await supabase.auth.getUser()
 
     if (user) {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const accessToken = sessionData.session?.access_token ?? ''
-      const profile = await fetchUserProfile(user.id, accessToken)
-      const onboardingComplete: boolean | undefined = profile.onboarding_complete
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_complete')
+        .eq('id', user.id)
+        .maybeSingle()
+      const onboardingComplete: boolean | undefined = profile?.onboarding_complete
 
       if (onboardingComplete === true) {
         return NextResponse.redirect(new URL('/dashboard', req.url))
@@ -119,18 +106,17 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // ✅ Obtener access token real desde la sesión (NO depender de sb-access-token)
-  const { data: sessionData } = await supabase.auth.getSession()
-  const accessToken = sessionData.session?.access_token ?? ''
-
   // 5) Reglas adicionales (admin / premium / onboarding)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role,subscription_status,onboarding_complete')
+    .eq('id', user.id)
+    .maybeSingle()
 
-  const profile = await fetchUserProfile(user.id, accessToken)
-
-  const role: string | undefined = profile.role || user.user_metadata?.role
+  const role: string | undefined = profile?.role || user.user_metadata?.role
   const subscription_status: string | undefined =
-    profile.subscription_status || user.user_metadata?.subscription_status
-  const onboarding_complete: boolean | undefined = profile.onboarding_complete
+    profile?.subscription_status || user.user_metadata?.subscription_status
+  const onboarding_complete: boolean | undefined = profile?.onboarding_complete
 
   // 5a) Admin gate
   if (pathname.startsWith('/admin') && role !== 'admin') {
