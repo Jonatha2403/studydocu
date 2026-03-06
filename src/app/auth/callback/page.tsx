@@ -65,8 +65,7 @@ export default function AuthCallbackPage() {
         }
 
         if (type === 'signup') {
-          // puedes enviarlo a /verificado o a login con mensaje
-          router.replace('/verificado')
+          router.replace(next)
           return
         }
 

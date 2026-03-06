@@ -69,7 +69,7 @@ export default function AuthModal({ onClose }: Props) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/verificado`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/dashboard')}`,
       },
     })
 
@@ -142,7 +142,9 @@ export default function AuthModal({ onClose }: Props) {
         </form>
 
         <div className="my-4 border-t border-gray-300 dark:border-gray-700 text-center relative">
-          <span className="absolute top-[-0.7rem] left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-900 px-2 text-sm text-gray-500">O continúa con</span>
+          <span className="absolute top-[-0.7rem] left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-900 px-2 text-sm text-gray-500">
+            O continúa con
+          </span>
         </div>
 
         <div className="flex gap-3">
@@ -168,21 +170,17 @@ export default function AuthModal({ onClose }: Props) {
             Regístrate aquí
           </a>
         </div>
-         <div className="mt-4">
-           <button
-             onClick={() => router.push('/')}
-             className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold py-2 rounded-lg hover:opacity-90 transition"
-           >
+        <div className="mt-4">
+          <button
+            onClick={() => router.push('/')}
+            className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold py-2 rounded-lg hover:opacity-90 transition"
+          >
             🡨 Volver al inicio
-           </button>
+          </button>
         </div>
-
-
       </motion.div>
 
-      {showResetModal && (
-        <PasswordResetModal onClose={() => setShowResetModal(false)} />
-      )}
+      {showResetModal && <PasswordResetModal onClose={() => setShowResetModal(false)} />}
     </div>
   )
 }
