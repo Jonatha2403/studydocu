@@ -140,6 +140,17 @@ export default function DashboardPage() {
   }, [user, perfil])
 
   useEffect(() => {
+    if (!sessionLoading && user && perfil) {
+      const hasIntereses =
+        Array.isArray((perfil as any).intereses) && (perfil as any).intereses.length > 0
+      const onboardingOk = (perfil as any).onboarding_complete === true && hasIntereses
+      if (!onboardingOk) {
+        router.replace('/onboarding?callbackUrl=/dashboard')
+      }
+    }
+  }, [sessionLoading, user, perfil, router])
+
+  useEffect(() => {
     if (user && perfil) {
       fetchStats()
       const toastShown = sessionStorage.getItem('welcome_toast_shown')
@@ -169,11 +180,9 @@ export default function DashboardPage() {
     if (thisTier !== lastTier) {
       sessionStorage.setItem('last_tier', thisTier)
       import('sonner').then(({ toast }) =>
-        toast.success(`¡Ascendiste a ${thisTier}! 🥳`, { duration: 3200 }),
+        toast.success(`¡Ascendiste a ${thisTier}! 🥳`, { duration: 3200 })
       )
-      import('canvas-confetti').then((c) =>
-        c.default({ particleCount: 120, spread: 70 }),
-      )
+      import('canvas-confetti').then((c) => c.default({ particleCount: 120, spread: 70 }))
     }
   }, [stats?.puntos])
 
@@ -228,10 +237,16 @@ export default function DashboardPage() {
             {isLottieAvatar && avatarUrl ? (
               <LottieAvatar src={avatarUrl} className="w-full h-full" />
             ) : (
-              <img src={avatarUrl ?? '/avatar.png'} alt="Avatar" className="w-full h-full object-cover" />
+              <img
+                src={avatarUrl ?? '/avatar.png'}
+                alt="Avatar"
+                className="w-full h-full object-cover"
+              />
             )}
           </div>
-          <span className="absolute -bottom-1 -right-1 text-2xl">{medalla.medalla.split(' ')[0]}</span>
+          <span className="absolute -bottom-1 -right-1 text-2xl">
+            {medalla.medalla.split(' ')[0]}
+          </span>
           {isPremiumStatus && (
             <span className="absolute -top-2 -left-2 bg-yellow-400 text-zinc-900 rounded-full p-1 shadow">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -273,7 +288,9 @@ export default function DashboardPage() {
       {!isPremium && (
         <div className="mb-6 rounded-2xl border bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-zinc-900 dark:to-zinc-900/40 p-4 flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium">Desbloquea estadísticas avanzadas y pronósticos PRO</p>
+            <p className="text-sm font-medium">
+              Desbloquea estadísticas avanzadas y pronósticos PRO
+            </p>
             <p className="text-xs text-muted-foreground">
               Mapas de calor, comparativa histórica y alertas inteligentes
             </p>
@@ -325,7 +342,11 @@ export default function DashboardPage() {
 
       {/* Estadísticas rápidas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <StatCard label="Total Documentos" value={stats.documentosTotales} icon={<FileText size={16} />} />
+        <StatCard
+          label="Total Documentos"
+          value={stats.documentosTotales}
+          icon={<FileText size={16} />}
+        />
         <StatCard label="Categorías Únicas" value={pieData.length} icon={<Layers size={16} />} />
         <StatCard
           label="Puntos Acumulados"
@@ -438,13 +459,18 @@ export default function DashboardPage() {
                       {(d.file_name || d.category || 'D')!.slice(0, 1).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-sm font-medium">{d.file_name || d.category || 'Documento'}</p>
+                      <p className="text-sm font-medium">
+                        {d.file_name || d.category || 'Documento'}
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(d.created_at).toLocaleString()}
                       </p>
                     </div>
                   </div>
-                  <a href={`/vista-previa/${d.id}`} className="text-xs text-blue-600 hover:underline">
+                  <a
+                    href={`/vista-previa/${d.id}`}
+                    className="text-xs text-blue-600 hover:underline"
+                  >
                     Ver
                   </a>
                 </li>
@@ -475,7 +501,10 @@ export default function DashboardPage() {
                       </p>
                     </div>
                   </div>
-                  <a href={`/vista-previa/${d.id}`} className="text-xs text-blue-600 hover:underline">
+                  <a
+                    href={`/vista-previa/${d.id}`}
+                    className="text-xs text-blue-600 hover:underline"
+                  >
                     Ver
                   </a>
                 </li>
@@ -510,7 +539,9 @@ function StatCard({
       <div className="text-sm text-muted-foreground flex items-center gap-2">
         {icon} {label}
       </div>
-      <div className={`text-2xl font-semibold ${color || 'text-gray-900 dark:text-white'}`}>{value}</div>
+      <div className={`text-2xl font-semibold ${color || 'text-gray-900 dark:text-white'}`}>
+        {value}
+      </div>
     </div>
   )
 }
