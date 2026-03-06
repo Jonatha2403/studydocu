@@ -3,7 +3,9 @@
 
 import { motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import RegisterForm from '@/components/auth/RegisterForm'
+import { useUserContext } from '@/context/UserContext'
 
 const WORDS = ['exámenes', 'resúmenes', 'mapas conceptuales', 'y mucho más...']
 const QUOTES = [
@@ -55,11 +57,32 @@ function TypingText({
 export default function RegisterPage() {
   const [qIdx, setQIdx] = useState(0)
   const quote = useMemo(() => QUOTES[qIdx % QUOTES.length], [qIdx])
+  const router = useRouter()
+  const { user, perfil, loading } = useUserContext()
+
+  useEffect(() => {
+    if (loading || !user) return
+
+    const hasIntereses =
+      Array.isArray((perfil as any)?.intereses) &&
+      (perfil as any).intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
+    const onboardingOk = (perfil as any)?.onboarding_complete === true && hasIntereses
+
+    router.replace(onboardingOk ? '/dashboard' : '/onboarding')
+  }, [loading, user, perfil, router])
 
   useEffect(() => {
     const t = setInterval(() => setQIdx((i) => (i + 1) % QUOTES.length), 4200)
     return () => clearInterval(t)
   }, [])
+
+  if (!loading && user) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Redirigiendo...</p>
+      </main>
+    )
+  }
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden bg-[#F6F5FF] dark:bg-[#070B18]">
