@@ -1,16 +1,18 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
 export default function AuthCallbackPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
 
   useEffect(() => {
     let cancelled = false
+    const hardRedirect = (path: string) => {
+      window.location.replace(path)
+    }
 
     const run = async () => {
       try {
@@ -22,7 +24,7 @@ export default function AuthCallbackPage() {
 
         if (error) {
           toast.error(error)
-          router.replace('/iniciar-sesion?error=auth_callback')
+          hardRedirect('/iniciar-sesion?error=auth_callback')
           return
         }
 
@@ -31,7 +33,7 @@ export default function AuthCallbackPage() {
           const { error: exErr } = await supabase.auth.exchangeCodeForSession(code)
           if (exErr) {
             console.error('[AUTH_CALLBACK] exchangeCodeForSession:', exErr)
-            router.replace('/iniciar-sesion?error=auth_callback')
+            hardRedirect('/iniciar-sesion?error=auth_callback')
             return
           }
         } else {
@@ -49,7 +51,7 @@ export default function AuthCallbackPage() {
               })
               if (setErr) {
                 console.error('[AUTH_CALLBACK] setSession:', setErr)
-                router.replace('/iniciar-sesion?error=auth_callback')
+                hardRedirect('/iniciar-sesion?error=auth_callback')
                 return
               }
             }
@@ -60,20 +62,20 @@ export default function AuthCallbackPage() {
 
         // ✅ Ruteo final por tipo
         if (type === 'recovery') {
-          router.replace('/auth/cambiar-clave?type=recovery')
+          hardRedirect('/auth/cambiar-clave?type=recovery')
           return
         }
 
         if (type === 'signup') {
-          router.replace(next)
+          hardRedirect(next)
           return
         }
 
         // default
-        router.replace(next)
+        hardRedirect(next)
       } catch (e) {
         console.error('[AUTH_CALLBACK] fatal:', e)
-        router.replace('/iniciar-sesion?error=auth_callback')
+        hardRedirect('/iniciar-sesion?error=auth_callback')
       }
     }
 
@@ -82,7 +84,7 @@ export default function AuthCallbackPage() {
     return () => {
       cancelled = true
     }
-  }, [router, searchParams])
+  }, [searchParams])
 
   return (
     <div className="min-h-screen flex items-center justify-center">
