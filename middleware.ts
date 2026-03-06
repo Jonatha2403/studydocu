@@ -84,11 +84,8 @@ export async function middleware(req: NextRequest) {
       const accessToken = sessionData.session?.access_token ?? ''
       const profile = await fetchUserProfile(user.id, accessToken)
       const onboardingComplete: boolean | undefined = profile.onboarding_complete
-      const hasIntereses =
-        Array.isArray(profile.intereses) &&
-        profile.intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
 
-      if (onboardingComplete === true && hasIntereses) {
+      if (onboardingComplete === true) {
         return NextResponse.redirect(new URL('/dashboard', req.url))
       }
       return NextResponse.redirect(new URL('/onboarding', req.url))
@@ -134,9 +131,6 @@ export async function middleware(req: NextRequest) {
   const subscription_status: string | undefined =
     profile.subscription_status || user.user_metadata?.subscription_status
   const onboarding_complete: boolean | undefined = profile.onboarding_complete
-  const hasIntereses =
-    Array.isArray(profile.intereses) &&
-    profile.intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
 
   // 5a) Admin gate
   if (pathname.startsWith('/admin') && role !== 'admin') {
@@ -157,11 +151,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // 5c) Onboarding gate (solo para páginas protegidas, no APIs)
-  if (
-    isProtectedPage &&
-    !ONBOARDING_SAFE_ROUTES.has(pathname) &&
-    (onboarding_complete !== true || !hasIntereses)
-  ) {
+  if (isProtectedPage && !ONBOARDING_SAFE_ROUTES.has(pathname) && onboarding_complete !== true) {
     const ob = new URL('/onboarding', req.url)
     ob.searchParams.set('callbackUrl', pathname + (url.search || ''))
     return NextResponse.redirect(ob)

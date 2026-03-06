@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect, Fragment } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import Confetti from 'react-confetti'
 import Lottie from 'lottie-react'
@@ -92,6 +92,7 @@ function TagChip({
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, perfil, refrescarUsuario, loading: userLoading } = useUserContext()
 
   const [step, setStep] = useState(1)
@@ -99,12 +100,10 @@ export default function OnboardingPage() {
   const [emailVerified, setEmailVerified] = useState(false)
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
+  const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard'
 
   useEffect(() => {
-    const hasIntereses =
-      Array.isArray((perfil as any)?.intereses) &&
-      (perfil as any).intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
-    if (perfil?.onboarding_complete === true && hasIntereses) router.replace('/dashboard')
+    if (perfil?.onboarding_complete === true) router.replace('/dashboard')
   }, [perfil, router])
 
   useEffect(() => {
@@ -393,7 +392,7 @@ export default function OnboardingPage() {
               </p>
               <div className="mt-6">
                 <button
-                  onClick={() => router.push('/dashboard')}
+                  onClick={() => window.location.replace(callbackUrl)}
                   className="rounded-xl bg-indigo-600 px-6 py-2 text-white hover:opacity-90"
                 >
                   Ir al dashboard

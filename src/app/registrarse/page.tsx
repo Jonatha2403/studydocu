@@ -64,10 +64,7 @@ export default function RegisterPage() {
   useEffect(() => {
     if (loading || !user) return
 
-    const hasIntereses =
-      Array.isArray((perfil as any)?.intereses) &&
-      (perfil as any).intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
-    const onboardingOk = (perfil as any)?.onboarding_complete === true && hasIntereses
+    const onboardingOk = (perfil as any)?.onboarding_complete === true
 
     router.replace(onboardingOk ? '/dashboard' : '/onboarding')
   }, [loading, user, perfil, router])
