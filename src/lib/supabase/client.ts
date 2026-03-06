@@ -19,8 +19,6 @@ export function getSupabaseBrowserClient(): SupabaseClient {
       // Evita fallos de PKCE (code_verifier) cuando hay variaciones de dominio/redirección.
       flowType: 'implicit',
       persistSession: true,
-      storageKey: 'supabase.auth.token',
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     },
   })
 
