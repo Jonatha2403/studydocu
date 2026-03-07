@@ -42,9 +42,15 @@ export default function UploadForm({
     const buffer = await file.arrayBuffer()
     const hashBuffer = await crypto.subtle.digest('SHA-256', buffer)
     return Array.from(new Uint8Array(hashBuffer))
-      .map(b => b.toString(16).padStart(2, '0'))
+      .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
   }
+
+  const hasText = (value: string) => value.trim().length > 0
+
+  const isCareerValid = () => (carreraId === 'otra' ? hasText(carreraManual) : hasText(carreraId))
+
+  const isSubjectValid = () => (materiaId === 'otra' ? hasText(materiaManual) : hasText(materiaId))
 
   const generatePreview = async (file: File) => {
     if (file.type === 'text/plain') {
@@ -64,8 +70,12 @@ export default function UploadForm({
     setFileHash(null)
     setPreviewText('')
     if (selectedFile) {
-      const hash = await calculateHash(selectedFile)
-      setFileHash(hash)
+      try {
+        const hash = await calculateHash(selectedFile)
+        setFileHash(hash)
+      } catch (err) {
+        console.warn('[UPLOAD_HASH_ERROR]', err)
+      }
       await generatePreview(selectedFile)
     }
   }
@@ -114,9 +124,7 @@ export default function UploadForm({
   const registrarDocumento = async (fileToRegister: File, docCategory: string) => {
     if (!user) throw new Error('Usuario no autenticado.')
 
-    const sanitizedFileName = fileToRegister.name
-      .normalize('NFD')
-      .replace(/[^\w.\-]/g, '_')
+    const sanitizedFileName = fileToRegister.name.normalize('NFD').replace(/[^\w.\-]/g, '_')
 
     const filePath = `${user.id}/${Date.now()}_${sanitizedFileName}`
 
@@ -127,33 +135,43 @@ export default function UploadForm({
 
     const tipoArchivo = fileToRegister.name.split('.').pop()?.toLowerCase() || 'desconocido'
 
-    const { data: newDocument, error: insertError } = await supabase.from('documents').insert({
-      user_id: user.id,
-      file_name: fileToRegister.name,
-      title: fileToRegister.name,
-      file_path: filePath,
-      category: docCategory,
-      status: 'aprobado',
-      approved: true,
-      approved_at: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      hash: fileHash || null,
-      download_count: 0,
-      tipo: tipoArchivo,
-      university_id: universidadId,
-      career_id: carreraId !== 'otra' ? carreraId : null,
-      career_name_manual: carreraId === 'otra' ? carreraManual : null,
-      subject_id: materiaId !== 'otra' ? materiaId : null,
-      subject_name_manual: materiaId === 'otra' ? materiaManual : null,
-      file_url: filePath,
-    }).select('id').single()
+    const { data: newDocument, error: insertError } = await supabase
+      .from('documents')
+      .insert({
+        user_id: user.id,
+        file_name: fileToRegister.name,
+        title: fileToRegister.name,
+        file_path: filePath,
+        category: docCategory,
+        status: 'aprobado',
+        approved: true,
+        approved_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        hash: fileHash || null,
+        download_count: 0,
+        tipo: tipoArchivo,
+        university_id: universidadId,
+        career_id: carreraId !== 'otra' ? carreraId : null,
+        career_name_manual: carreraId === 'otra' ? carreraManual : null,
+        subject_id: materiaId !== 'otra' ? materiaId : null,
+        subject_name_manual: materiaId === 'otra' ? materiaManual : null,
+        file_url: filePath,
+      })
+      .select('id')
+      .single()
 
     if (insertError) throw new Error(`Error al guardar metadatos: ${insertError.message}`)
     return { id: newDocument.id, content: previewText }
   }
 
   const handleUpload = async () => {
-    if (!file || !category || !fileHash || !universidadId || (!carreraId && !carreraManual) || (!materiaId && !materiaManual)) {
+    if (
+      !file ||
+      !hasText(category) ||
+      !hasText(universidadId) ||
+      !isCareerValid() ||
+      !isSubjectValid()
+    ) {
       setFormError('Completa todos los campos antes de subir.')
       toast.warning('Faltan datos para la subida.')
       return
@@ -163,6 +181,14 @@ export default function UploadForm({
     setFormError('')
 
     try {
+      if (!fileHash) {
+        try {
+          const hash = await calculateHash(file)
+          setFileHash(hash)
+        } catch (err) {
+          console.warn('[UPLOAD_HASH_RETRY_ERROR]', err)
+        }
+      }
       const newDocDetails = await registrarDocumento(file, category)
       const nuevosLogros = (await checkAndGrantAchievements(user!.id)) || []
       await sumarPuntos(user!.id, 15, 'Documento subido')
@@ -170,7 +196,7 @@ export default function UploadForm({
       await checkMissions(user!.id)
 
       if (nuevosLogros.length > 0) {
-        nuevosLogros.forEach(logro => toast.success(`🏆 Nuevo logro desbloqueado: ${logro.name}`))
+        nuevosLogros.forEach((logro) => toast.success(`🏆 Nuevo logro desbloqueado: ${logro.name}`))
       }
 
       toast.success('✅ Documento subido correctamente.')
@@ -200,7 +226,7 @@ export default function UploadForm({
       <input
         type="file"
         accept=".pdf,.docx,.xlsx,.txt"
-        onChange={e => handleFileChange(e.target.files?.[0] || null)}
+        onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
         disabled={loading || parentDisabled}
         className="w-full border p-2 rounded"
       />
@@ -212,8 +238,10 @@ export default function UploadForm({
         disabled={loading}
       >
         <option value="">Selecciona universidad</option>
-        {universidades.map(u => (
-          <option key={u.id} value={u.id}>{u.name}</option>
+        {universidades.map((u) => (
+          <option key={u.id} value={u.id}>
+            {u.name}
+          </option>
         ))}
       </select>
 
@@ -224,8 +252,10 @@ export default function UploadForm({
         disabled={!universidadId || loading}
       >
         <option value="">Selecciona carrera</option>
-        {carreras.map(c => (
-          <option key={c.id} value={c.id}>{c.name}</option>
+        {carreras.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
         ))}
         <option value="otra">Otra carrera (escribir manualmente)</option>
       </select>
@@ -235,7 +265,7 @@ export default function UploadForm({
           type="text"
           placeholder="Escribe tu carrera"
           value={carreraManual}
-          onChange={e => setCarreraManual(e.target.value)}
+          onChange={(e) => setCarreraManual(e.target.value)}
           className="w-full border p-2 rounded"
         />
       )}
@@ -247,8 +277,10 @@ export default function UploadForm({
         disabled={!carreraId || loading}
       >
         <option value="">Selecciona materia</option>
-        {materias.map(m => (
-          <option key={m.id} value={m.id}>{m.name}</option>
+        {materias.map((m) => (
+          <option key={m.id} value={m.id}>
+            {m.name}
+          </option>
         ))}
         <option value="otra">Otra materia (escribir manualmente)</option>
       </select>
@@ -258,7 +290,7 @@ export default function UploadForm({
           type="text"
           placeholder="Escribe tu materia"
           value={materiaManual}
-          onChange={e => setMateriaManual(e.target.value)}
+          onChange={(e) => setMateriaManual(e.target.value)}
           className="w-full border p-2 rounded"
         />
       )}
@@ -266,7 +298,7 @@ export default function UploadForm({
       <select
         className="w-full border p-2 rounded"
         value={category}
-        onChange={e => setCategory(e.target.value)}
+        onChange={(e) => setCategory(e.target.value)}
         disabled={!file || loading || parentDisabled}
       >
         <option value="">Selecciona categoría</option>
@@ -280,7 +312,15 @@ export default function UploadForm({
 
       <button
         onClick={handleUpload}
-        disabled={loading || !file || !category || !fileHash || !universidadId || (!carreraId && !carreraManual) || (!materiaId && !materiaManual) || parentDisabled}
+        disabled={
+          loading ||
+          !file ||
+          !hasText(category) ||
+          !hasText(universidadId) ||
+          !isCareerValid() ||
+          !isSubjectValid() ||
+          parentDisabled
+        }
         className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
       >
         {loading ? 'Subiendo...' : '📤 Subir documento'}

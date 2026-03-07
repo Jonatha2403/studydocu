@@ -126,6 +126,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [perfil, setPerfil] = useState<PerfilExtendido | null>(null)
   const [loading, setLoading] = useState(true)
   const [perfilError, setPerfilError] = useState(false)
+  const hasBootstrappedRef = useRef(false)
 
   // ✅ evita llamadas simultáneas (focus + onAuthStateChange)
   const inFlightRef = useRef<Promise<void> | null>(null)
@@ -150,7 +151,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       if (inFlightRef.current) return inFlightRef.current
 
       const task = (async () => {
-        setLoading(true)
+        if (!hasBootstrappedRef.current || forceFresh) {
+          setLoading(true)
+        }
         setPerfilError(false)
 
         try {
@@ -263,6 +266,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           setPerfilError(true)
         } finally {
           setLoading(false)
+          hasBootstrappedRef.current = true
         }
       })()
 
