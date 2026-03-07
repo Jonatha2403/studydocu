@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import DownloadButton from '@/components/DownloadButton'
 import { useCallback, useEffect, useState } from 'react'
@@ -8,9 +8,9 @@ import Link from 'next/link'
 
 const CATEGORIAS = ['Resumen', 'Ensayo', 'Tarea', 'Examen'] as const
 const ORDENES = [
-  { label: 'Más recientes', value: 'created_at' },
-  { label: 'Más descargados', value: 'download_count' },
-  { label: 'Más populares', value: 'likes' },
+  { label: 'MÃ¡s recientes', value: 'created_at' },
+  { label: 'MÃ¡s descargados', value: 'download_count' },
+  { label: 'MÃ¡s populares', value: 'likes' },
 ] as const
 const FORMATOS = ['pdf', 'docx', 'xlsx'] as const
 
@@ -97,28 +97,28 @@ export default function ExplorarPage() {
   }, [fetchUniversidades, handleBuscar])
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-2">
-        📚 Explorar documentos
+    <div className="mx-auto max-w-6xl px-4 pb-10 pt-24 sm:pt-28 lg:pt-10">
+      <h1 className="mb-8 flex items-center justify-center gap-2 text-center text-2xl font-bold sm:text-3xl">
+        ðŸ“š Explorar documentos
       </h1>
 
-      {/* Filtros + botón */}
+      {/* Filtros + botÃ³n */}
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
-        {/* Búsqueda */}
+        {/* BÃºsqueda */}
         <input
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
-          placeholder="🔍 Buscar por nombre..."
+          placeholder="ðŸ” Buscar por nombre..."
           className="md:col-span-2 rounded-2xl px-4 py-2 text-sm border border-border shadow-sm focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-800 dark:text-white"
         />
 
-        {/* Categoría */}
+        {/* CategorÃ­a */}
         <select
           value={categoria}
           onChange={(e) => setCategoria(e.target.value as any)}
           className="rounded-2xl px-4 py-2 text-sm border border-border shadow-sm focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-800 dark:text-white"
         >
-          <option value="Todos">Todas las categorías</option>
+          <option value="Todos">Todas las categorÃ­as</option>
           {CATEGORIAS.map((cat) => (
             <option key={cat} value={cat}>
               {cat}
@@ -168,7 +168,7 @@ export default function ExplorarPage() {
         </select>
       </div>
 
-      {/* Botón buscar */}
+      {/* BotÃ³n buscar */}
       <div className="flex justify-center mb-8">
         <button
           onClick={handleBuscar}
@@ -188,13 +188,13 @@ export default function ExplorarPage() {
           <table className="min-w-full text-sm">
             <thead className="bg-muted text-foreground">
               <tr>
-                <th className="px-4 py-3 text-left">📄 Documento</th>
-                <th className="px-4 py-3">🏷️ Categoría</th>
-                <th className="px-4 py-3">🎓 Universidad</th>
-                <th className="px-4 py-3">👤 Autor</th>
-                <th className="px-4 py-3">⬇️ Descargas</th>
-                <th className="px-4 py-3">👍 Likes</th>
-                <th className="px-4 py-3">🔗 Acción</th>
+                <th className="px-4 py-3 text-left">ðŸ“„ Documento</th>
+                <th className="px-4 py-3">ðŸ·ï¸ CategorÃ­a</th>
+                <th className="px-4 py-3">ðŸŽ“ Universidad</th>
+                <th className="px-4 py-3">ðŸ‘¤ Autor</th>
+                <th className="px-4 py-3">â¬‡ï¸ Descargas</th>
+                <th className="px-4 py-3">ðŸ‘ Likes</th>
+                <th className="px-4 py-3">ðŸ”— AcciÃ³n</th>
               </tr>
             </thead>
             <tbody>
@@ -222,11 +222,11 @@ export default function ExplorarPage() {
         </div>
       ) : (
         <div className="text-center text-muted-foreground mt-10">
-          🚫 No se encontraron resultados.
+          ðŸš« No se encontraron resultados.
           <div className="text-sm mt-2">
-            ¿Quieres ser el primero en subir algo así?{' '}
+            Â¿Quieres ser el primero en subir algo asÃ­?{' '}
             <Link href="/subir" className="underline text-primary">
-              Sube uno aquí
+              Sube uno aquÃ­
             </Link>
             .
           </div>

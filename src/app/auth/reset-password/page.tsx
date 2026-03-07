@@ -1,222 +1,47 @@
-// src/app/auth/reset-password/page.tsx
-'use client'
+﻿'use client'
 
-import { FormEvent, useEffect, useMemo, useState } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
-
-import { getSupabaseBrowserClient } from '@/lib/supabase/client'
+import { useSearchParams } from 'next/navigation'
+import { AlertCircle, KeyRound } from 'lucide-react'
 import PasswordResetForm from '@/components/auth/PasswordResetForm'
-
-type Step = 'request' | 'update' | 'error'
 
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams()
-  const router = useRouter()
-
-  const [step, setStep] = useState<Step>('request')
-  const [loading, setLoading] = useState(false)
-  const [booting, setBooting] = useState(true) // 👈 para el check inicial
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
-
-  // ✅ Cliente Supabase (lazy + cacheado internamente)
-  const supabase = useMemo(() => getSupabaseBrowserClient(), [])
-
-  // 1) Revisar si hay error en la URL o si existe sesión de recuperación
-  useEffect(() => {
-    const run = async () => {
-      setErrorMsg(null)
-      setSuccessMsg(null)
-      setBooting(true)
-
-      const urlError = searchParams?.get('error') ?? null
-
-      // Si el callback nos mandó con error
-      if (urlError) {
-        setStep('error')
-        setErrorMsg(
-          urlError === 'token'
-            ? 'El enlace de recuperación es inválido o ha expirado. Solicita un nuevo correo.'
-            : 'Ocurrió un problema al validar el enlace. Solicita un nuevo correo.'
-        )
-        setBooting(false)
-        return
-      }
-
-      try {
-        // Si venimos del enlace de Supabase, normalmente ya habrá sesión de recovery
-        const { data, error: userError } = await supabase.auth.getUser()
-
-        if (!userError && data?.user) {
-          setStep('update')
-        } else {
-          setStep('request')
-        }
-      } catch (e: any) {
-        // Si faltan env vars o falla el cliente, mostramos error controlado
-        console.error('[reset-password] boot error:', e)
-        setStep('error')
-        setErrorMsg(
-          'No se pudo inicializar la recuperación. Revisa la configuración del sitio (Supabase).'
-        )
-      } finally {
-        setBooting(false)
-      }
-    }
-
-    run()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams])
-
-  // 2) Actualizar la contraseña
-  const handleUpdatePassword = async (e: FormEvent) => {
-    e.preventDefault()
-    setErrorMsg(null)
-    setSuccessMsg(null)
-
-    const pass = password.trim()
-    const pass2 = confirmPassword.trim()
-
-    if (pass.length < 6) {
-      setErrorMsg('La contraseña debe tener al menos 6 caracteres.')
-      return
-    }
-    if (pass !== pass2) {
-      setErrorMsg('Las contraseñas no coinciden.')
-      return
-    }
-
-    try {
-      setLoading(true)
-      const { error } = await supabase.auth.updateUser({ password: pass })
-
-      if (error) {
-        console.error('[reset-password] updateUser error:', error)
-        setErrorMsg('No se pudo actualizar la contraseña. Inténtalo nuevamente.')
-        return
-      }
-
-      setSuccessMsg('¡Contraseña actualizada! Redirigiendo a iniciar sesión…')
-      setPassword('')
-      setConfirmPassword('')
-
-      setTimeout(() => {
-        router.push('/iniciar-sesion')
-      }, 1600)
-    } catch (err) {
-      console.error('[reset-password] fatal:', err)
-      setErrorMsg('Error interno. Inténtalo nuevamente.')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const hasError = Boolean(searchParams?.get('error'))
 
   return (
-    <section className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-muted">
-      {/* ENCABEZADO */}
-      <div className="text-center mb-8 max-w-md">
-        <div className="text-5xl mb-3">🔒</div>
-        <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-          Restablecer contraseña
-        </h1>
-
-        {step === 'request' && (
-          <p className="text-muted-foreground text-base">
-            Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.
-          </p>
-        )}
-
-        {step === 'update' && (
-          <p className="text-muted-foreground text-base">
-            Ingresa tu nueva contraseña para tu cuenta de StudyDocu.
-          </p>
-        )}
-
-        {step === 'error' && (
-          <p className="text-muted-foreground text-base">
-            {errorMsg ??
-              'Hubo un problema con el enlace de recuperación. Puedes solicitar uno nuevo.'}
-          </p>
-        )}
+    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-100 via-indigo-50 to-slate-100 px-4 py-14">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_18%_14%,rgba(99,102,241,0.18),transparent_62%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_82%_20%,rgba(6,182,212,0.14),transparent_62%)]" />
       </div>
 
-      {/* CONTENIDO */}
-      <div className="w-full max-w-md bg-background shadow-lg rounded-2xl p-6 sm:p-8">
-        {/* Loader inicial */}
-        {booting && (
-          <div className="flex flex-col items-center justify-center gap-3 py-10">
-            <Loader2 className="h-6 w-6 animate-spin" />
-            <p className="text-sm text-muted-foreground">Verificando enlace…</p>
+      <div className="relative mx-auto flex min-h-[70vh] w-full max-w-xl flex-col items-center justify-center">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-indigo-200 bg-white/90 shadow-sm">
+            <KeyRound className="h-7 w-7 text-indigo-600" />
           </div>
-        )}
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            Restablecer contrasena
+          </h1>
+          <p className="mx-auto mt-2 max-w-md text-sm text-slate-600 sm:text-base">
+            Ingresa tu correo y te enviaremos un enlace seguro para cambiar tu contrasena.
+          </p>
+        </div>
 
-        {!booting && (
-          <>
-            {/* Paso 1: solicitar correo */}
-            {step === 'request' && <PasswordResetForm />}
+        <div className="w-full rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-[0_24px_60px_-32px_rgba(15,23,42,0.35)] backdrop-blur-xl sm:p-8">
+          {hasError && (
+            <div className="mb-4 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+              <AlertCircle className="mt-0.5 h-4 w-4" />
+              <p>El enlace no es valido o expiro. Solicita uno nuevo.</p>
+            </div>
+          )}
 
-            {/* Paso 2: actualizar contraseña */}
-            {step === 'update' && (
-              <form onSubmit={handleUpdatePassword} className="space-y-4">
-                <div className="space-y-2 text-left">
-                  <label className="text-sm font-medium">Nueva contraseña</label>
-                  <input
-                    type="password"
-                    className="w-full rounded-md border px-3 py-2 text-sm bg-background"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    disabled={loading}
-                    autoComplete="new-password"
-                  />
-                </div>
+          <PasswordResetForm />
 
-                <div className="space-y-2 text-left">
-                  <label className="text-sm font-medium">Confirmar contraseña</label>
-                  <input
-                    type="password"
-                    className="w-full rounded-md border px-3 py-2 text-sm bg-background"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    disabled={loading}
-                    autoComplete="new-password"
-                  />
-                </div>
-
-                {errorMsg && <p className="text-sm text-red-500">{errorMsg}</p>}
-                {successMsg && <p className="text-sm text-emerald-600">{successMsg}</p>}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium disabled:opacity-60"
-                >
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Guardar nueva contraseña
-                </button>
-              </form>
-            )}
-
-            {/* Paso 3: error + reintento */}
-            {step === 'error' && (
-              <div className="space-y-4">
-                {errorMsg && (
-                  <p className="text-sm text-red-500 text-center">{errorMsg}</p>
-                )}
-                <div className="h-px bg-border my-4" />
-                <p className="text-sm text-center text-muted-foreground mb-2">
-                  ¿Quieres intentarlo de nuevo? Solicita un nuevo enlace:
-                </p>
-                <PasswordResetForm />
-              </div>
-            )}
-          </>
-        )}
+          <p className="mt-4 text-center text-xs text-slate-500">
+            Si no recibes el correo, revisa spam o vuelve a intentarlo en 1 minuto.
+          </p>
+        </div>
       </div>
     </section>
   )

@@ -26,7 +26,10 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
   const pathname = usePathname() ?? ''
   const isDashboardOrAdmin = pathname.startsWith('/dashboard') || pathname.startsWith('/admin')
   const isAuthFlowRoute =
-    pathname.startsWith('/onboarding') || pathname.startsWith('/auth/callback')
+    pathname.startsWith('/onboarding') ||
+    pathname.startsWith('/auth/callback') ||
+    pathname.startsWith('/auth/reset-password') ||
+    pathname.startsWith('/auth/cambiar-clave')
 
   useEffect(() => {
     let mounted = true

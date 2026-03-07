@@ -1,11 +1,10 @@
-// src/app/auth/cambiar-clave/page.tsx
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Loader2, Lock } from 'lucide-react'
+import { KeyRound, Loader2, Lock } from 'lucide-react'
 
 export default function CambiarClavePage() {
   const router = useRouter()
@@ -21,36 +20,27 @@ export default function CambiarClavePage() {
 
     const run = async () => {
       try {
-        // 1) Si viene code (PKCE), intercambiamos sesión aquí mismo
         const code = searchParams?.get('code')
-        const type = searchParams?.get('type') // puede venir o no
+        const type = searchParams?.get('type')
 
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code)
           if (error) throw error
         }
 
-        // 2) Confirmar sesión
         const { data, error } = await supabase.auth.getSession()
         if (error) throw error
 
         const session = data.session
-
-        // Si NO hay sesión, link inválido/expirado
         if (!session) {
-          toast.error('Tu enlace expiró o no es válido. Solicita uno nuevo.')
-          router.replace('/auth/send-reset')
+          toast.error('El enlace expiro o no es valido. Solicita uno nuevo.')
+          router.replace('/auth/reset-password?error=token')
           return
         }
 
-        // 3) Validación estricta: solo permitir si es un flujo de RECOVERY
-        // - Si viene `type=recovery` -> OK
-        // - Si no viene type, aceptamos solo si el usuario tiene `recovery_sent_at`
         const isRecovery = type === 'recovery' || Boolean(session.user?.recovery_sent_at)
-
         if (!isRecovery) {
-          // Estabas logueado normal y entraste aquí: NO permitir
-          toast.error('Este enlace no corresponde a recuperación de contraseña.')
+          toast.error('Este enlace no corresponde a recuperacion de contrasena.')
           router.replace('/')
           return
         }
@@ -59,8 +49,8 @@ export default function CambiarClavePage() {
         setChecking(false)
       } catch (e: any) {
         console.error('[CAMBIAR_CLAVE] error:', e)
-        toast.error(e?.message || 'No se pudo validar el enlace de recuperación.')
-        router.replace('/auth/send-reset')
+        toast.error(e?.message || 'No se pudo validar el enlace de recuperacion.')
+        router.replace('/auth/reset-password?error=token')
       }
     }
 
@@ -75,87 +65,99 @@ export default function CambiarClavePage() {
     e.preventDefault()
 
     if (password.length < 6) {
-      toast.error('La contraseña debe tener al menos 6 caracteres.')
+      toast.error('La contrasena debe tener al menos 6 caracteres.')
       return
     }
     if (password !== confirmPassword) {
-      toast.error('Las contraseñas no coinciden.')
+      toast.error('Las contrasenas no coinciden.')
       return
     }
 
     setLoading(true)
 
     const { error } = await supabase.auth.updateUser({ password })
-
     if (error) {
       toast.error(error.message)
       setLoading(false)
       return
     }
 
-    toast.success('Contraseña actualizada con éxito 🎉')
+    toast.success('Contrasena actualizada con exito.')
 
-    // Recomendado: cerrar sesión para re-login
     await supabase.auth.signOut()
-    router.replace('/iniciar-sesion')
-    setLoading(false)
+    window.location.replace('/iniciar-sesion?reset=ok')
   }
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex items-center gap-2 text-muted-foreground">
+      <div className="grid min-h-screen place-items-center">
+        <div className="flex items-center gap-2 text-sm text-slate-600">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span>Validando enlace...</span>
+          Validando enlace...
         </div>
       </div>
     )
   }
 
   return (
-    <section className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-muted">
-      <div className="text-center mb-8 max-w-md">
-        <div className="text-5xl mb-3">🔑</div>
-        <h1 className="text-3xl font-bold mb-2">Cambia tu contraseña</h1>
-        <p className="text-muted-foreground text-base">Ingresa tu nueva contraseña segura.</p>
+    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-100 via-indigo-50 to-slate-100 px-4 py-14">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_18%_14%,rgba(99,102,241,0.18),transparent_62%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_82%_20%,rgba(6,182,212,0.14),transparent_62%)]" />
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md bg-white dark:bg-gray-900/90 backdrop-blur p-8 rounded-3xl shadow-2xl space-y-6"
-      >
-        <div className="relative">
-          <Lock className="absolute left-3 top-3.5 text-gray-400" size={20} />
-          <input
-            type="password"
-            placeholder="Nueva contraseña"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="pl-10 w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-white placeholder-gray-400"
-          />
+      <div className="relative mx-auto flex min-h-[70vh] w-full max-w-xl flex-col items-center justify-center">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-indigo-200 bg-white/90 shadow-sm">
+            <KeyRound className="h-7 w-7 text-indigo-600" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            Cambia tu contrasena
+          </h1>
+          <p className="mx-auto mt-2 max-w-md text-sm text-slate-600 sm:text-base">
+            Ingresa una nueva contrasena segura para tu cuenta.
+          </p>
         </div>
 
-        <div className="relative">
-          <Lock className="absolute left-3 top-3.5 text-gray-400" size={20} />
-          <input
-            type="password"
-            placeholder="Confirmar contraseña"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            className="pl-10 w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-white placeholder-gray-400"
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all duration-150 disabled:opacity-70"
+        <form
+          onSubmit={handleSubmit}
+          className="w-full rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-[0_24px_60px_-32px_rgba(15,23,42,0.35)] backdrop-blur-xl sm:p-8"
         >
-          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Guardar nueva contraseña'}
-        </button>
-      </form>
+          <div className="space-y-4">
+            <div className="relative">
+              <Lock className="absolute left-3 top-3.5 text-slate-400" size={20} />
+              <input
+                type="password"
+                placeholder="Nueva contrasena"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full rounded-xl border border-slate-300 bg-white p-3 pl-10 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+
+            <div className="relative">
+              <Lock className="absolute left-3 top-3.5 text-slate-400" size={20} />
+              <input
+                type="password"
+                placeholder="Confirmar contrasena"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="w-full rounded-xl border border-slate-300 bg-white p-3 pl-10 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 font-semibold text-white transition hover:brightness-110 disabled:opacity-70"
+            >
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Guardar nueva contrasena'}
+            </button>
+          </div>
+        </form>
+      </div>
     </section>
   )
 }
