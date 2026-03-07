@@ -1,7 +1,6 @@
-// src/app/dashboard/configuracion/page.tsx
-'use client'
+﻿'use client'
 
-import { useEffect, useRef, useState, ChangeEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useUserContext } from '@/context/UserContext'
 import { toast } from 'sonner'
@@ -10,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Loader2, Upload, User2, Images, X } from 'lucide-react'
+import { Loader2, Upload, User2, Images, X, Check, AlertCircle } from 'lucide-react'
 import LottieAvatar from '@/components/LottieAvatar'
 
 const LOTTIE_PRESETS = [
@@ -24,16 +23,22 @@ const LOTTIE_PRESETS = [
   '/avatars/lottie/avatar8.json',
 ]
 
+const getCleanUrl = (u?: string | null) => (u ? u.split('?')[0] : '')
+type UsernameStatus = 'idle' | 'checking' | 'available' | 'unavailable'
+
 export default function ConfiguracionPage() {
   const { user, perfil, refrescarUsuario } = useUserContext()
+
   const [username, setUsername] = useState('')
-  const [email, setEmail] = useState<string>('')
+  const [email, setEmail] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
 
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
-
   const [showLottiePicker, setShowLottiePicker] = useState(false)
+  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>('idle')
+  const [usernameHelp, setUsernameHelp] = useState<string>('')
+
   const [darkMode, setDarkMode] = useState(false)
   const [notifications, setNotifications] = useState(true)
 
@@ -41,12 +46,8 @@ export default function ConfiguracionPage() {
   const openFilePicker = () => fileInputRef.current?.click()
 
   useEffect(() => {
-    console.log('✅ Configuración hidratada')
-  }, [])
-
-  // Cargar perfil
-  useEffect(() => {
     if (!user) return
+
     setEmail(user.email ?? '')
 
     if (perfil) {
@@ -66,12 +67,67 @@ export default function ConfiguracionPage() {
         console.error('[LOAD_PROFILE_ERROR]', error)
         return
       }
+
       setUsername(data?.username ?? '')
       setAvatarUrl(data?.avatar_url ?? null)
     })()
   }, [user, perfil])
 
-  /** Subir imagen desde el dispositivo */
+  useEffect(() => {
+    const raw = username.trim()
+    const current = (perfil?.username ?? '').trim().toLowerCase()
+    const normalized = raw.toLowerCase()
+
+    if (!normalized) {
+      setUsernameStatus('idle')
+      setUsernameHelp('Debe tener entre 3 y 20 caracteres.')
+      return
+    }
+
+    if (!/^[a-z0-9._-]{3,20}$/i.test(raw)) {
+      setUsernameStatus('unavailable')
+      setUsernameHelp('Solo letras, numeros, punto, guion y guion bajo.')
+      return
+    }
+
+    if (normalized === current) {
+      setUsernameStatus('idle')
+      setUsernameHelp('Sin cambios.')
+      return
+    }
+
+    let active = true
+    setUsernameStatus('checking')
+    setUsernameHelp('Verificando disponibilidad...')
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/user/check-username', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: normalized }),
+        })
+        const payload = await res.json().catch(() => ({}))
+        if (!active) return
+        if (payload?.available) {
+          setUsernameStatus('available')
+          setUsernameHelp('Disponible.')
+        } else {
+          setUsernameStatus('unavailable')
+          setUsernameHelp('No disponible.')
+        }
+      } catch {
+        if (!active) return
+        setUsernameStatus('idle')
+        setUsernameHelp('No se pudo verificar ahora.')
+      }
+    }, 500)
+
+    return () => {
+      active = false
+      clearTimeout(timer)
+    }
+  }, [username, perfil?.username])
+
   const handleAvatarChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.currentTarget.value = ''
@@ -82,19 +138,18 @@ export default function ConfiguracionPage() {
         toast.error('El archivo debe ser una imagen.')
         return
       }
+
       if (file.size > 2 * 1024 * 1024) {
-        toast.error('Máximo 2MB.')
+        toast.error('Maximo 2MB.')
         return
       }
 
       const { data: sessionData } = await supabase.auth.getSession()
       if (!sessionData.session) {
-        toast.error('Sesión expirada. Inicia sesión nuevamente.')
+        toast.error('Sesion expirada. Inicia sesion nuevamente.')
         return
       }
 
-      const tmpUrl = URL.createObjectURL(file)
-      setAvatarUrl(tmpUrl)
       setUploading(true)
 
       const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
@@ -107,7 +162,6 @@ export default function ConfiguracionPage() {
       if (uploadError) {
         console.error('[UPLOAD_ERROR]', uploadError)
         toast.error(uploadError.message || 'No se pudo subir el archivo.')
-        setAvatarUrl(perfil?.avatar_url ?? null)
         return
       }
 
@@ -121,29 +175,24 @@ export default function ConfiguracionPage() {
 
       if (updateError) {
         console.error('[DB_UPDATE_ERROR]', updateError)
-        toast.error('La imagen subió, pero no se pudo guardar en tu perfil.')
-        setAvatarUrl(perfil?.avatar_url ?? null)
+        toast.error('La imagen subio, pero no se pudo guardar en tu perfil.')
         return
       }
 
       setAvatarUrl(`${publicUrl}?v=${Date.now()}`)
-      toast.success('Avatar actualizado ✨')
-
-      // 🔄 Refrescar perfil global
+      toast.success('Avatar actualizado')
       void refrescarUsuario()
-    } catch (err: any) {
+    } catch (err) {
       console.error('[UNEXPECTED_UPLOAD_ERROR]', err)
       toast.error('Error inesperado al subir.')
-      setAvatarUrl(perfil?.avatar_url ?? null)
     } finally {
       setUploading(false)
     }
   }
 
-  /** Elegir avatar animado Lottie */
   const handleChooseLottie = async (url: string) => {
     if (!user) {
-      toast.error('No hay usuario en sesión.')
+      toast.error('No hay usuario en sesion.')
       return
     }
 
@@ -152,100 +201,80 @@ export default function ConfiguracionPage() {
 
       const { data: sessionData } = await supabase.auth.getSession()
       if (!sessionData.session) {
-        toast.error('Sesión expirada. Inicia sesión nuevamente.')
+        toast.error('Sesion expirada. Inicia sesion nuevamente.')
         return
       }
 
-      const { data: updData, error: updErr } = await supabase
+      const { error: updErr } = await supabase
         .from('profiles')
         .update({ avatar_url: url, updated_at: new Date().toISOString() })
         .eq('id', user.id)
-        .select('id')
-
-      const updated = !updErr && (updData?.length ?? 0) > 0
-      if (updated) {
-        setAvatarUrl(`${url}?v=${Date.now()}`)
-        toast.success('Avatar actualizado ✨')
-        setShowLottiePicker(false)
-        void refrescarUsuario()
-        return
-      }
 
       if (updErr) {
         console.error('[PRESET_CHOOSE_ERROR:UPDATE]', updErr)
-      }
-
-      const payloadInsert: Record<string, any> = {
-        id: user.id,
-        avatar_url: url,
-        username: (perfil?.username ?? username?.trim()) ?? 'usuario',
-        nombre_completo: (perfil as any)?.nombre_completo ?? 'Sin nombre',
-        role: (perfil as any)?.role ?? 'user',
-        email: user.email ?? null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
-
-      const { error: insErr } = await supabase.from('profiles').insert(payloadInsert)
-
-      if (insErr) {
-        // @ts-ignore
-        if (insErr.code === '23505') {
-          const { error: updAfterDup } = await supabase
-            .from('profiles')
-            .update({ avatar_url: url, updated_at: new Date().toISOString() })
-            .eq('id', user.id)
-
-          if (updAfterDup) {
-            console.error('[PRESET_CHOOSE_ERROR:UPDATE_AFTER_DUP]', updAfterDup)
-            toast.error('No se pudo actualizar el avatar (duplicado).')
-            return
-          }
-
-          setAvatarUrl(`${url}?v=${Date.now()}`)
-          toast.success('Avatar actualizado ✨')
-          setShowLottiePicker(false)
-          void refrescarUsuario()
-          return
-        }
-
-        console.error('[PRESET_CHOOSE_ERROR:INSERT]', insErr)
         toast.error('No se pudo guardar el avatar seleccionado.')
         return
       }
 
       setAvatarUrl(`${url}?v=${Date.now()}`)
-      toast.success('Avatar actualizado ✨')
       setShowLottiePicker(false)
+      toast.success('Avatar actualizado')
       void refrescarUsuario()
-    } catch (err: any) {
+    } catch (err) {
       console.error('[PRESET_CHOOSE_ERROR:CATCH]', err)
-      toast.error(err?.message || 'No se pudo guardar el avatar seleccionado.')
+      toast.error('No se pudo guardar el avatar seleccionado.')
     } finally {
       setSaving(false)
     }
   }
 
-  /** Guardar datos básicos (username + avatar actual) */
   const handleSave = async () => {
     if (!user) return
+
     try {
       setSaving(true)
+      const normalized = username.trim().toLowerCase()
+      const current = (perfil?.username ?? '').trim().toLowerCase()
+
+      if (normalized && !/^[a-z0-9._-]{3,20}$/.test(normalized)) {
+        toast.error('Username invalido. Usa 3-20 caracteres.')
+        return
+      }
+
+      if (normalized && normalized !== current) {
+        if (usernameStatus === 'checking') {
+          toast.error('Espera a que termine la validacion de username.')
+          return
+        }
+        if (usernameStatus === 'unavailable') {
+          toast.error('Ese username no esta disponible.')
+          return
+        }
+        const unameRes = await fetch('/api/user/update-username', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: normalized }),
+        })
+        const unamePayload = await unameRes.json().catch(() => ({}))
+        if (!unameRes.ok) {
+          toast.error(unamePayload?.error || 'No se pudo actualizar el username.')
+          return
+        }
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({
-          username: (username ?? '').trim() || null,
           avatar_url: avatarUrl ? avatarUrl.split('?v=')[0] : null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id)
 
       if (error) throw error
-      toast.success('Perfil guardado correctamente ✅')
 
-      // 🔄 Refrescar perfil global después de guardar
+      toast.success('Perfil guardado correctamente')
       void refrescarUsuario()
-    } catch (err: any) {
+    } catch (err) {
       console.error('[SAVE_PROFILE_ERROR]', err)
       toast.error('No se pudo guardar el perfil')
     } finally {
@@ -253,37 +282,24 @@ export default function ConfiguracionPage() {
     }
   }
 
-  const cleanUrl = avatarUrl?.split('?v=')[0] || null
-  const isLottie = !!cleanUrl && cleanUrl.endsWith('.json')
+  const cleanUrl = getCleanUrl(avatarUrl)
+  const isLottie = cleanUrl.endsWith('.json')
 
   return (
-    <div className="p-6 space-y-8 pointer-events-auto">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-bold">⚙️ Configuración</h1>
+    <div className="mx-auto w-full max-w-5xl space-y-6 px-3 pb-10 pt-4 sm:px-6 sm:pt-6">
+      <header className="rounded-2xl border bg-background/70 p-4 sm:p-6">
+        <h1 className="text-2xl font-bold tracking-tight">Configuracion</h1>
         <p className="text-muted-foreground">
           Actualiza tu perfil y personaliza tu experiencia en StudyDocu.
         </p>
       </header>
 
-      {/* Botón de prueba */}
-      <div className="mb-4">
-        <Button
-          type="button"
-          variant="outline"
-          className="cursor-pointer"
-          onClick={() => alert('Click OK (botón de prueba)')}
-        >
-          Probar click (debug)
-        </Button>
-      </div>
-
-      {/* Perfil */}
-      <section className="rounded-2xl border p-5 md:p-6 space-y-6 pointer-events-auto">
+      <section className="rounded-2xl border bg-background p-4 sm:p-6 space-y-6">
         <h2 className="text-lg font-semibold">Perfil</h2>
 
-        <div className="flex flex-col sm:flex-row gap-5 sm:items-center">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           {isLottie ? (
-            <LottieAvatar src={cleanUrl!} size={80} />
+            <LottieAvatar src={cleanUrl} size={80} />
           ) : (
             <Avatar className="h-20 w-20">
               <AvatarImage src={avatarUrl ?? undefined} alt="Avatar" />
@@ -294,7 +310,6 @@ export default function ConfiguracionPage() {
           )}
 
           <div className="flex flex-wrap gap-3">
-            {/* Subir archivo */}
             <input
               ref={fileInputRef}
               type="file"
@@ -302,15 +317,17 @@ export default function ConfiguracionPage() {
               className="hidden"
               onChange={handleAvatarChange}
             />
+
             <Button
               type="button"
               variant="secondary"
               onClick={openFilePicker}
               className="cursor-pointer"
+              disabled={uploading || saving}
             >
               {uploading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Subiendo...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Subiendo
                 </>
               ) : (
                 <>
@@ -319,12 +336,12 @@ export default function ConfiguracionPage() {
               )}
             </Button>
 
-            {/* Elegir Lottie */}
             <Button
               type="button"
               variant="outline"
               onClick={() => setShowLottiePicker(true)}
               className="cursor-pointer"
+              disabled={saving}
             >
               <Images className="mr-2 h-4 w-4" />
               Elegir avatar animado
@@ -332,7 +349,7 @@ export default function ConfiguracionPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="username">Nombre de usuario</Label>
             <Input
@@ -341,13 +358,21 @@ export default function ConfiguracionPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
+            <p className="flex items-center gap-2 text-xs text-muted-foreground">
+              {usernameStatus === 'available' && <Check className="h-3.5 w-3.5 text-emerald-600" />}
+              {usernameStatus === 'unavailable' && (
+                <AlertCircle className="h-3.5 w-3.5 text-red-500" />
+              )}
+              {usernameStatus === 'checking' && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {usernameHelp}
+            </p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="email">Correo</Label>
             <Input id="email" value={email} disabled />
             <p className="text-xs text-muted-foreground">
-              El correo se gestiona desde la autenticación.{' '}
+              El correo se gestiona desde la autenticacion.{' '}
               <a className="underline underline-offset-2" href="/dashboard/perfil">
                 Ver perfil
               </a>
@@ -356,15 +381,18 @@ export default function ConfiguracionPage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Button onClick={handleSave} className="cursor-pointer">
+          <Button
+            onClick={handleSave}
+            className="cursor-pointer"
+            disabled={saving || usernameStatus === 'checking'}
+          >
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Guardar cambios
           </Button>
         </div>
       </section>
 
-      {/* Preferencias */}
-      <section className="rounded-2xl border p-5 md:p-6 space-y-4 pointer-events-auto">
+      <section className="rounded-2xl border bg-background p-4 sm:p-6 space-y-4">
         <h2 className="text-lg font-semibold">Preferencias de interfaz</h2>
         <div className="flex items-center justify-between">
           <Label htmlFor="dark-mode">Modo oscuro</Label>
@@ -372,28 +400,22 @@ export default function ConfiguracionPage() {
         </div>
       </section>
 
-      {/* Notificaciones */}
-      <section className="rounded-2xl border p-5 md:p-6 space-y-4 pointer-events-auto">
+      <section className="rounded-2xl border bg-background p-4 sm:p-6 space-y-4">
         <h2 className="text-lg font-semibold">Notificaciones</h2>
         <div className="flex items-center justify-between">
           <Label htmlFor="notifications">Activar notificaciones</Label>
-          <Switch
-            id="notifications"
-            checked={notifications}
-            onCheckedChange={setNotifications}
-          />
+          <Switch id="notifications" checked={notifications} onCheckedChange={setNotifications} />
         </div>
       </section>
 
-      {/* Seguridad */}
-      <section className="rounded-2xl border p-5 md:p-6 space-y-3 pointer-events-auto">
+      <section className="rounded-2xl border bg-background p-4 sm:p-6 space-y-3">
         <h2 className="text-lg font-semibold">Seguridad</h2>
         <p className="text-sm text-muted-foreground">
-          Gestiona tu contraseña desde el flujo de autenticación.
+          Gestiona tu contrasena desde el flujo de autenticacion.
         </p>
         <div className="flex flex-wrap gap-3">
           <Button variant="outline" asChild>
-            <a href="/reset-password">Cambiar contraseña</a>
+            <a href="/reset-password">Cambiar contrasena</a>
           </Button>
           <Button variant="destructive" asChild>
             <a href="/dashboard/cuenta/eliminar">Eliminar cuenta</a>
@@ -401,29 +423,40 @@ export default function ConfiguracionPage() {
         </div>
       </section>
 
-      {/* Modal Lottie avatars */}
       {showLottiePicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full mx-4 p-4 md:p-6 relative">
+        <div
+          className="fixed inset-0 z-[70] flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
+          onClick={() => setShowLottiePicker(false)}
+        >
+          <div
+            className="relative max-h-[85vh] w-full overflow-y-auto rounded-t-2xl border bg-white p-4 shadow-xl sm:max-w-2xl sm:rounded-2xl sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => setShowLottiePicker(false)}
-              className="absolute right-3 top-3 p-1 rounded-full hover:bg-gray-100"
+              className="absolute right-3 top-3 rounded-full p-1 hover:bg-gray-100"
+              aria-label="Cerrar selector"
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" />
             </button>
 
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Images className="w-4 h-4" />
+            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+              <Images className="h-4 w-4" />
               Elige un avatar animado
             </h2>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 py-2">
+            <div className="grid grid-cols-2 gap-3 py-2 sm:grid-cols-3 md:grid-cols-4">
               {LOTTIE_PRESETS.map((src) => (
                 <button
                   key={src}
                   type="button"
                   onClick={() => handleChooseLottie(src)}
-                  className="rounded-xl border p-2 hover:ring-2 hover:ring-primary transition flex items-center justify-center cursor-pointer"
+                  disabled={saving}
+                  className={`flex cursor-pointer items-center justify-center rounded-xl border p-2 transition disabled:opacity-60 ${
+                    cleanUrl === src
+                      ? 'border-primary ring-2 ring-primary'
+                      : 'hover:ring-2 hover:ring-primary/60'
+                  }`}
                 >
                   <LottieAvatar src={src} size={80} />
                 </button>

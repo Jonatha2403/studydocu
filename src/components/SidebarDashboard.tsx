@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -20,10 +20,12 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
-import { useUserContext } from '@/context/UserContext' // ✅ usa tu contexto
+import { useUserContext } from '@/context/UserContext'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import LottieAvatar from '@/components/LottieAvatar'
 
 export default function SidebarDashboard() {
-  const { perfil } = useUserContext() // ✅ ya no necesitas props
+  const { perfil } = useUserContext()
   const pathname = usePathname()
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -32,7 +34,7 @@ export default function SidebarDashboard() {
     { label: 'Inicio', href: '/', icon: Home },
     { label: 'Subir Docs', href: '/subir', icon: FilePlus },
     { label: 'Explorar', href: '/explorar', icon: Search },
-    { label: 'Favoritos', href: '/favoritos', icon: BookOpen }
+    { label: 'Favoritos', href: '/favoritos', icon: BookOpen },
   ]
 
   const navDashboard = [
@@ -40,13 +42,17 @@ export default function SidebarDashboard() {
     { label: 'Mis Documentos', href: '/dashboard/documentos', icon: BookOpenCheck },
     { label: 'Mi Perfil', href: '/dashboard/perfil', icon: User },
     { label: 'Logros', href: '/dashboard/logros', icon: Medal },
-    { label: 'Configuración', href: '/dashboard/configuracion', icon: Settings }
+    { label: 'Configuracion', href: '/dashboard/configuracion', icon: Settings },
   ]
+
+  const cleanAvatarUrl = (perfil?.avatar_url || '').split('?')[0]
+  const isLottieAvatar = cleanAvatarUrl.endsWith('.json')
+  const initial = perfil?.username?.charAt(0).toUpperCase() || 'U'
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
     localStorage.removeItem('perfil')
-    toast.success('Sesión cerrada')
+    toast.success('Sesion cerrada')
     router.push('/')
   }
 
@@ -58,10 +64,10 @@ export default function SidebarDashboard() {
           key={href}
           href={href}
           onClick={() => setOpen(false)}
-          className={`relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all font-medium ${
+          className={`relative flex items-center gap-3 rounded-lg px-4 py-2 font-medium transition-all ${
             active
-              ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-yellow-300'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+              ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-yellow-300'
+              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
           }`}
         >
           <Icon size={20} />
@@ -69,7 +75,7 @@ export default function SidebarDashboard() {
           {active && (
             <motion.div
               layoutId="active-pill"
-              className="absolute left-0 h-full w-1 bg-indigo-500 dark:bg-yellow-400 rounded-r"
+              className="absolute left-0 h-full w-1 rounded-r bg-indigo-500 dark:bg-yellow-400"
             />
           )}
         </Link>
@@ -78,87 +84,106 @@ export default function SidebarDashboard() {
 
   return (
     <>
-      {/* 📱 Botón flotante en móviles */}
-      <div className="md:hidden fixed top-4 left-4 z-50">
+      <div className="fixed left-4 top-4 z-50 md:hidden">
         <button
           onClick={() => setOpen(true)}
-          className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-300 dark:border-gray-600"
+          className="rounded-full border border-gray-300 bg-white p-2 shadow-md dark:border-gray-600 dark:bg-gray-800"
+          aria-label="Abrir menu"
         >
           <Menu className="text-gray-800 dark:text-gray-100" size={24} />
         </button>
       </div>
 
-      {/* 🖥️ Sidebar escritorio */}
-      <aside className="hidden md:flex flex-col h-screen w-60 bg-white dark:bg-gray-900 border-r dark:border-gray-700 shadow-lg">
-        <div className="flex flex-col justify-between h-full p-4">
-          <div className="mt-0">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">📚 StudyDocu</h2>
+      <aside className="hidden h-screen w-60 flex-col border-r bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900 md:flex">
+        <div className="flex h-full flex-col justify-between p-4">
+          <div>
+            <h2 className="mb-2 text-xl font-bold text-gray-800 dark:text-white">StudyDocu</h2>
             {perfil?.username && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
                 Bienvenido, {perfil.username}
               </p>
             )}
-            <nav className="flex flex-col gap-1 mb-6">{renderLinks(navMain)}</nav>
+            <nav className="mb-6 flex flex-col gap-1">{renderLinks(navMain)}</nav>
             <hr className="my-2 border-gray-300 dark:border-gray-700" />
             <nav className="flex flex-col gap-1">{renderLinks(navDashboard)}</nav>
           </div>
-          <div className="flex items-center gap-3 mt-6">
-            <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-sm font-semibold text-gray-800 dark:text-white">
-              {perfil?.username?.charAt(0).toUpperCase()}
-            </div>
+
+          <div className="mt-6 flex items-center gap-3">
+            {isLottieAvatar && cleanAvatarUrl ? (
+              <LottieAvatar src={cleanAvatarUrl} size={36} />
+            ) : (
+              <Avatar className="h-9 w-9">
+                <AvatarImage
+                  src={perfil?.avatar_url || undefined}
+                  alt={perfil?.username || 'Avatar'}
+                />
+                <AvatarFallback className="text-sm font-semibold">{initial}</AvatarFallback>
+              </Avatar>
+            )}
+
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 text-sm text-red-500 hover:text-red-700 transition"
-              title="Cerrar sesión"
+              className="flex items-center gap-2 text-sm text-red-500 transition hover:text-red-700"
+              title="Cerrar sesion"
             >
               <LogOut size={16} />
-              Cerrar sesión
+              Cerrar sesion
             </button>
           </div>
         </div>
       </aside>
 
-      {/* 📱 Drawer móvil */}
       <AnimatePresence>
         {open && (
           <>
             <motion.div
-              className="fixed inset-0 bg-black/40 z-40"
+              className="fixed inset-0 z-40 bg-black/40"
               onClick={() => setOpen(false)}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             />
             <motion.aside
-              className="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-900 z-50 shadow-xl p-6 flex flex-col justify-between"
+              className="fixed left-0 top-0 z-50 flex h-full w-64 flex-col justify-between bg-white p-6 shadow-xl dark:bg-gray-900"
               initial={{ x: -300 }}
               animate={{ x: 0 }}
               exit={{ x: -300 }}
               transition={{ type: 'tween' }}
             >
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-800 dark:text-white">📚 StudyDocu</h2>
-                  <button onClick={() => setOpen(false)}>
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-gray-800 dark:text-white">StudyDocu</h2>
+                  <button onClick={() => setOpen(false)} aria-label="Cerrar menu">
                     <X className="text-gray-800 dark:text-white" />
                   </button>
                 </div>
                 {perfil?.username && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
                     Bienvenido, {perfil.username}
                   </p>
                 )}
-                <nav className="flex flex-col gap-1 mb-6">{renderLinks(navMain)}</nav>
+                <nav className="mb-6 flex flex-col gap-1">{renderLinks(navMain)}</nav>
                 <hr className="my-2 border-gray-300 dark:border-gray-700" />
                 <nav className="flex flex-col gap-1">{renderLinks(navDashboard)}</nav>
               </div>
 
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 text-sm px-4 py-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900 rounded-md mt-4"
+                className="mt-4 flex items-center gap-2 rounded-md px-4 py-2 text-sm text-red-500 hover:bg-red-100 dark:hover:bg-red-900"
               >
+                {isLottieAvatar && cleanAvatarUrl ? (
+                  <LottieAvatar src={cleanAvatarUrl} size={24} />
+                ) : (
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage
+                      src={perfil?.avatar_url || undefined}
+                      alt={perfil?.username || 'Avatar'}
+                    />
+                    <AvatarFallback className="text-[10px]">{initial}</AvatarFallback>
+                  </Avatar>
+                )}
                 <LogOut size={18} />
-                Cerrar sesión
+                Cerrar sesion
               </button>
             </motion.aside>
           </>

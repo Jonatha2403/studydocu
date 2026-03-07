@@ -1,10 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useUserContext } from '@/context/UserContext'
 import LogroCard from './LogroCard'
-import { Progress } from '@/components/ui/Progress'
 import { motion } from 'framer-motion'
 
 type VistaFiltro = 'all' | 'unlocked' | 'locked'
@@ -31,7 +30,7 @@ export default function LogrosList({
   filtro = 'all',
   query = '',
   orden = 'title',
-  onStats
+  onStats,
 }: Props) {
   const { perfil } = useUserContext()
   const [logros, setLogros] = useState<Logro[]>([])
@@ -71,9 +70,9 @@ export default function LogrosList({
 
         const enriched: Logro[] = (allLogros || []).map((l: any) => ({
           id: String(l.id),
-          title: String(l.title ?? 'Logro sin título'),
+          title: String(l.title ?? 'Logro sin tÃ­tulo'),
           description: String(l.description ?? ''),
-          icon: String(l.icon ?? l.emoji ?? '🏅'),
+          icon: String(l.icon ?? l.emoji ?? 'ðŸ…'),
           difficulty: l.difficulty ?? 1,
           created_at: l.created_at ?? null,
           unlocked: ids.has(l.id),
@@ -88,7 +87,7 @@ export default function LogrosList({
         }
       } catch (e) {
         console.error('[logros] unexpected error:', e)
-        if (!cancelled) setError('Ocurrió un error al cargar los logros.')
+        if (!cancelled) setError('OcurriÃ³ un error al cargar los logros.')
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -106,7 +105,7 @@ export default function LogrosList({
       cancelled = true
       clearTimeout(safety)
     }
-  }, [perfil?.id]) // 👈 solo depende del id del usuario, NO de onStats
+  }, [perfil?.id, onStats])
 
   const filtrados = useMemo(() => {
     let arr = [...logros]
@@ -115,9 +114,7 @@ export default function LogrosList({
     const q = query.trim().toLowerCase()
     if (q) {
       arr = arr.filter(
-        (l) =>
-          l.title.toLowerCase().includes(q) ||
-          l.description.toLowerCase().includes(q)
+        (l) => l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q)
       )
     }
     if (orden === 'title') {
@@ -131,17 +128,11 @@ export default function LogrosList({
   }, [logros, filtro, query, orden])
 
   const completados = logros.filter((l) => l.unlocked).length
-  const progreso = logros.length > 0 ? Math.round((completados / logros.length) * 100) : 0
 
   // Loading
   if (loading) {
     return (
       <>
-        <div className="mt-6 max-w-sm mx-auto mb-8">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Progreso total</p>
-          <Progress value={0} />
-          <p className="mt-1 text-xs text-muted-foreground">Cargando…</p>
-        </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="rounded-xl border p-4 animate-pulse">
@@ -160,16 +151,10 @@ export default function LogrosList({
   if (!loading && logros.length === 0) {
     return (
       <>
-        <div className="mt-6 max-w-sm mx-auto mb-8">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Progreso total</p>
-          <Progress value={0} />
-          <p className="mt-1 text-xs text-muted-foreground">0% completado</p>
-        </div>
-
         <div className="rounded-2xl border p-10 text-center">
-          <p className="text-lg font-semibold">Aún no hay logros disponibles</p>
+          <p className="text-lg font-semibold">AÃºn no hay logros disponibles</p>
           <p className="text-sm text-muted-foreground mt-1">
-            Cuando se creen logros, aparecerán aquí. Explora documentos y vuelve más tarde.
+            Cuando se creen logros, aparecerÃ¡n aquÃ­. Explora documentos y vuelve mÃ¡s tarde.
           </p>
           {error && <p className="text-xs text-red-500 mt-3">{error}</p>}
         </div>
@@ -180,34 +165,33 @@ export default function LogrosList({
   // Vista normal
   return (
     <>
-      <div className="mt-6 max-w-sm mx-auto mb-8">
-        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Progreso total</p>
-        <Progress value={progreso} />
-        <p className="mt-1 text-xs text-muted-foreground">
-          {completados} de {logros.length} logros completados
-        </p>
-      </div>
-
       {completados === logros.length && logros.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-gradient-to-r from-purple-600 to-indigo-500 text-white text-center p-6 rounded-xl shadow-xl mb-10"
         >
-          <p className="text-lg font-semibold">🎉 ¡Felicidades!</p>
-          <p className="text-sm">Has desbloqueado todos los logros. ¡Eres un crack estudiantil! 🔥</p>
+          <p className="text-lg font-semibold">ðŸŽ‰ Â¡Felicidades!</p>
+          <p className="text-sm">
+            Has desbloqueado todos los logros. Â¡Eres un crack estudiantil! ðŸ”¥
+          </p>
         </motion.div>
       )}
 
       {filtrados.length === 0 ? (
         <div className="rounded-2xl border p-10 text-center text-muted-foreground">
-          <p className="text-base">No hay logros que coincidan con tu búsqueda o filtro.</p>
-          <p className="text-sm mt-1">Prueba con otra palabra clave o cambia de pestaña.</p>
+          <p className="text-base">No hay logros que coincidan con tu bÃºsqueda o filtro.</p>
+          <p className="text-sm mt-1">Prueba con otra palabra clave o cambia de pestaÃ±a.</p>
         </div>
       ) : (
         <motion.section layout className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filtrados.map((logro, i) => (
-            <motion.div key={logro.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            <motion.div
+              key={logro.id}
+              layout
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
               <LogroCard logro={logro} index={i} />
             </motion.div>
           ))}

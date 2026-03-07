@@ -14,17 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 
 // icons
-import {
-  LogOut,
-  Save,
-  Loader2,
-  Camera,
-  Check,
-  X,
-  ArrowUpRight,
-  Crown,
-  Tags,
-} from 'lucide-react'
+import { LogOut, Save, Loader2, Camera, Check, X, ArrowUpRight, Crown, Tags } from 'lucide-react'
 
 // Lottie avatar
 import LottieAvatar from '@/components/LottieAvatar'
@@ -41,7 +31,7 @@ interface PerfilExtendido {
   avatar_url?: string
   role?: string
   tags?: string[]
-  updated_at?: string   // usado para cache-buster
+  updated_at?: string // usado para cache-buster
 }
 
 type UsernameStatus = 'idle' | 'checking' | 'available' | 'unavailable'
@@ -82,7 +72,7 @@ export default function PerfilPage() {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setLocalProfile(prev => (prev ? { ...prev, [name]: value } : prev))
+    setLocalProfile((prev) => (prev ? { ...prev, [name]: value } : prev))
     if (name === 'username') setUsernameStatus('idle')
   }
 
@@ -98,14 +88,19 @@ export default function PerfilPage() {
       const u = debouncedUsername
       if (!u || u.length < 3) return setUsernameStatus('idle')
       setUsernameStatus('checking')
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', u)
-        .neq('id', user?.id)
-      if (!active) return
-      if (error) return setUsernameStatus('idle')
-      setUsernameStatus((data?.length ?? 0) === 0 ? 'available' : 'unavailable')
+      try {
+        const res = await fetch('/api/user/check-username', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u }),
+        })
+        const payload = await res.json().catch(() => ({}))
+        if (!active) return
+        setUsernameStatus(payload?.available ? 'available' : 'unavailable')
+      } catch {
+        if (!active) return
+        setUsernameStatus('idle')
+      }
     }
     const t = setTimeout(run, 500)
     return () => {
@@ -120,7 +115,9 @@ export default function PerfilPage() {
     const username = localProfile.username ? localProfile.username.trim().toLowerCase() : ''
     const usernameRegex = /^[a-zA-Z0-9_]+$/
     if (username && !usernameRegex.test(username)) {
-      return toast.error('El nombre de usuario solo puede contener letras, números y guiones bajos.')
+      return toast.error(
+        'El nombre de usuario solo puede contener letras, números y guiones bajos.'
+      )
     }
     if (usernameStatus === 'unavailable') {
       return toast.error('El nombre de usuario ya está en uso.')
@@ -128,11 +125,24 @@ export default function PerfilPage() {
 
     setSaving(true)
     try {
+      const currentUsername = (perfil?.username ?? '').trim().toLowerCase()
+      if (username && username !== currentUsername) {
+        const unameRes = await fetch('/api/user/update-username', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+        })
+        const unamePayload = await unameRes.json().catch(() => ({}))
+        if (!unameRes.ok) {
+          throw new Error(unamePayload?.error || 'No se pudo actualizar el username')
+        }
+      }
+
       const updates = {
-        nombre_completo: (localProfile.nombre_completo ? localProfile.nombre_completo.trim() : '') || null,
+        nombre_completo:
+          (localProfile.nombre_completo ? localProfile.nombre_completo.trim() : '') || null,
         carrera: (localProfile.carrera ? localProfile.carrera.trim() : '') || null,
         universidad: (localProfile.universidad ? localProfile.universidad.trim() : '') || null,
-        username: username || null,
         avatar_url: localProfile.avatar_url || null,
         updated_at: new Date().toISOString(),
       }
@@ -178,7 +188,7 @@ export default function PerfilPage() {
         .eq('id', user.id)
       if (updErr) throw updErr
 
-      setLocalProfile(prev =>
+      setLocalProfile((prev) =>
         prev ? { ...prev, avatar_url: pub.publicUrl, updated_at: nowIso } : prev
       )
       setAvatarVersion(Date.now())
@@ -319,12 +329,8 @@ export default function PerfilPage() {
                   <span className="font-semibold text-lg">
                     @{localProfile.username || 'usuario'}
                   </span>
-                  {usernameStatus === 'available' && (
-                    <Check className="h-4 w-4 text-emerald-500" />
-                  )}
-                  {usernameStatus === 'unavailable' && (
-                    <X className="h-4 w-4 text-destructive" />
-                  )}
+                  {usernameStatus === 'available' && <Check className="h-4 w-4 text-emerald-500" />}
+                  {usernameStatus === 'unavailable' && <X className="h-4 w-4 text-destructive" />}
                 </div>
                 <p className="text-xs text-muted-foreground break-all">{user?.email}</p>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -462,11 +468,7 @@ export default function PerfilPage() {
               disabled={saving || usernameStatus === 'checking'}
               className="gap-2 flex-1"
             >
-              {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}{' '}
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}{' '}
               Guardar cambios
             </Button>
           </div>
