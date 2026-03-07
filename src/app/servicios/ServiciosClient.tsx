@@ -396,7 +396,7 @@ export default function ServiciosClient() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 pb-12 pt-24 sm:pt-28 lg:pt-32 lg:pb-16">
+    <main className="mx-auto max-w-7xl px-4 pb-12 pt-24 sm:pt-28 lg:pt-24 lg:pb-16">
       {/* Hero */}
       <motion.section
         className="mb-12 grid items-center gap-8 lg:mb-16 lg:grid-cols-[1.7fr,1.1fr]"
