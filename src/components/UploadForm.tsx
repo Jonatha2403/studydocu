@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { checkAndGrantAchievements } from '@/lib/grantAchievements'
 import type { User } from '@supabase/supabase-js'
@@ -40,6 +40,7 @@ export default function UploadForm({
   const MAX_FILE_SIZE_MB = 25
   const MIN_FILE_SIZE_BYTES = 64
   const MIN_TEXT_CONTENT_LENGTH = 20
+  const MANUAL_FIELD_REGEX = /^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9][A-Za-zÁÉÍÓÚáéíóúÑñ0-9\s\-.,()]{2,99}$/
 
   const calculateHash = async (file: File) => {
     const buffer = await file.arrayBuffer()
@@ -53,6 +54,8 @@ export default function UploadForm({
   const extensionOf = (name: string) => name.toLowerCase().split('.').pop() || ''
   const isTextLikeFile = (name: string) =>
     ['txt', 'md', 'csv', 'ipynb', 'xlsx', 'xls'].includes(extensionOf(name))
+  const cleanText = (value: string) => value.replace(/\s+/g, ' ').trim()
+  const isValidManualText = (value: string) => MANUAL_FIELD_REGEX.test(cleanText(value))
 
   const isCareerValid = () => (carreraId === 'otra' ? hasText(carreraManual) : hasText(carreraId))
 
@@ -69,7 +72,13 @@ export default function UploadForm({
       lowerName.endsWith('.csv')
     ) {
       const text = await file.text()
-      setPreviewText(text.slice(0, 500))
+      const compact = text
+        .split('\n')
+        .slice(0, 12)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .join('\n')
+      setPreviewText(compact.slice(0, 1000))
       return
     }
 
@@ -111,8 +120,18 @@ export default function UploadForm({
           setPreviewText('[No se encontro contenido legible en Excel]')
           return
         }
-        const csv = XLSX.utils.sheet_to_csv(sheet)
-        setPreviewText(csv.slice(0, 1200) || '[Excel sin filas legibles]')
+        const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as Array<Array<unknown>>
+        const lines = matrix
+          .slice(0, 10)
+          .map((row) =>
+            row
+              .slice(0, 8)
+              .map((cell) => String(cell ?? '').trim())
+              .join(' | ')
+          )
+          .filter(Boolean)
+          .join('\n')
+        setPreviewText(lines || '[Excel sin filas legibles]')
       } catch {
         setPreviewText('[No se pudo generar vista previa de Excel]')
       }
@@ -194,11 +213,21 @@ export default function UploadForm({
   }
 
   const registrarDocumento = async (fileToRegister: File, docCategory: string) => {
+    const {
+      data: { user: sessionUser },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !sessionUser?.id) {
+      throw new Error('Tu sesion expiro. Inicia sesion nuevamente para subir documentos.')
+    }
+
     if (!user) throw new Error('Usuario no autenticado.')
 
     const sanitizedFileName = fileToRegister.name.normalize('NFD').replace(/[^\w.\-]/g, '_')
 
-    const filePath = `${user.id}/${Date.now()}_${sanitizedFileName}`
+    const ownerId = sessionUser.id
+    const filePath = `${ownerId}/${Date.now()}_${sanitizedFileName}`
 
     let uploadErrorMessage = ''
     for (let attempt = 1; attempt <= 2; attempt += 1) {
@@ -220,9 +249,11 @@ export default function UploadForm({
 
     if (uploadErrorMessage) {
       throw new Error(
-        /Failed to fetch/i.test(uploadErrorMessage)
-          ? 'No se pudo conectar al servidor de archivos. Revisa internet e intenta nuevamente.'
-          : `Error al subir archivo: ${uploadErrorMessage}`
+        /row-level security|violates row-level security policy/i.test(uploadErrorMessage)
+          ? 'No tienes permisos para guardar en Storage con esta sesion. Cierra sesion e inicia nuevamente.'
+          : /Failed to fetch/i.test(uploadErrorMessage)
+            ? 'No se pudo conectar al servidor de archivos. Revisa internet e intenta nuevamente.'
+            : `Error al subir archivo: ${uploadErrorMessage}`
       )
     }
 
@@ -231,7 +262,7 @@ export default function UploadForm({
     const { data: newDocument, error: insertError } = await supabase
       .from('documents')
       .insert({
-        user_id: user.id,
+        user_id: ownerId,
         file_name: fileToRegister.name,
         title: fileToRegister.name,
         file_path: filePath,
@@ -245,9 +276,9 @@ export default function UploadForm({
         tipo: tipoArchivo,
         university_id: universidadId,
         career_id: carreraId !== 'otra' ? carreraId : null,
-        career_name_manual: carreraId === 'otra' ? carreraManual : null,
+        career_name_manual: carreraId === 'otra' ? cleanText(carreraManual) : null,
         subject_id: materiaId !== 'otra' ? materiaId : null,
-        subject_name_manual: materiaId === 'otra' ? materiaManual : null,
+        subject_name_manual: materiaId === 'otra' ? cleanText(materiaManual) : null,
         file_url: filePath,
       })
       .select('id')
@@ -267,6 +298,22 @@ export default function UploadForm({
     ) {
       setFormError('Completa todos los campos antes de subir.')
       toast.warning('Faltan datos para la subida.')
+      return
+    }
+
+    if (carreraId === 'otra' && !isValidManualText(carreraManual)) {
+      setFormError(
+        'La carrera manual debe tener entre 3 y 100 caracteres y usar solo letras, numeros y signos basicos.'
+      )
+      toast.warning('Corrige el campo de carrera.')
+      return
+    }
+
+    if (materiaId === 'otra' && !isValidManualText(materiaManual)) {
+      setFormError(
+        'La materia manual debe tener entre 3 y 100 caracteres y usar solo letras, numeros y signos basicos.'
+      )
+      toast.warning('Corrige el campo de materia.')
       return
     }
 
@@ -442,9 +489,11 @@ export default function UploadForm({
 
       {formError && <p className="text-red-500 text-sm">{formError}</p>}
       {previewText && (
-        <div className="text-sm bg-gray-100 p-2 rounded">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
           <strong>Vista previa:</strong>
-          <p>{previewText}</p>
+          <pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap text-xs leading-relaxed text-slate-700">
+            {previewText}
+          </pre>
         </div>
       )}
     </div>
