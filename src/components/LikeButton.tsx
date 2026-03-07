@@ -78,12 +78,6 @@ export default function LikeButton({ docId, initialLikes, userId }: LikeButtonPr
       if (likesCountError) throw likesCountError
 
       const totalLikes = count || 0
-      const { error: syncLikesError } = await supabase
-        .from('documents')
-        .update({ likes: totalLikes })
-        .eq('id', docId)
-      if (syncLikesError) throw syncLikesError
-
       setLiked(true)
       setLikes(totalLikes)
     } catch (err) {
