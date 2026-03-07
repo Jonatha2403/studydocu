@@ -139,7 +139,7 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
         )}
 
         {!isAuthFlowRoute && (
-          <footer className="w-full text-muted-foreground border-t border-border bg-white/80 dark:bg-gray-900/80 backdrop-blur-md py-10">
+          <footer className="w-full border-t border-border bg-white/80 py-10 pb-[calc(5.5rem+env(safe-area-inset-bottom))] text-muted-foreground backdrop-blur-md md:pb-10 dark:bg-gray-900/80">
             <div className="max-w-7xl mx-auto px-4 md:px-8 flex flex-col lg:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-3">
                 <Image
