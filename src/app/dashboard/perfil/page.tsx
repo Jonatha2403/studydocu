@@ -52,7 +52,7 @@ const LOTTIE_PRESETS = [
 
 export default function PerfilPage() {
   const router = useRouter()
-  const { user, perfil, loading } = useUserContext()
+  const { user, perfil, loading, refrescarUsuario } = useUserContext()
 
   const [saving, setSaving] = useState(false)
   const [localProfile, setLocalProfile] = useState<PerfilExtendido | null>(null)
@@ -176,21 +176,18 @@ export default function PerfilPage() {
 
     try {
       setSavingAvatar(true)
-      const avatarRes = await fetch('/api/user/update-avatar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ avatar_url: selectedAvatar }),
-      })
-      const payload = await avatarRes.json().catch(() => ({}))
-      if (!avatarRes.ok) {
-        throw new Error(payload?.error || 'No se pudo actualizar el avatar')
-      }
-
       const nowIso = new Date().toISOString()
+      const { error } = await supabase
+        .from('profiles')
+        .update({ avatar_url: selectedAvatar, updated_at: nowIso })
+        .eq('id', user.id)
+      if (error) throw error
+
       setLocalProfile((prev) =>
         prev ? { ...prev, avatar_url: selectedAvatar, updated_at: nowIso } : prev
       )
       setAvatarVersion(Date.now())
+      void refrescarUsuario()
       toast.success('Avatar actualizado')
       setShowAvatarPicker(false)
       router.refresh()

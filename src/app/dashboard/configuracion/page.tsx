@@ -152,17 +152,11 @@ export default function ConfiguracionPage() {
         return
       }
 
-      const updRes = await fetch('/api/user/update-avatar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ avatar_url: selectedAvatar }),
-      })
-      const updPayload = await updRes.json().catch(() => ({}))
-      if (!updRes.ok) {
-        console.error('[PRESET_CHOOSE_ERROR:UPDATE]', updPayload)
-        toast.error(updPayload?.error || 'No se pudo guardar el avatar seleccionado.')
-        return
-      }
+      const { error: updErr } = await supabase
+        .from('profiles')
+        .update({ avatar_url: selectedAvatar, updated_at: new Date().toISOString() })
+        .eq('id', user.id)
+      if (updErr) throw updErr
 
       setAvatarUrl(`${selectedAvatar}?v=${Date.now()}`)
       setShowLottiePicker(false)
@@ -212,15 +206,11 @@ export default function ConfiguracionPage() {
 
       const cleanAvatar = avatarUrl ? avatarUrl.split('?v=')[0] : null
       if (cleanAvatar) {
-        const avatarRes = await fetch('/api/user/update-avatar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ avatar_url: cleanAvatar }),
-        })
-        if (!avatarRes.ok) {
-          const payload = await avatarRes.json().catch(() => ({}))
-          throw new Error(payload?.error || 'No se pudo guardar el avatar')
-        }
+        const { error: avatarErr } = await supabase
+          .from('profiles')
+          .update({ avatar_url: cleanAvatar, updated_at: new Date().toISOString() })
+          .eq('id', user.id)
+        if (avatarErr) throw avatarErr
       }
 
       toast.success('Perfil guardado correctamente')
