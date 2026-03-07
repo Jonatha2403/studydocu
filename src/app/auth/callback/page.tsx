@@ -5,18 +5,24 @@ import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
+const hasAnyInterests = (value: unknown) => {
+  if (Array.isArray(value)) {
+    return value.some((v) => String(v ?? '').trim().length > 0)
+  }
+  if (typeof value === 'string') {
+    return value.trim().length > 0 && value.trim() !== '[]'
+  }
+  return false
+}
+
 const isOnboardingReady = (
   profile: {
     onboarding_complete?: boolean
     intereses?: unknown
-    hasTags?: boolean
   } | null
 ) => {
   if (!profile) return false
-  const hasIntereses =
-    Array.isArray(profile.intereses) &&
-    profile.intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
-  return profile.onboarding_complete === true && (hasIntereses || profile.hasTags === true)
+  return profile.onboarding_complete === true && hasAnyInterests(profile.intereses)
 }
 
 export default function AuthCallbackPage() {
@@ -136,14 +142,7 @@ export default function AuthCallbackPage() {
             return
           }
 
-          const { data: tagRow } = await supabase
-            .from('user_tags')
-            .select('user_id')
-            .eq('user_id', user.id)
-            .limit(1)
-            .maybeSingle()
-
-          if (!isOnboardingReady({ ...(profile as any), hasTags: Boolean(tagRow) })) {
+          if (!isOnboardingReady(profile as any)) {
             hardRedirect('/onboarding')
             return
           }

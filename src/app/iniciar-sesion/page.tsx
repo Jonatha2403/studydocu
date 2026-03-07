@@ -61,6 +61,16 @@ function TypingText({
   )
 }
 
+const hasAnyInterests = (value: unknown) => {
+  if (Array.isArray(value)) {
+    return value.some((v) => String(v ?? '').trim().length > 0)
+  }
+  if (typeof value === 'string') {
+    return value.trim().length > 0 && value.trim() !== '[]'
+  }
+  return false
+}
+
 export default function LoginPage() {
   const [qIdx, setQIdx] = useState(0)
   const quote = useMemo(() => QUOTES[qIdx % QUOTES.length], [qIdx])
@@ -70,13 +80,8 @@ export default function LoginPage() {
   useEffect(() => {
     if (loading || !user) return
 
-    const hasIntereses =
-      Array.isArray((perfil as any)?.intereses) &&
-      (perfil as any).intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
-    const hasTags =
-      Array.isArray((perfil as any)?.tags) &&
-      (perfil as any).tags.some((v: unknown) => String(v ?? '').trim().length > 0)
-    const onboardingOk = (perfil as any)?.onboarding_complete === true && (hasIntereses || hasTags)
+    const hasIntereses = hasAnyInterests((perfil as any)?.intereses)
+    const onboardingOk = (perfil as any)?.onboarding_complete === true && hasIntereses
 
     router.replace(onboardingOk ? '/dashboard' : '/onboarding')
   }, [loading, user, perfil, router])
