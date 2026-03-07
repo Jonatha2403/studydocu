@@ -93,7 +93,7 @@ function TagChip({
 export default function OnboardingPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user, perfil, refrescarUsuario, loading: userLoading } = useUserContext()
+  const { user, refrescarUsuario, loading: userLoading } = useUserContext()
 
   const [step, setStep] = useState(1)
   const [intereses, setIntereses] = useState<string[]>([])
@@ -102,25 +102,6 @@ export default function OnboardingPage() {
   const [checking, setChecking] = useState(true)
   const callbackRaw = searchParams?.get('callbackUrl') || '/dashboard'
   const callbackUrl = callbackRaw.startsWith('/') ? callbackRaw : '/dashboard'
-
-  useEffect(() => {
-    // Si un usuario ya completó onboarding y entra manualmente a esta ruta, lo llevamos al dashboard.
-    // Cuando está en el paso 4 (final), evitamos redirección automática para no crear rebotes visuales.
-    const hasIntereses =
-      Array.isArray((perfil as any)?.intereses) &&
-      (perfil as any).intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
-    if (perfil?.onboarding_complete === true && hasIntereses && step < 4)
-      router.replace('/dashboard')
-  }, [perfil, step, router])
-
-  useEffect(() => {
-    const storedStep = sessionStorage.getItem('onboarding_step')
-    if (storedStep) setStep(Number(storedStep))
-  }, [])
-
-  useEffect(() => {
-    sessionStorage.setItem('onboarding_step', String(step))
-  }, [step])
 
   useEffect(() => {
     if (userLoading) return

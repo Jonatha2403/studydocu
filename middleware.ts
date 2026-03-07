@@ -49,13 +49,14 @@ const isOnboardingReady = (
   profile: {
     onboarding_complete?: boolean
     intereses?: unknown
+    hasTags?: boolean
   } | null
 ) => {
   if (!profile) return false
   const hasIntereses =
     Array.isArray(profile.intereses) &&
     profile.intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
-  return profile.onboarding_complete === true && hasIntereses
+  return profile.onboarding_complete === true && (hasIntereses || profile.hasTags === true)
 }
 
 export async function middleware(req: NextRequest) {
@@ -84,7 +85,14 @@ export async function middleware(req: NextRequest) {
         .eq('id', user.id)
         .maybeSingle()
 
-      if (isOnboardingReady(profile as any)) {
+      const { data: tagRow } = await supabase
+        .from('user_tags')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle()
+
+      if (isOnboardingReady({ ...(profile as any), hasTags: Boolean(tagRow) })) {
         return NextResponse.redirect(new URL('/dashboard', req.url))
       }
       return NextResponse.redirect(new URL('/onboarding', req.url))
@@ -125,10 +133,17 @@ export async function middleware(req: NextRequest) {
     .eq('id', user.id)
     .maybeSingle()
 
+  const { data: tagRow } = await supabase
+    .from('user_tags')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .limit(1)
+    .maybeSingle()
+
   const role: string | undefined = profile?.role || user.user_metadata?.role
   const subscription_status: string | undefined =
     profile?.subscription_status || user.user_metadata?.subscription_status
-  const onboardingReady = isOnboardingReady(profile as any)
+  const onboardingReady = isOnboardingReady({ ...(profile as any), hasTags: Boolean(tagRow) })
 
   // 5a) Admin gate
   if (pathname.startsWith('/admin') && role !== 'admin') {

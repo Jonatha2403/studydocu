@@ -9,13 +9,14 @@ const isOnboardingReady = (
   profile: {
     onboarding_complete?: boolean
     intereses?: unknown
+    hasTags?: boolean
   } | null
 ) => {
   if (!profile) return false
   const hasIntereses =
     Array.isArray(profile.intereses) &&
     profile.intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
-  return profile.onboarding_complete === true && hasIntereses
+  return profile.onboarding_complete === true && (hasIntereses || profile.hasTags === true)
 }
 
 export default function AuthCallbackPage() {
@@ -135,7 +136,14 @@ export default function AuthCallbackPage() {
             return
           }
 
-          if (!isOnboardingReady(profile as any)) {
+          const { data: tagRow } = await supabase
+            .from('user_tags')
+            .select('user_id')
+            .eq('user_id', user.id)
+            .limit(1)
+            .maybeSingle()
+
+          if (!isOnboardingReady({ ...(profile as any), hasTags: Boolean(tagRow) })) {
             hardRedirect('/onboarding')
             return
           }
