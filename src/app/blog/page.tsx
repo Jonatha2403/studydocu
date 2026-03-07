@@ -42,9 +42,9 @@ export default function BlogPage() {
   }, [])
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-12">
+    <main className="mx-auto max-w-7xl px-4 pb-12 pt-24 sm:pt-28 lg:pt-8">
       <motion.section
-        className="text-center mb-12"
+        className="mb-12 text-center"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -55,7 +55,7 @@ export default function BlogPage() {
             Blog educativo
           </span>
         </div>
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
           Aprende, mejora y comparte conocimiento
         </h1>
         <p className="mt-3 text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
@@ -88,9 +88,7 @@ export default function BlogPage() {
                 <h2 className="text-lg font-semibold mt-2 mb-1 text-gray-900 dark:text-white">
                   {post.title}
                 </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                  {post.excerpt}
-                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{post.excerpt}</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500">{post.date}</p>
               </div>
             </motion.article>

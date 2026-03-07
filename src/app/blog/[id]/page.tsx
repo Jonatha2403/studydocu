@@ -31,16 +31,12 @@ function getAnimation(title: string) {
 
 export default function BlogDetailPage() {
   const params = useParams()
-  const id = Array.isArray(params?.id) ? params.id[0] : params?.id ?? ''
+  const id = Array.isArray(params?.id) ? params.id[0] : (params?.id ?? '')
   const [article, setArticle] = useState<Article | null>(null)
 
   useEffect(() => {
     const fetchArticle = async () => {
-      const { data, error } = await supabase
-        .from('blog_articles')
-        .select('*')
-        .eq('id', id)
-        .single()
+      const { data, error } = await supabase.from('blog_articles').select('*').eq('id', id).single()
 
       if (!error && data) setArticle(data)
     }
@@ -50,14 +46,12 @@ export default function BlogDetailPage() {
 
   if (!article) {
     return (
-      <div className="text-center py-32 text-gray-500 dark:text-gray-400">
-        Cargando artículo...
-      </div>
+      <div className="text-center py-32 text-gray-500 dark:text-gray-400">Cargando artículo...</div>
     )
   }
 
   return (
-    <main className="max-w-3xl mx-auto px-4 py-12">
+    <main className="mx-auto max-w-3xl px-4 pb-12 pt-24 sm:pt-28 lg:pt-8">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -72,14 +66,19 @@ export default function BlogDetailPage() {
 
         <div className="mb-6">
           <p className="text-sm text-gray-400 dark:text-gray-500">
-            <Link href="/" className="hover:underline">Inicio</Link> / <Link href="/blog" className="hover:underline">Blog</Link> / {article.title}
+            <Link href="/" className="hover:underline">
+              Inicio
+            </Link>{' '}
+            /{' '}
+            <Link href="/blog" className="hover:underline">
+              Blog
+            </Link>{' '}
+            / {article.title}
           </p>
           <span className="text-sm text-purple-600 dark:text-purple-400 font-medium uppercase">
             {article.category}
           </span>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-            {article.title}
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{article.title}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Publicado el {article.date}
           </p>

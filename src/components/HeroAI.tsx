@@ -146,13 +146,18 @@ export default function HeroAI() {
   return (
     <section
       ref={sectionRef}
-      className={['relative overflow-hidden', 'pt-8 md:pt-12', 'pb-8 md:pb-10', 'px-4'].join(' ')}
+      className={[
+        'relative overflow-hidden',
+        'pt-24 md:pt-28 lg:pt-32',
+        'pb-8 md:pb-10',
+        'px-4',
+      ].join(' ')}
     >
       {/* ✅ Background enterprise: muy sutil y liviano */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(820px_420px_at_18%_12%,rgba(37,99,235,0.12),transparent_60%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(780px_420px_at_88%_18%,rgba(6,182,212,0.10),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgb(131, 180, 229),rgba(174, 156, 156, 0.78),rgb(204, 181, 181))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(191,219,254,0.42),rgba(224,231,255,0.22),rgba(233,213,255,0.36))]" />
       </div>
 
       {/* ✅ Partículas (desktop only) */}
@@ -167,18 +172,18 @@ export default function HeroAI() {
             fpsLimit: 60,
             particles: {
               number: {
-                value: isMobile ? 26 : 18,
+                value: isMobile ? 44 : 30,
                 density: { enable: true, width: 900, height: 900 },
               },
-              size: { value: isMobile ? 2.2 : 2 },
-              move: { enable: true, speed: isMobile ? 0.28 : 0.35 },
-              opacity: { value: isMobile ? 0.34 : 0.22 },
+              size: { value: isMobile ? 2.8 : 2.3 },
+              move: { enable: true, speed: isMobile ? 0.34 : 0.4 },
+              opacity: { value: isMobile ? 0.52 : 0.36 },
               color: { value: '#2563EB' },
               links: {
                 enable: !isMobile,
                 distance: 170,
                 color: '#06B6D4',
-                opacity: 0.14,
+                opacity: 0.24,
                 width: 1,
               },
             },

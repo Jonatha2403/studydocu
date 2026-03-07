@@ -396,10 +396,10 @@ export default function ServiciosClient() {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-4 pt-4 pb-12 lg:pt-8 lg:pb-16">
+    <main className="mx-auto max-w-7xl px-4 pb-12 pt-24 sm:pt-28 lg:pt-8 lg:pb-16">
       {/* Hero */}
       <motion.section
-        className="grid gap-8 lg:grid-cols-[1.7fr,1.1fr] items-center mb-12 lg:mb-16"
+        className="mb-12 grid items-center gap-8 lg:mb-16 lg:grid-cols-[1.7fr,1.1fr]"
         initial={{ opacity: 0, y: -18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.55 }}
@@ -412,14 +412,14 @@ export default function ServiciosClient() {
             </span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white leading-tight">
+          <h1 className="text-2xl font-bold leading-tight text-slate-900 dark:text-white sm:text-4xl">
             Servicios académicos profesionales
             <span className="block text-indigo-700 dark:text-indigo-200">
               para estudiantes universitarios
             </span>
           </h1>
 
-          <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl">
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-300 sm:text-base lg:mx-0">
             Te acompañamos en todo tu ciclo académico: ensayos, exámenes, plataformas
             universitarias, resúmenes, normas APA y asesorías personalizadas. Enfoque fuerte para
             UTPL y universidades de Ecuador.
