@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Loader2, Download, Heart, Copy, AlertTriangle, ArrowLeft } from 'lucide-react'
 import CommentBox from '@/components/CommentBox'
@@ -10,11 +10,7 @@ import DocumentPreview from '@/components/DocumentPreview'
 import { useUserContext } from '@/context/UserContext'
 import { toast } from 'sonner'
 import FavoriteButton from '@/components/FavoriteButton'
-import {
-  normalizeStoragePath,
-  parseSupabaseStorageUrl,
-  isHttpUrl,
-} from '@/lib/storagePath'
+import { normalizeStoragePath, parseSupabaseStorageUrl, isHttpUrl } from '@/lib/storagePath'
 
 interface Profile {
   username: string
@@ -25,6 +21,7 @@ interface DocumentRow {
   id: string
   file_name: string
   file_path: string
+  file_url?: string | null
   category: string
   created_at: string
   user_id: string
@@ -50,30 +47,12 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [urlOk, setUrlOk] = useState<boolean>(false)
-
-  /** Lista una carpeta y busca si existe el archivo (v2 no tiene .stat). */
-  const checkExists = async (bucket: string, objectKey: string): Promise<boolean> => {
-    try {
-      const parts = (objectKey || '').split('/').filter(Boolean)
-      const fileName = parts.pop() || ''
-      const folder = parts.join('/') // '' si raíz
-
-      const { data, error } = await supabase.storage.from(bucket).list(folder || '', {
-        limit: 100,
-        offset: 0,
-        sortBy: { column: 'name', order: 'asc' },
-      })
-      if (error) return false
-      return !!data?.find(f => f.name === fileName)
-    } catch {
-      return false
-    }
-  }
-
   /** Genera posibles keys a partir del file_path y el bucket. */
-  const buildKeyCandidates = (raw: string, bucket: string): string[] => {
+  const buildKeyCandidates = useCallback((raw: string, bucket: string): string[] => {
     const cands = new Set<string>()
-    const push = (s?: string) => { if (s && s.trim()) cands.add(s.trim()) }
+    const push = (s?: string) => {
+      if (s && s.trim()) cands.add(s.trim())
+    }
 
     // 1) Normalizada base
     const norm = normalizeStoragePath(raw, bucket)
@@ -86,8 +65,12 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
     }
 
     // 3) Variantes decodificadas/limpias
-    try { push(decodeURIComponent(norm)) } catch { /* noop */ }
-    Array.from(cands).forEach(k => {
+    try {
+      push(decodeURIComponent(norm))
+    } catch {
+      /* noop */
+    }
+    Array.from(cands).forEach((k) => {
       push(k.replace(/\/{2,}/g, '/'))
       push(k.replace(/\+/g, ' '))
     })
@@ -96,49 +79,58 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
     const parsed = parseSupabaseStorageUrl(raw)
     if (parsed) {
       push(parsed.key)
-      try { push(decodeURIComponent(parsed.key)) } catch { /* noop */ }
+      try {
+        push(decodeURIComponent(parsed.key))
+      } catch {
+        /* noop */
+      }
       push(parsed.key.replace(/\+/g, ' '))
       push(parsed.key.replace(/\/{2,}/g, '/'))
     }
 
     // Quita vacíos y dupes
-    return Array.from(cands).map(s => s.trim()).filter(Boolean)
-  }
+    return Array.from(cands)
+      .map((s) => s.trim())
+      .filter(Boolean)
+  }, [])
 
-  /** Intenta firmar o sacar pública para el primer key que exista y responda 200. */
-  const resolveWorkingUrl = async (bucket: string, rawPath: string) => {
-    const candidates = buildKeyCandidates(rawPath, bucket)
+  /** Intenta firmar o sacar publica para el primer key candidato valido. */
+  const resolveWorkingUrl = useCallback(
+    async (bucket: string, rawPath: string) => {
+      const candidates = buildKeyCandidates(rawPath, bucket)
 
-    for (const key of candidates) {
-      const exists = await checkExists(bucket, key)
-      if (!exists) continue
+      for (const key of candidates) {
+        let url: string | undefined
 
-      let url: string | undefined
-      // Intenta firmar (privado)
-      try {
-        const { data: signed } = await supabase.storage.from(bucket).createSignedUrl(key, 60 * 60)
-        if (signed?.signedUrl) url = signed.signedUrl
-      } catch { /* noop */ }
+        // Intenta firmar (bucket privado)
+        try {
+          const { data: signed, error: signedError } = await supabase.storage
+            .from(bucket)
+            .createSignedUrl(key, 60 * 60)
+          if (!signedError && signed?.signedUrl) url = signed.signedUrl
+        } catch {
+          // noop
+        }
 
-      // Fallback pública
-      if (!url) {
-        const { data: pub } = supabase.storage.from(bucket).getPublicUrl(key)
-        if (pub?.publicUrl) url = pub.publicUrl
-      }
+        // Fallback publica (si bucket fuese publico)
+        if (!url) {
+          try {
+            const { data: pub } = supabase.storage.from(bucket).getPublicUrl(key)
+            if (pub?.publicUrl) url = pub.publicUrl
+          } catch {
+            // noop
+          }
+        }
 
-      if (!url) continue
-
-      // Verifica que la URL responde
-      try {
-        const head = await fetch(url, { method: 'HEAD' })
-        if (head.ok) {
+        if (url) {
           return { url, key }
         }
-      } catch { /* prueba siguiente */ }
-    }
+      }
 
-    return { url: undefined as string | undefined, key: undefined as string | undefined }
-  }
+      return { url: undefined as string | undefined, key: undefined as string | undefined }
+    },
+    [buildKeyCandidates]
+  )
 
   useEffect(() => {
     if (!id) return
@@ -162,9 +154,14 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
         // 2) Resolver URL del archivo
         let bucket = process.env.NEXT_PUBLIC_SUPABASE_BUCKET || 'documents'
 
-        if (isHttpUrl(d.file_path)) {
+        const rawPath = (d.file_path || d.file_url || '').trim()
+        if (!rawPath) {
+          throw new Error('El documento no tiene ruta de archivo guardada.')
+        }
+
+        if (isHttpUrl(rawPath)) {
           // URL completa: si es de Supabase, extrae bucket/key y re-firma; si no, úsala tal cual
-          const parsed = parseSupabaseStorageUrl(d.file_path)
+          const parsed = parseSupabaseStorageUrl(rawPath)
           if (parsed) {
             bucket = parsed.bucket
             const { url } = await resolveWorkingUrl(bucket, parsed.key)
@@ -173,13 +170,14 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
             setPublicUrl(url)
           } else {
             if (!mounted) return
-            setPublicUrl(d.file_path)
+            setPublicUrl(rawPath)
           }
         } else {
           // Ruta interna (key relativa)
-          const { url } = await resolveWorkingUrl(bucket, d.file_path)
+          const { url } = await resolveWorkingUrl(bucket, rawPath)
           if (!mounted) return
-          if (!url) throw new Error('No se pudo generar URL del archivo (bucket o ruta incorrectos).')
+          if (!url)
+            throw new Error('No se pudo generar URL del archivo (bucket o ruta incorrectos).')
           setPublicUrl(url)
         }
 
@@ -204,8 +202,10 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
       }
     })()
 
-    return () => { mounted = false }
-  }, [id])
+    return () => {
+      mounted = false
+    }
+  }, [id, resolveWorkingUrl])
 
   const ext = useMemo(() => {
     const name = (doc?.file_name || doc?.file_path || '').toLowerCase().trim()
@@ -323,9 +323,7 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
         <div className="md:col-span-2">
           <div className="rounded-2xl overflow-hidden border bg-background">
             {/* PDF */}
-            {publicUrl && isPDF && urlOk && (
-              <DocumentPreview filePath={publicUrl} canViewFull />
-            )}
+            {publicUrl && isPDF && urlOk && <DocumentPreview filePath={publicUrl} canViewFull />}
 
             {/* Office (doc/xls/ppt) */}
             {publicUrl && !isPDF && isOffice && urlOk && (
