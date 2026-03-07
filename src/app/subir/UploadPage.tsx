@@ -161,7 +161,7 @@ export default function UploadPage() {
         user={user}
         onUploadComplete={() => {
           fetchDocuments()
-          toast.success('🎉 ¡Documento subido y 10 puntos ganados!', {
+          toast.success('🎉 ¡Documento subido y 15 puntos ganados!', {
             duration: 4000,
             style: {
               border: '1px solid #4ade80',

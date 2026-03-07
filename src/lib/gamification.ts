@@ -111,24 +111,32 @@ export async function registrarLogro(userId: string, tipo: string) {
   try {
     if (!userId || !tipo) return false
 
-    // Si la tabla no existe, esto puede fallar; lo manejamos
     const { data: existente } = await supabase
       .from('user_achievements')
-      .select('*')
+      .select('achievement_key, achievement')
       .eq('user_id', userId)
-      .eq('achievement', tipo)
-      .maybeSingle()
+      .or(`achievement_key.eq.${tipo},achievement.eq.${tipo}`)
 
-    if (existente) return false
+    if ((existente || []).length > 0) return false
 
-    const { error } = await supabase.from('user_achievements').insert([
+    const nowIso = new Date().toISOString()
+    const firstTry = await supabase.from('user_achievements').insert([
       {
         user_id: userId,
-        achievement: tipo,
-        created_at: new Date().toISOString(),
+        achievement_key: tipo,
+        created_at: nowIso,
       },
     ])
-    if (error) throw error
+    if (firstTry.error) {
+      const secondTry = await supabase.from('user_achievements').insert([
+        {
+          user_id: userId,
+          achievement: tipo,
+          created_at: nowIso,
+        },
+      ])
+      if (secondTry.error) throw secondTry.error
+    }
 
     toast.success(`🏅 Logro desbloqueado: ${tipo}`)
     lanzarConfeti()
@@ -162,9 +170,7 @@ export async function checkMissions(userId: string) {
       .select('mission_id')
       .eq('user_id', userId)
 
-    const completedIds = (completed || [])
-      .map((ach: any) => ach?.mission_id)
-      .filter(Boolean)
+    const completedIds = (completed || []).map((ach: any) => ach.mission_id).filter(Boolean)
 
     // 3) Logs de acciones del usuario
     const { data: logs } = await supabase
@@ -179,9 +185,7 @@ export async function checkMissions(userId: string) {
     })
 
     const uniqueDays = Array.from(
-      new Set(
-        (logs || []).map((log: any) => new Date(log.created_at).toDateString())
-      )
+      new Set((logs || []).map((log: any) => new Date(log.created_at).toDateString()))
     )
 
     // 4) Evaluar condiciones
@@ -208,13 +212,12 @@ export async function checkMissions(userId: string) {
 
       // 5) Registrar logro y sumar recompensa
       try {
-        const { error: insertError } = await supabase
-          .from('user_achievements')
-          .insert({
-            user_id: userId,
-            mission_id: mission.id,
-            created_at: new Date().toISOString(),
-          })
+        const { error: insertError } = await supabase.from('user_achievements').insert({
+          user_id: userId,
+          mission_id: mission.id,
+          achievement_key: mission.key || null,
+          created_at: new Date().toISOString(),
+        })
 
         if (!insertError) {
           const reward = Number(mission.reward || 0)

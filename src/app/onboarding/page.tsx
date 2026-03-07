@@ -149,7 +149,11 @@ export default function OnboardingPage() {
   const resendVerification = async () => {
     if (!user?.email) return
     const { error } = await supabase.auth.resend({ type: 'signup', email: user.email })
-    error ? toast.error('Error al reenviar correo') : toast.success('Correo reenviado ✅')
+    if (error) {
+      toast.error('Error al reenviar correo')
+      return
+    }
+    toast.success('Correo reenviado ✅')
   }
 
   const checkVerification = async () => {
@@ -179,7 +183,7 @@ export default function OnboardingPage() {
 
       const { data: existingProfile, error: profileReadError } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, points, onboarding_complete')
         .eq('id', user.id)
         .maybeSingle()
 
@@ -209,9 +213,12 @@ export default function OnboardingPage() {
         if (profileInsertError) throw profileInsertError
       }
 
+      const currentPoints = Number((existingProfile as any)?.points ?? 0)
+      const safePoints = Math.max(currentPoints, 50)
+
       const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
-        .update({ onboarding_complete: true, intereses, points: 50 })
+        .update({ onboarding_complete: true, intereses, points: safePoints })
         .eq('id', user.id)
         .select('id')
         .maybeSingle()
@@ -231,9 +238,14 @@ export default function OnboardingPage() {
         description: 'El usuario completó el onboarding y seleccionó intereses.',
         metadata: { intereses },
       })
-      supabase
+      const firstAchievementInsert = await supabase
         .from('user_achievements')
         .insert({ user_id: user.id, achievement_key: 'bienvenida', unlocked: true })
+      if (firstAchievementInsert.error) {
+        await supabase
+          .from('user_achievements')
+          .insert({ user_id: user.id, achievement: 'bienvenida' })
+      }
       supabase.from('ai_context').insert({ user_id: user.id, context: intereses.join(', ') })
 
       toast.success('Preferencias guardadas ✅')

@@ -4,46 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Loader2, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-interface Achievement {
-  key: string
-  label: string
-  description: string
-  icon: string
-}
-
-const ACHIEVEMENT_CATALOG: Achievement[] = [
-  {
-    key: 'first_upload',
-    label: 'Primer Documento',
-    description: 'Subiste tu primer archivo 🎉',
-    icon: '📄',
-  },
-  {
-    key: 'five_uploads',
-    label: 'Colaborador Activo',
-    description: 'Subiste 5 documentos 📚',
-    icon: '📚',
-  },
-  {
-    key: 'popular_doc',
-    label: 'Documento Popular',
-    description: 'Recibiste más de 10 likes en un documento ❤️',
-    icon: '🔥',
-  },
-  {
-    key: 'moderation_helper',
-    label: 'Ayudante de Moderación',
-    description: 'Uno de tus reportes fue útil 🛡️',
-    icon: '🛡️',
-  },
-  {
-    key: 'daily_login',
-    label: 'Constante',
-    description: 'Ingresaste 7 días seguidos 📆',
-    icon: '📆',
-  },
-]
+import { ACHIEVEMENTS_CATALOG } from '@/lib/achievementsCatalog'
 
 interface Props {
   userId: string
@@ -58,53 +19,54 @@ export default function UserAchievements({ userId }: Props) {
       setLoading(true)
       const { data, error } = await supabase
         .from('user_achievements')
-        .select('achievement_key')
+        .select('achievement_key, achievement')
         .eq('user_id', userId)
 
       if (error) {
         console.error('Error fetching achievements:', error)
       } else {
-        setUnlockedKeys(data.map((a) => a.achievement_key))
+        const keys = (data || [])
+          .map((a: any) => String(a?.achievement_key || a?.achievement || '').trim())
+          .filter(Boolean)
+        setUnlockedKeys(Array.from(new Set(keys)))
       }
 
       setLoading(false)
     }
 
-    if (userId) fetchAchievements()
+    if (userId) void fetchAchievements()
   }, [userId])
 
   if (loading) {
     return (
       <div className="flex justify-center py-8">
-        <Loader2 className="animate-spin w-6 h-6 text-gray-500" />
+        <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
       </div>
     )
   }
 
   return (
-    <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 mt-6">
-      {ACHIEVEMENT_CATALOG.map((achievement) => {
+    <div className="mt-6 grid gap-5 sm:grid-cols-2 md:grid-cols-3">
+      {ACHIEVEMENTS_CATALOG.map((achievement) => {
         const unlocked = unlockedKeys.includes(achievement.key)
         return (
           <div
             key={achievement.key}
             className={cn(
-              'relative p-5 rounded-2xl border shadow-sm transition-all duration-300',
+              'relative rounded-2xl border p-5 shadow-sm transition-all duration-300',
               unlocked
-                ? 'bg-green-50 border-green-500 hover:shadow-md'
-                : 'bg-gray-100 border-gray-300 opacity-70 hover:opacity-90'
+                ? 'border-green-500 bg-green-50 hover:shadow-md'
+                : 'border-gray-300 bg-gray-100 opacity-70 hover:opacity-90'
             )}
-            aria-label={achievement.label}
+            aria-label={achievement.title}
           >
-            <div className="flex justify-between items-start">
-              <div className="text-4xl">{achievement.icon}</div>
-              {unlocked && <CheckCircle2 className="text-green-600 w-5 h-5" />}
+            <div className="flex items-start justify-between">
+              <div className="text-4xl">{unlocked ? '🏆' : '🔒'}</div>
+              {unlocked && <CheckCircle2 className="h-5 w-5 text-green-600" />}
             </div>
-            <h3 className="font-bold text-lg mt-3 text-gray-800">{achievement.label}</h3>
+            <h3 className="mt-3 text-lg font-bold text-gray-800">{achievement.title}</h3>
             <p className="text-sm text-gray-600">{achievement.description}</p>
-            {!unlocked && (
-              <p className="mt-2 text-xs text-gray-500 italic">Aún no desbloqueado</p>
-            )}
+            {!unlocked && <p className="mt-2 text-xs italic text-gray-500">Aun no desbloqueado</p>}
           </div>
         )
       })}

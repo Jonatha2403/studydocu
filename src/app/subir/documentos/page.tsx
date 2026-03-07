@@ -119,15 +119,13 @@ export default function UploadPage() {
       })
 
     // 2. Escuchar cambios en el estado de autenticación
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        await processUserSession(session?.user ?? null)
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      await processUserSession(session?.user ?? null)
 
-        if (_event === 'SIGNED_OUT') {
-          router.push('/')
-        }
+      if (_event === 'SIGNED_OUT') {
+        router.push('/')
       }
-    )
+    })
 
     return () => {
       authListener.subscription.unsubscribe()
@@ -170,11 +168,7 @@ export default function UploadPage() {
     }
   }
 
-  const isProfileComplete = !!(
-    profile?.nombre &&
-    profile?.carrera &&
-    profile?.universidad
-  )
+  const isProfileComplete = !!(profile?.nombre && profile?.carrera && profile?.universidad)
 
   if (loading) {
     return (
@@ -235,8 +229,8 @@ export default function UploadPage() {
         </button>
       </div>
       <p className="mb-6 text-gray-600 dark:text-gray-300 text-sm text-center">
-        Sube tus apuntes, tareas o exámenes en formato PDF, Word o Excel.
-        Asegúrate de que tengan contenido legible.
+        Sube tus apuntes, tareas o exámenes en formato PDF, Word o Excel. Asegúrate de que tengan
+        contenido legible.
       </p>
 
       {/* Editor de perfil: se espera que UserProfileEdit tenga la prop onProfileUpdate en su tipo */}
@@ -244,11 +238,7 @@ export default function UploadPage() {
         user={user as SupabaseUser}
         onProfileUpdate={(updatedProfile: UserProfile | null) => {
           setProfile(updatedProfile)
-          if (
-            updatedProfile?.nombre &&
-            updatedProfile?.carrera &&
-            updatedProfile?.universidad
-          ) {
+          if (updatedProfile?.nombre && updatedProfile?.carrera && updatedProfile?.universidad) {
             toast.success('Perfil actualizado. Ahora puedes subir documentos.')
           }
         }}
@@ -259,8 +249,8 @@ export default function UploadPage() {
           <div className="flex items-center">
             <AlertTriangle className="h-5 w-5 text-yellow-500 dark:text-yellow-300 mr-3 shrink-0" />
             <p>
-              <strong>Atención:</strong> Para poder subir documentos, primero
-              debes completar tu perfil (nombre, carrera y universidad).
+              <strong>Atención:</strong> Para poder subir documentos, primero debes completar tu
+              perfil (nombre, carrera y universidad).
             </p>
           </div>
         </div>
@@ -270,10 +260,7 @@ export default function UploadPage() {
         <div className="my-6 bg-blue-50 dark:bg-blue-700/30 border-l-4 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-200 p-4 rounded-md text-sm shadow">
           <div className="flex items-center">
             <AlertTriangle className="h-5 w-5 text-blue-500 dark:text-blue-300 mr-3 shrink-0" />
-            <p>
-              Parece que aún no has configurado tu perfil. Por favor,
-              complétalo arriba.
-            </p>
+            <p>Parece que aún no has configurado tu perfil. Por favor, complétalo arriba.</p>
           </div>
         </div>
       )}
@@ -284,7 +271,7 @@ export default function UploadPage() {
           onUploadComplete={() => {
             if (!user) return
             fetchDocuments(user.id)
-            toast.success('🎉 ¡Documento subido y 10 puntos ganados!', {
+            toast.success('🎉 ¡Documento subido y 15 puntos ganados!', {
               duration: 4000,
               style: {
                 border: '1px solid #4ade80',
@@ -305,8 +292,7 @@ export default function UploadPage() {
         <div className="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700">
           <div className="mb-6 text-center">
             <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-3">
-              📂 Historial de Documentos Subidos ({filteredDocs.length} de{' '}
-              {documents.length})
+              📂 Historial de Documentos Subidos ({filteredDocs.length} de {documents.length})
             </h2>
             <div className="relative max-w-md mx-auto">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -316,9 +302,7 @@ export default function UploadPage() {
                 type="text"
                 placeholder="Buscar por nombre, categoría o estado..."
                 value={searchTerm}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  handleSearch(e.target.value)
-                }
+                onChange={(e: ChangeEvent<HTMLInputElement>) => handleSearch(e.target.value)}
                 className="w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -341,12 +325,12 @@ export default function UploadPage() {
                           doc.category === 'Resumen'
                             ? 'bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-100'
                             : doc.category === 'Ensayo'
-                            ? 'bg-purple-100 text-purple-700 dark:bg-purple-700 dark:text-purple-100'
-                            : doc.category === 'Tarea'
-                            ? 'bg-orange-100 text-orange-700 dark:bg-orange-700 dark:text-orange-100'
-                            : doc.category === 'Examen'
-                            ? 'bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100'
-                            : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200'
+                              ? 'bg-purple-100 text-purple-700 dark:bg-purple-700 dark:text-purple-100'
+                              : doc.category === 'Tarea'
+                                ? 'bg-orange-100 text-orange-700 dark:bg-orange-700 dark:text-orange-100'
+                                : doc.category === 'Examen'
+                                  ? 'bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100'
+                                  : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200'
                         }`}
                       >
                         🏷️ {doc.category}
@@ -370,8 +354,8 @@ export default function UploadPage() {
                         doc.status === 'aprobado'
                           ? 'bg-green-100 text-green-700 dark:bg-green-700 dark:text-green-100'
                           : doc.status === 'rechazado'
-                          ? 'bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100'
-                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100'
+                            ? 'bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100'
+                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100'
                       }`}
                     >
                       {doc.status
@@ -392,8 +376,7 @@ export default function UploadPage() {
 
       {documents.length === 0 && !error && (
         <p className="text-center text-gray-500 dark:text-gray-400 mt-8 py-6">
-          📭 Aún no has subido ningún documento. ¡Anímate a compartir tus
-          apuntes!
+          📭 Aún no has subido ningún documento. ¡Anímate a compartir tus apuntes!
         </p>
       )}
 
