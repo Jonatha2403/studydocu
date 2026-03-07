@@ -11,6 +11,8 @@ import { useUserContext } from '@/context/UserContext'
 import { toast } from 'sonner'
 import FavoriteButton from '@/components/FavoriteButton'
 import DownloadButton from '@/components/DownloadButton'
+import LikeButton from '@/components/LikeButton'
+import ReactionBar from '@/components/ReactionBar'
 import { normalizeStoragePath, parseSupabaseStorageUrl, isHttpUrl } from '@/lib/storagePath'
 
 interface Profile {
@@ -28,6 +30,7 @@ interface DocumentRow {
   user_id: string
   downloads?: number
   likes?: number
+  download_count?: number
   approved?: boolean
 }
 
@@ -372,6 +375,14 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
             >
               <AlertTriangle size={16} /> Reportar documento
             </button>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <div className="text-sm text-slate-700">
+              <span className="mr-2 font-medium">Interacciones:</span>
+              <LikeButton docId={doc.id} initialLikes={Number(doc.likes ?? 0)} userId={user?.id} />
+            </div>
+            <ReactionBar documentId={doc.id} />
           </div>
 
           <CommentBox documentId={doc.id} user={user} />
