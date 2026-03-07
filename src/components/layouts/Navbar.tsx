@@ -1,28 +1,21 @@
-'use client'
+﻿'use client'
 
 import { useUserContext } from '@/context/UserContext'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useMemo, useState } from 'react'
-import {
-  AnimatePresence,
-  motion,
-  useScroll,
-  useMotionValueEvent,
-} from 'framer-motion'
-import { Menu, X, Loader2 } from 'lucide-react'
+import { AnimatePresence, motion, useMotionValueEvent, useScroll } from 'framer-motion'
+import { Loader2, Menu, X } from 'lucide-react'
 import ThemeToggle from '@/components/ThemeToggle'
 import LanguageToggle from '@/components/LanguageToggle'
 import UserDropdown from '@/components/UserDropdown'
 
-/** ✅ Props que recibe desde ClientWrapper */
 interface NavbarProps {
   userId?: string
   sessionLoading?: boolean
 }
 
-/** ✅ Export default con el mismo nombre que importas en ClientWrapper */
 export default function Navbar({ userId, sessionLoading }: NavbarProps) {
   const { user, perfil } = useUserContext()
   const pathname = usePathname()
@@ -30,10 +23,8 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
-  // Usuario efectivo: o el que viene en props o el del contexto
   const isLogged = !!(userId || user)
 
-  // Escucha de scroll para encoger/oscurecer el navbar
   const { scrollY } = useScroll()
   useMotionValueEvent(scrollY, 'change', (latest) => {
     setScrolled(latest > 8)
@@ -61,7 +52,6 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
       }}
       className="fixed top-0 z-50 w-full"
     >
-      {/* Halo/borde gradiente sutil */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="mx-auto h-[1px] w-full max-w-7xl bg-gradient-to-r from-transparent via-indigo-400/40 to-transparent" />
       </div>
@@ -72,7 +62,6 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
           scrolled ? 'h-16' : 'h-20',
         ].join(' ')}
       >
-        {/* Contenedor glass con borde sutil */}
         <div className="absolute left-0 right-0 -z-10 mx-4 sm:mx-6 lg:mx-8">
           <div
             className={[
@@ -85,22 +74,15 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
           />
         </div>
 
-        {/* Logo */}
-        <Link href="/" className="relative z-10 flex items-center gap-2">
-          <Image
-            src="/icon.png"
-            alt="StudyDocu"
-            width={40}
-            height={40}
-            className="rounded-xl bg-white p-1 shadow"
-            priority
-          />
-          <span className="font-extrabold text-xl text-gray-900 dark:text-white tracking-tight">
+        <Link href="/" className="relative z-10 flex items-center gap-2.5">
+          <span className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200/80 bg-white/90 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <Image src="/icon.png" alt="StudyDocu" width={30} height={30} priority />
+          </span>
+          <span className="font-extrabold tracking-tight text-slate-900 dark:text-white text-xl">
             StudyDocu
           </span>
         </Link>
 
-        {/* Links centrados en desktop con 'pill' animada */}
         <div className="relative z-10 hidden lg:flex items-center gap-6 text-[15px] font-medium">
           <div className="relative flex items-center gap-6">
             <AnimatePresence initial={false}>
@@ -119,9 +101,7 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
                       href={link.href}
                       className={[
                         'relative px-2 py-1 transition-colors',
-                        active
-                          ? 'text-indigo-600 dark:text-indigo-400'
-                          : 'hover:text-indigo-500',
+                        active ? 'text-indigo-600 dark:text-indigo-400' : 'hover:text-indigo-500',
                       ].join(' ')}
                     >
                       {link.label}
@@ -133,32 +113,32 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
           </div>
         </div>
 
-        {/* Botones derecha */}
         <div className="relative z-10 hidden lg:flex items-center gap-3">
-          <ThemeToggle />
-          <LanguageToggle />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/80 bg-white/70 dark:border-slate-700 dark:bg-slate-800/70">
+            <ThemeToggle />
+          </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/80 bg-white/70 dark:border-slate-700 dark:bg-slate-800/70">
+            <LanguageToggle />
+          </div>
 
           {sessionLoading ? (
             <span className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" /> Cargando…
+              <Loader2 className="h-4 w-4 animate-spin" /> Cargando...
             </span>
           ) : isLogged && perfil ? (
-            <button className="group flex items-center gap-2 rounded-full border border-gray-300/60 bg-white/60 px-4 py-2 text-sm shadow-sm backdrop-blur hover:bg-white/80 dark:border-gray-700/60 dark:bg-gray-800/60 dark:hover:bg-gray-800/80">
-              <UserDropdown />
-            </button>
+            <UserDropdown />
           ) : (
             <>
-              {/* 🔐 LOGIN DESKTOP: ahora a /iniciar-sesion */}
               <Link
                 href="/iniciar-sesion"
                 className="text-sm font-medium text-indigo-600 hover:underline"
               >
-                Iniciar sesión
+                Iniciar sesion
               </Link>
 
               <Link href="/registrarse" className="relative inline-flex">
                 <span className="btn-glow text-sm">
-                  🚀 Regístrate
+                  Registrate
                   <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
                     <span className="absolute -left-full top-0 h-full w-1/3 rotate-12 bg-white/30 blur-md transition-transform duration-700 group-hover:translate-x-[300%]" />
                   </span>
@@ -168,19 +148,17 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
           )}
         </div>
 
-        {/* Botón menú móvil */}
-        <div className="relative z-10 lg:hidden flex items-center gap-2">
+        <div className="relative z-10 flex items-center gap-2 lg:hidden">
           <button
             onClick={() => setMenuOpen((s) => !s)}
-            aria-label="Abrir menú"
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+            aria-label="Abrir menu"
+            className="rounded-full p-2 transition hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
 
-      {/* Menú móvil animado */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
@@ -188,9 +166,15 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="lg:hidden px-4 sm:px-6 lg:px-8 pb-6 pt-3"
+            className="px-4 pb-6 pt-3 sm:px-6 lg:hidden"
           >
             <div className="rounded-2xl border border-white/10 bg-white/80 p-4 shadow-lg backdrop-blur-xl dark:border-white/10 dark:bg-gray-900/80">
+              {isLogged && perfil && (
+                <div className="mb-4">
+                  <UserDropdown className="w-full justify-between" showName />
+                </div>
+              )}
+
               <motion.div
                 initial="hidden"
                 animate="show"
@@ -198,7 +182,7 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
                   hidden: { transition: { staggerChildren: 0.04, staggerDirection: -1 } },
                   show: { transition: { staggerChildren: 0.06 } },
                 }}
-                className="flex flex-col gap-3 mb-4"
+                className="mb-4 flex flex-col gap-3"
               >
                 {navLinks.map((link) => {
                   const active = pathname === link.href
@@ -228,15 +212,14 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
 
               {!isLogged && (
                 <div className="flex flex-col items-stretch gap-2">
-                  {/* 🔐 LOGIN MOBILE: también /iniciar-sesion */}
                   <Link href="/iniciar-sesion" onClick={() => setMenuOpen(false)}>
                     <button className="w-full rounded-lg bg-gray-100 px-4 py-2 text-center text-sm font-medium text-gray-900 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700">
-                      Iniciar sesión
+                      Iniciar sesion
                     </button>
                   </Link>
                   <Link href="/registrarse" onClick={() => setMenuOpen(false)}>
-                    <button className="w-full rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-2 text-sm font-semibold text-white shadow hover:scale-[1.02] transition">
-                      🚀 Regístrate gratis
+                    <button className="w-full rounded-lg bg-gradient-to-r from-indigo-500 to-blue-500 px-4 py-2 text-sm font-semibold text-white shadow transition hover:scale-[1.02]">
+                      Crear cuenta gratis
                     </button>
                   </Link>
                 </div>
