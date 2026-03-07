@@ -109,8 +109,7 @@ export default function OnboardingPage() {
     const hasIntereses =
       Array.isArray((perfil as any)?.intereses) &&
       (perfil as any).intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
-    const points = Number((perfil as any)?.points ?? 0)
-    if (perfil?.onboarding_complete === true && hasIntereses && points >= 50 && step < 4)
+    if (perfil?.onboarding_complete === true && hasIntereses && step < 4)
       router.replace('/dashboard')
   }, [perfil, step, router])
 

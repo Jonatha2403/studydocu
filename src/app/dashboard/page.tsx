@@ -141,17 +141,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user && perfil) {
-      const hasIntereses =
-        Array.isArray((perfil as any)?.intereses) &&
-        (perfil as any).intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
-      const points = Number((perfil as any)?.points ?? 0)
-      const onboardingReady =
-        (perfil as any)?.onboarding_complete === true && hasIntereses && points >= 50
-      if (!onboardingReady) {
-        router.replace('/onboarding?callbackUrl=/dashboard')
-        return
-      }
-
       fetchStats()
       const toastShown = sessionStorage.getItem('welcome_toast_shown')
       if (!toastShown) {
@@ -163,7 +152,7 @@ export default function DashboardPage() {
       // dejamos que el redirect actúe
       setLoading(false)
     }
-  }, [user, perfil, fetchStats, sessionLoading, router])
+  }, [user, perfil, fetchStats, sessionLoading])
 
   // 🎯 Redirigir a /iniciar-sesion si no hay usuario
   useEffect(() => {

@@ -9,15 +9,13 @@ const isOnboardingReady = (
   profile: {
     onboarding_complete?: boolean
     intereses?: unknown
-    points?: number
   } | null
 ) => {
   if (!profile) return false
   const hasIntereses =
     Array.isArray(profile.intereses) &&
     profile.intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
-  const points = Number(profile.points ?? 0)
-  return profile.onboarding_complete === true && hasIntereses && points >= 50
+  return profile.onboarding_complete === true && hasIntereses
 }
 
 export default function AuthCallbackPage() {
@@ -109,7 +107,7 @@ export default function AuthCallbackPage() {
         if (user?.id) {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('id,onboarding_complete,intereses,points')
+            .select('id,onboarding_complete,intereses')
             .eq('id', user.id)
             .maybeSingle()
 
