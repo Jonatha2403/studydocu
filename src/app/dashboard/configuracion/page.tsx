@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useUserContext } from '@/context/UserContext'
 import { toast } from 'sonner'
@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Loader2, Upload, User2, Images, X, Check, AlertCircle } from 'lucide-react'
+import { Loader2, User2, Images, X, Check, AlertCircle } from 'lucide-react'
 import LottieAvatar from '@/components/LottieAvatar'
 
 const LOTTIE_PRESETS = [
@@ -34,16 +34,13 @@ export default function ConfiguracionPage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
 
   const [saving, setSaving] = useState(false)
-  const [uploading, setUploading] = useState(false)
   const [showLottiePicker, setShowLottiePicker] = useState(false)
+  const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null)
   const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>('idle')
   const [usernameHelp, setUsernameHelp] = useState<string>('')
 
   const [darkMode, setDarkMode] = useState(false)
   const [notifications, setNotifications] = useState(true)
-
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const openFilePicker = () => fileInputRef.current?.click()
 
   useEffect(() => {
     if (!user) return
@@ -136,72 +133,13 @@ export default function ConfiguracionPage() {
     }
   }, [username, perfil?.username])
 
-  const handleAvatarChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.currentTarget.value = ''
-    if (!file || !user) return
-
-    try {
-      if (!file.type.startsWith('image/')) {
-        toast.error('El archivo debe ser una imagen.')
-        return
-      }
-
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error('Maximo 2MB.')
-        return
-      }
-
-      const { data: sessionData } = await supabase.auth.getSession()
-      if (!sessionData.session) {
-        toast.error('Sesion expirada. Inicia sesion nuevamente.')
-        return
-      }
-
-      setUploading(true)
-
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
-      const filePath = `${user.id}/${Date.now()}.${ext}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: false })
-
-      if (uploadError) {
-        console.error('[UPLOAD_ERROR]', uploadError)
-        toast.error(uploadError.message || 'No se pudo subir el archivo.')
-        return
-      }
-
-      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath)
-      const publicUrl = data.publicUrl
-
-      const updateRes = await fetch('/api/user/update-avatar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ avatar_url: publicUrl }),
-      })
-      const updatePayload = await updateRes.json().catch(() => ({}))
-      if (!updateRes.ok) {
-        console.error('[DB_UPDATE_ERROR]', updatePayload)
-        toast.error(updatePayload?.error || 'No se pudo guardar en tu perfil.')
-        return
-      }
-
-      setAvatarUrl(`${publicUrl}?v=${Date.now()}`)
-      toast.success('Avatar actualizado')
-      void refrescarUsuario()
-    } catch (err) {
-      console.error('[UNEXPECTED_UPLOAD_ERROR]', err)
-      toast.error('Error inesperado al subir.')
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const handleChooseLottie = async (url: string) => {
+  const handleSaveSelectedAvatar = async () => {
     if (!user) {
       toast.error('No hay usuario en sesion.')
+      return
+    }
+    if (!selectedAvatar) {
+      toast.error('Selecciona un avatar.')
       return
     }
 
@@ -217,7 +155,7 @@ export default function ConfiguracionPage() {
       const updRes = await fetch('/api/user/update-avatar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ avatar_url: url }),
+        body: JSON.stringify({ avatar_url: selectedAvatar }),
       })
       const updPayload = await updRes.json().catch(() => ({}))
       if (!updRes.ok) {
@@ -226,7 +164,7 @@ export default function ConfiguracionPage() {
         return
       }
 
-      setAvatarUrl(`${url}?v=${Date.now()}`)
+      setAvatarUrl(`${selectedAvatar}?v=${Date.now()}`)
       setShowLottiePicker(false)
       toast.success('Avatar actualizado')
       void refrescarUsuario()
@@ -311,6 +249,11 @@ export default function ConfiguracionPage() {
   const cleanUrl = getCleanUrl(avatarUrl)
   const isLottie = cleanUrl.endsWith('.json')
 
+  useEffect(() => {
+    if (!showLottiePicker) return
+    setSelectedAvatar(cleanUrl.endsWith('.json') ? cleanUrl : LOTTIE_PRESETS[0])
+  }, [showLottiePicker, cleanUrl])
+
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 px-3 pb-10 pt-4 sm:px-6 sm:pt-6">
       <header className="rounded-2xl border bg-background/70 p-4 sm:p-6">
@@ -336,32 +279,6 @@ export default function ConfiguracionPage() {
           )}
 
           <div className="flex flex-wrap gap-3">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarChange}
-            />
-
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={openFilePicker}
-              className="cursor-pointer"
-              disabled={uploading || saving}
-            >
-              {uploading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Subiendo
-                </>
-              ) : (
-                <>
-                  <Upload className="mr-2 h-4 w-4" /> Subir desde mi dispositivo
-                </>
-              )}
-            </Button>
-
             <Button
               type="button"
               variant="outline"
@@ -480,10 +397,10 @@ export default function ConfiguracionPage() {
                 <button
                   key={src}
                   type="button"
-                  onClick={() => handleChooseLottie(src)}
+                  onClick={() => setSelectedAvatar(src)}
                   disabled={saving}
                   className={`flex cursor-pointer items-center justify-center rounded-xl border p-2 transition disabled:opacity-60 ${
-                    cleanUrl === src
+                    selectedAvatar === src
                       ? 'border-primary ring-2 ring-primary'
                       : 'hover:ring-2 hover:ring-primary/60'
                   }`}
@@ -491,6 +408,16 @@ export default function ConfiguracionPage() {
                   <LottieAvatar src={src} size={80} />
                 </button>
               ))}
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setShowLottiePicker(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveSelectedAvatar} disabled={!selectedAvatar || saving}>
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Guardar avatar
+              </Button>
             </div>
           </div>
         </div>

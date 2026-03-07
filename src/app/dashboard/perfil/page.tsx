@@ -1,7 +1,7 @@
 // src/app/dashboard/perfil/page.tsx
 'use client'
 
-import { useEffect, useMemo, useRef, useState, ChangeEvent } from 'react'
+import { useEffect, useMemo, useState, ChangeEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 
 // icons
-import { LogOut, Save, Loader2, Camera, Check, X, ArrowUpRight, Crown, Tags } from 'lucide-react'
+import { LogOut, Save, Loader2, Check, X, ArrowUpRight, Crown, Tags, Images } from 'lucide-react'
 
 // Lottie avatar
 import LottieAvatar from '@/components/LottieAvatar'
@@ -39,6 +39,16 @@ type UsernameStatus = 'idle' | 'checking' | 'available' | 'unavailable'
 // Helpers avatar
 const getCleanUrl = (u?: string | null) => (u ? u.split('?')[0] : '')
 const isLottieUrl = (u?: string | null) => getCleanUrl(u).endsWith('.json')
+const LOTTIE_PRESETS = [
+  '/avatars/lottie/avatar1.json',
+  '/avatars/lottie/avatar2.json',
+  '/avatars/lottie/avatar3.json',
+  '/avatars/lottie/avatar4.json',
+  '/avatars/lottie/avatar5.json',
+  '/avatars/lottie/avatar6.json',
+  '/avatars/lottie/avatar7.json',
+  '/avatars/lottie/avatar8.json',
+]
 
 export default function PerfilPage() {
   const router = useRouter()
@@ -48,9 +58,9 @@ export default function PerfilPage() {
   const [localProfile, setLocalProfile] = useState<PerfilExtendido | null>(null)
   const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>('idle')
 
-  // avatar upload
-  const [uploadingAvatar, setUploadingAvatar] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false)
+  const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null)
+  const [savingAvatar, setSavingAvatar] = useState(false)
 
   // cache-buster para el avatar en esta página (solo imágenes)
   const [avatarVersion, setAvatarVersion] = useState<number>(Date.now())
@@ -68,6 +78,9 @@ export default function PerfilPage() {
 
     const ua = (perfil as Record<string, any>)?.updated_at as string | undefined
     if (ua) setAvatarVersion(new Date(ua).getTime())
+
+    const clean = getCleanUrl((perfil as Record<string, any>)?.avatar_url as string | undefined)
+    setSelectedAvatar(clean.endsWith('.json') ? clean : null)
   }, [perfil])
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -157,51 +170,34 @@ export default function PerfilPage() {
     }
   }
 
-  const handlePickAvatar = () => fileInputRef.current?.click()
+  const handleSaveSelectedAvatar = async () => {
+    if (!user || !selectedAvatar) return
+    if (!selectedAvatar.endsWith('.json')) return
 
-  const handleAvatarChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !user) return
-    if (!file.type.startsWith('image/')) {
-      toast.error('Selecciona una imagen válida.')
-      return
-    }
-
-    setUploadingAvatar(true)
     try {
-      const ext = file.name.split('.').pop() || 'png'
-      const filePath = `${user.id}/${Date.now()}.${ext}`
-      const { error: uploadErr } = await supabase.storage.from('avatars').upload(filePath, file, {
-        upsert: false,
-        cacheControl: '3600',
-      })
-      if (uploadErr) throw uploadErr
-
-      const { data: pub } = supabase.storage.from('avatars').getPublicUrl(filePath)
-      if (!pub?.publicUrl) throw new Error('No se pudo obtener la URL pública')
-
-      const nowIso = new Date().toISOString()
+      setSavingAvatar(true)
       const avatarRes = await fetch('/api/user/update-avatar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ avatar_url: pub.publicUrl }),
+        body: JSON.stringify({ avatar_url: selectedAvatar }),
       })
+      const payload = await avatarRes.json().catch(() => ({}))
       if (!avatarRes.ok) {
-        const payload = await avatarRes.json().catch(() => ({}))
         throw new Error(payload?.error || 'No se pudo actualizar el avatar')
       }
 
+      const nowIso = new Date().toISOString()
       setLocalProfile((prev) =>
-        prev ? { ...prev, avatar_url: pub.publicUrl, updated_at: nowIso } : prev
+        prev ? { ...prev, avatar_url: selectedAvatar, updated_at: nowIso } : prev
       )
       setAvatarVersion(Date.now())
       toast.success('Avatar actualizado')
+      setShowAvatarPicker(false)
       router.refresh()
     } catch (err) {
       toast.error((err as Error).message)
     } finally {
-      setUploadingAvatar(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
+      setSavingAvatar(false)
     }
   }
 
@@ -289,7 +285,7 @@ export default function PerfilPage() {
           <div className="flex flex-col md:flex-row gap-6">
             {/* Avatar + meta */}
             <div className="flex flex-col items-center md:items-start gap-4 min-w-[220px]">
-              <div className="relative">
+              <div className="flex flex-col items-center gap-3">
                 {lottie ? (
                   <div className="h-24 w-24 ring-2 ring-muted rounded-full overflow-hidden grid place-items-center bg-muted">
                     <LottieAvatar src={cleanUrl} size={96} />
@@ -305,26 +301,14 @@ export default function PerfilPage() {
 
                 <Button
                   type="button"
-                  variant="secondary"
-                  size="icon"
-                  className="absolute -bottom-2 -right-2 h-9 w-9 rounded-full shadow"
-                  onClick={handlePickAvatar}
-                  disabled={uploadingAvatar}
-                  aria-label="Cambiar avatar"
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setShowAvatarPicker(true)}
                 >
-                  {uploadingAvatar ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Camera className="h-4 w-4" />
-                  )}
+                  <Images className="h-4 w-4" />
+                  Elegir avatar
                 </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleAvatarChange}
-                />
               </div>
 
               <div className="text-center md:text-left">
@@ -479,6 +463,46 @@ export default function PerfilPage() {
       </Card>
 
       <p className="text-xs text-muted-foreground mt-3" />
+
+      {showAvatarPicker && (
+        <div
+          className="fixed inset-0 z-[80] flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
+          onClick={() => setShowAvatarPicker(false)}
+        >
+          <div
+            className="w-full max-h-[85vh] overflow-y-auto rounded-t-2xl border bg-white p-4 shadow-xl sm:max-w-2xl sm:rounded-2xl sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="mb-4 text-lg font-semibold">Elige tu avatar</h2>
+            <div className="grid grid-cols-2 gap-3 py-2 sm:grid-cols-3 md:grid-cols-4">
+              {LOTTIE_PRESETS.map((src) => (
+                <button
+                  key={src}
+                  type="button"
+                  onClick={() => setSelectedAvatar(src)}
+                  className={`flex items-center justify-center rounded-xl border p-2 transition ${
+                    selectedAvatar === src
+                      ? 'border-primary ring-2 ring-primary'
+                      : 'hover:ring-2 hover:ring-primary/60'
+                  }`}
+                >
+                  <LottieAvatar src={src} size={80} />
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setShowAvatarPicker(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveSelectedAvatar} disabled={!selectedAvatar || savingAvatar}>
+                {savingAvatar && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Guardar avatar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
