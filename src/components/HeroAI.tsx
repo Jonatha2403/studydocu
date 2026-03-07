@@ -61,13 +61,13 @@ export default function HeroAI() {
     return () => mq.removeEventListener?.('change', sync)
   }, [])
 
-  // ✅ Partículas SOLO desktop y sin reduceMotion
+  // ✅ Partículas en desktop y móvil (config ligera en móvil)
   useEffect(() => {
-    if (isMobile || reduceMotion) return
+    if (reduceMotion) return
     initParticlesEngine(async (engine) => {
       await loadBasic(engine)
     }).then(() => setEngineReady(true))
-  }, [isMobile, reduceMotion])
+  }, [reduceMotion])
 
   const particlesLoaded = useCallback(async (_container?: Container) => {}, [])
 
@@ -166,13 +166,16 @@ export default function HeroAI() {
             background: { color: { value: 'transparent' } },
             fpsLimit: 60,
             particles: {
-              number: { value: 18, density: { enable: true, width: 900, height: 900 } },
-              size: { value: 2 },
-              move: { enable: true, speed: 0.35 },
-              opacity: { value: 0.22 },
+              number: {
+                value: isMobile ? 26 : 18,
+                density: { enable: true, width: 900, height: 900 },
+              },
+              size: { value: isMobile ? 2.2 : 2 },
+              move: { enable: true, speed: isMobile ? 0.28 : 0.35 },
+              opacity: { value: isMobile ? 0.34 : 0.22 },
               color: { value: '#2563EB' },
               links: {
-                enable: true,
+                enable: !isMobile,
                 distance: 170,
                 color: '#06B6D4',
                 opacity: 0.14,

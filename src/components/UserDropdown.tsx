@@ -49,6 +49,7 @@ export default function UserDropdown({ className, showName = true }: UserDropdow
   }
 
   if (!perfil) return null
+  const displayName = perfil.username || perfil.nombre_completo || 'Usuario'
 
   return (
     <DropdownMenu>
@@ -78,8 +79,8 @@ export default function UserDropdown({ className, showName = true }: UserDropdow
           )}
 
           {showName && (
-            <span className="hidden max-w-[120px] truncate font-semibold text-slate-800 sm:inline dark:text-slate-100">
-              {perfil.username}
+            <span className="inline max-w-[140px] truncate font-semibold text-slate-800 dark:text-slate-100">
+              {displayName}
             </span>
           )}
 
