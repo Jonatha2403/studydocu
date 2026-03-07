@@ -112,10 +112,15 @@ export default function ExplorarPage() {
   )
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6 px-3 pb-10 pt-6 sm:px-6 lg:pt-8">
-      <section className="rounded-2xl border bg-white p-4 shadow-sm dark:bg-gray-900 sm:p-6">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Explorar documentos</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-3 pb-10 pt-28 sm:px-6 sm:pt-32 lg:pt-32">
+      <section className="rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-blue-50/40 p-5 shadow-sm dark:border-slate-700 dark:from-gray-900 dark:via-slate-900 dark:to-slate-900 sm:p-7">
+        <div className="mb-3 inline-flex items-center rounded-full border border-slate-200 bg-white/90 px-3 py-1 text-xs font-medium text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300">
+          Biblioteca academica
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+          Explorar documentos
+        </h1>
+        <p className="mt-2 max-w-3xl text-sm text-slate-600 dark:text-slate-300">
           Filtra por categoria, universidad y formato para encontrar material academico.
         </p>
       </section>
