@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, FormEvent } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { Send, MessageSquareText, Loader2, UserCircle, Flag } from 'lucide-react'
 import Image from 'next/image'

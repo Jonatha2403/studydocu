@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { ThumbsUp, ThumbsDown, Smile, Meh, Frown } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
-import { useUser } from '@/lib/useUser'
+import { supabase } from '@/lib/supabase/client'
+import { useUserContext } from '@/context/UserContext'
 import { toast } from 'sonner'
 
 interface Props {
@@ -23,7 +23,7 @@ const reactionsList = [
 ]
 
 export default function ReactionBar({ documentId }: Props) {
-  const { user } = useUser()
+  const { user } = useUserContext()
   const [reactions, setReactions] = useState<Record<string, number>>({})
   const [userReaction, setUserReaction] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
