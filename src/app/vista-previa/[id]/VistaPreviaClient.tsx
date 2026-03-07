@@ -10,6 +10,7 @@ import DocumentPreview from '@/components/DocumentPreview'
 import { useUserContext } from '@/context/UserContext'
 import { toast } from 'sonner'
 import FavoriteButton from '@/components/FavoriteButton'
+import DownloadButton from '@/components/DownloadButton'
 import { normalizeStoragePath, parseSupabaseStorageUrl, isHttpUrl } from '@/lib/storagePath'
 
 interface Profile {
@@ -406,15 +407,13 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
           <p className="flex items-center gap-2 text-pink-600 dark:text-pink-400">
             <Heart size={16} /> Likes: <strong>{doc.likes ?? 0}</strong>
           </p>
-          {publicUrl && (
-            <a
-              href={publicUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded w-full justify-center"
-            >
-              <Download size={16} /> Descargar documento
-            </a>
+          {doc.file_path && (
+            <DownloadButton
+              docId={doc.id}
+              filePath={doc.file_path}
+              className="inline-flex w-full items-center justify-center gap-2 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              label="Descargar documento"
+            />
           )}
         </aside>
       </div>

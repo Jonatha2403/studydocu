@@ -65,19 +65,33 @@ export default function DownloadButton({
     }
   }, [subscriptionActiva, tieneDocsAprobados, userIdProp])
 
-  const registrarDescarga = async () => {
-    if (!docId) return
+  const registrarDescarga = async (): Promise<boolean> => {
+    if (!docId) return true
     try {
       const res = await fetch(`/api/documents/${docId}/download`, { method: 'POST' })
+      const body = await res.json().catch(() => ({}))
+
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        console.warn(
-          '[DownloadButton] contador descarga no actualizado:',
-          body?.error || res.status
+        const msg = body?.error || 'No tienes permiso para descargar este documento.'
+        toast.error(msg)
+        return false
+      }
+
+      if (body?.accessMode === 'free' && typeof body?.remainingFreeDownloads === 'number') {
+        toast.success(
+          `Descarga gratis aplicada. Te quedan ${body.remainingFreeDownloads} descargas gratis.`
         )
       }
+
+      if (body?.accessMode === 'points' && body?.pointsCharged) {
+        toast.success(`Se descontaron ${body.pointsCharged} puntos por esta descarga.`)
+      }
+
+      return true
     } catch (e) {
       console.warn('[DownloadButton] error registrando descarga:', e)
+      toast.error('No se pudo validar tu descarga. Intenta nuevamente.')
+      return false
     }
   }
 
@@ -96,6 +110,9 @@ export default function DownloadButton({
 
     try {
       setLoading(true)
+
+      const accessAllowed = await registrarDescarga()
+      if (!accessAllowed) return
 
       // Normaliza la ruta: debe ser el "object key" dentro del bucket
       let objectKey = (filePath || '').replace(/^\/+/, '')
@@ -120,7 +137,6 @@ export default function DownloadButton({
         return
       }
 
-      await registrarDescarga()
       window.open(url, '_blank')
     } catch (e: any) {
       console.error('[DownloadButton] descargar error:', e)

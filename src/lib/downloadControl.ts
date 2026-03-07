@@ -3,19 +3,15 @@ import { supabase } from '@/lib/supabase'
 
 export async function puedeDescargar(userId: string): Promise<boolean> {
   try {
-    const { data: perfil } = await supabase
+    if (!userId) return false
+    const { data: perfil, error } = await supabase
       .from('profiles')
-      .select('subscription_active')
+      .select('id')
       .eq('id', userId)
-      .single()
+      .maybeSingle()
 
-    const { count } = await supabase
-      .from('documents')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('status', 'aprobado')
-
-    return !!perfil?.subscription_active || (count || 0) > 0
+    if (error) throw error
+    return Boolean(perfil?.id)
   } catch (e) {
     console.error('Error al verificar descarga:', e)
     return false
