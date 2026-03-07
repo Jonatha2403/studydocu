@@ -52,7 +52,7 @@ const LOTTIE_PRESETS = [
 
 export default function PerfilPage() {
   const router = useRouter()
-  const { user, perfil, loading, refrescarUsuario } = useUserContext()
+  const { user, perfil, loading, refrescarUsuario, actualizarPerfilLocal } = useUserContext()
 
   const [saving, setSaving] = useState(false)
   const [localProfile, setLocalProfile] = useState<PerfilExtendido | null>(null)
@@ -82,6 +82,12 @@ export default function PerfilPage() {
     const clean = getCleanUrl((perfil as Record<string, any>)?.avatar_url as string | undefined)
     setSelectedAvatar(clean.endsWith('.json') ? clean : null)
   }, [perfil])
+
+  useEffect(() => {
+    if (!showAvatarPicker) return
+    const cleanCurrent = getCleanUrl(localProfile?.avatar_url)
+    setSelectedAvatar(cleanCurrent.endsWith('.json') ? cleanCurrent : LOTTIE_PRESETS[0])
+  }, [showAvatarPicker, localProfile?.avatar_url])
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -186,8 +192,9 @@ export default function PerfilPage() {
       setLocalProfile((prev) =>
         prev ? { ...prev, avatar_url: selectedAvatar, updated_at: nowIso } : prev
       )
+      actualizarPerfilLocal({ avatar_url: selectedAvatar, updated_at: nowIso })
       setAvatarVersion(Date.now())
-      await refrescarUsuario()
+      await refrescarUsuario(true)
       toast.success('Avatar actualizado')
       setShowAvatarPicker(false)
       router.refresh()

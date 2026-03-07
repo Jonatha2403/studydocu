@@ -28,7 +28,7 @@ const getCleanUrl = (u?: string | null) => (u ? u.split('?')[0] : '')
 type UsernameStatus = 'idle' | 'checking' | 'available' | 'unavailable'
 
 export default function ConfiguracionPage() {
-  const { user, perfil, refrescarUsuario } = useUserContext()
+  const { user, perfil, refrescarUsuario, actualizarPerfilLocal } = useUserContext()
 
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -165,9 +165,10 @@ export default function ConfiguracionPage() {
 
       setAvatarUrl(selectedAvatar)
       setAvatarVersion(new Date(nowIso).getTime())
+      actualizarPerfilLocal({ avatar_url: selectedAvatar, updated_at: nowIso })
       setShowLottiePicker(false)
       toast.success('Avatar actualizado')
-      await refrescarUsuario()
+      await refrescarUsuario(true)
     } catch (err) {
       console.error('[PRESET_CHOOSE_ERROR:CATCH]', err)
       toast.error('No se pudo guardar el avatar seleccionado.')
@@ -222,7 +223,7 @@ export default function ConfiguracionPage() {
       }
 
       toast.success('Perfil guardado correctamente')
-      await refrescarUsuario()
+      await refrescarUsuario(true)
     } catch (err) {
       console.error('[SAVE_PROFILE_ERROR]', err)
       toast.error('No se pudo guardar el perfil')
