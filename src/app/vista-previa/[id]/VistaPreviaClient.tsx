@@ -296,7 +296,7 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto mt-8 px-4">
+    <div className="mx-auto mt-8 max-w-6xl px-4 pb-28 md:pb-12">
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={() => router.back()}
