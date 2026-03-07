@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/client'
 import { useUserContext } from '@/context/UserContext'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Loader2, User2, Images, X, Check, AlertCircle } from 'lucide-react'
 import LottieAvatar from '@/components/LottieAvatar'
+import { getAvatarImageSrc } from '@/lib/avatar'
 
 const LOTTIE_PRESETS = [
   '/avatars/lottie/avatar1.json',
@@ -32,6 +33,7 @@ export default function ConfiguracionPage() {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [avatarVersion, setAvatarVersion] = useState<number>(Date.now())
 
   const [saving, setSaving] = useState(false)
   const [showLottiePicker, setShowLottiePicker] = useState(false)
@@ -50,13 +52,14 @@ export default function ConfiguracionPage() {
     if (perfil) {
       setUsername(perfil.username ?? '')
       setAvatarUrl(perfil.avatar_url ?? null)
+      if (perfil.updated_at) setAvatarVersion(new Date(perfil.updated_at).getTime())
       return
     }
 
     ;(async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('username, avatar_url')
+        .select('username, avatar_url, updated_at')
         .eq('id', user.id)
         .single()
 
@@ -67,6 +70,7 @@ export default function ConfiguracionPage() {
 
       setUsername(data?.username ?? '')
       setAvatarUrl(data?.avatar_url ?? null)
+      if (data?.updated_at) setAvatarVersion(new Date(data.updated_at).getTime())
     })()
   }, [user, perfil])
 
@@ -152,16 +156,18 @@ export default function ConfiguracionPage() {
         return
       }
 
+      const nowIso = new Date().toISOString()
       const { error: updErr } = await supabase
         .from('profiles')
-        .update({ avatar_url: selectedAvatar, updated_at: new Date().toISOString() })
+        .update({ avatar_url: selectedAvatar, updated_at: nowIso })
         .eq('id', user.id)
       if (updErr) throw updErr
 
-      setAvatarUrl(`${selectedAvatar}?v=${Date.now()}`)
+      setAvatarUrl(selectedAvatar)
+      setAvatarVersion(new Date(nowIso).getTime())
       setShowLottiePicker(false)
       toast.success('Avatar actualizado')
-      void refrescarUsuario()
+      await refrescarUsuario()
     } catch (err) {
       console.error('[PRESET_CHOOSE_ERROR:CATCH]', err)
       toast.error('No se pudo guardar el avatar seleccionado.')
@@ -206,15 +212,17 @@ export default function ConfiguracionPage() {
 
       const cleanAvatar = avatarUrl ? avatarUrl.split('?v=')[0] : null
       if (cleanAvatar) {
+        const nowIso = new Date().toISOString()
         const { error: avatarErr } = await supabase
           .from('profiles')
-          .update({ avatar_url: cleanAvatar, updated_at: new Date().toISOString() })
+          .update({ avatar_url: cleanAvatar, updated_at: nowIso })
           .eq('id', user.id)
         if (avatarErr) throw avatarErr
+        setAvatarVersion(new Date(nowIso).getTime())
       }
 
       toast.success('Perfil guardado correctamente')
-      void refrescarUsuario()
+      await refrescarUsuario()
     } catch (err) {
       console.error('[SAVE_PROFILE_ERROR]', err)
       toast.error('No se pudo guardar el perfil')
@@ -238,6 +246,7 @@ export default function ConfiguracionPage() {
 
   const cleanUrl = getCleanUrl(avatarUrl)
   const isLottie = cleanUrl.endsWith('.json')
+  const avatarImageSrc = getAvatarImageSrc(avatarUrl, avatarVersion)
 
   useEffect(() => {
     if (!showLottiePicker) return
@@ -261,7 +270,7 @@ export default function ConfiguracionPage() {
             <LottieAvatar src={cleanUrl} size={80} />
           ) : (
             <Avatar className="h-20 w-20">
-              <AvatarImage src={avatarUrl ?? undefined} alt="Avatar" />
+              <AvatarImage src={avatarImageSrc} alt="Avatar" />
               <AvatarFallback>
                 <User2 className="h-8 w-8" />
               </AvatarFallback>

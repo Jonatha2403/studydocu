@@ -31,6 +31,7 @@ import {
 } from 'recharts'
 import PremiumBadge from '@/components/PremiumBadge'
 import LottieAvatar from '@/components/LottieAvatar'
+import { getAvatarImageSrc, getCleanAvatarUrl, isLottieAvatar } from '@/lib/avatar'
 
 type UserDashboardStats = {
   puntos: number
@@ -47,14 +48,6 @@ type FetchedDocument = {
   created_at: string
 }
 
-function getCleanUrl(u?: string | null) {
-  return u ? u.split('?')[0] : ''
-}
-
-function isLottieUrl(u?: string | null) {
-  return getCleanUrl(u).toLowerCase().endsWith('.json')
-}
-
 export default function DashboardPage() {
   const { user, perfil, loading: sessionLoading } = useUserContext()
   const { isPremium } = useMembership()
@@ -69,8 +62,9 @@ export default function DashboardPage() {
   const router = useRouter()
 
   const avatarUrl = (perfil as any)?.avatar_url as string | undefined
-  const avatarClean = getCleanUrl(avatarUrl)
-  const isLottieAvatar = isLottieUrl(avatarUrl)
+  const avatarClean = getCleanAvatarUrl(avatarUrl)
+  const isLottieAvatarSelected = isLottieAvatar(avatarUrl)
+  const avatarImageSrc = getAvatarImageSrc(avatarUrl, (perfil as any)?.updated_at as string)
 
   const fetchStats = useCallback(async () => {
     if (!user) return
@@ -218,11 +212,11 @@ export default function DashboardPage() {
           <div className="relative flex items-center justify-center">
             <div className="absolute h-28 w-28 animate-spin-slow rounded-full bg-[conic-gradient(#60a5fa,#a78bfa,#f472b6,#60a5fa)]" />
             <div className="relative grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-white ring-4 ring-white dark:bg-zinc-900 dark:ring-zinc-900 sm:h-24 sm:w-24">
-              {isLottieAvatar && avatarClean ? (
+              {isLottieAvatarSelected && avatarClean ? (
                 <LottieAvatar src={avatarClean} className="h-full w-full" />
               ) : (
                 <img
-                  src={avatarUrl ?? '/avatar.png'}
+                  src={avatarImageSrc ?? '/avatar.png'}
                   alt="Avatar"
                   className="h-full w-full object-cover"
                 />

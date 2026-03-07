@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, ChangeEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/client'
 import { useUserContext } from '@/context/UserContext'
 
 // ui
@@ -187,7 +187,7 @@ export default function PerfilPage() {
         prev ? { ...prev, avatar_url: selectedAvatar, updated_at: nowIso } : prev
       )
       setAvatarVersion(Date.now())
-      void refrescarUsuario()
+      await refrescarUsuario()
       toast.success('Avatar actualizado')
       setShowAvatarPicker(false)
       router.refresh()

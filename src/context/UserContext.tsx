@@ -31,6 +31,7 @@ export interface PerfilExtendido {
   has_new_rewards?: boolean
   onboarding_complete?: boolean
   tags?: string[]
+  updated_at?: string
 }
 
 interface UserContextType {
@@ -188,7 +189,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             `
             id, username, email, points, subscription_active, universidad,
             nombre_completo, carrera, avatar_url, role, intereses,
-            onboarding_complete
+            onboarding_complete, updated_at
           `
           )
           .eq('id', currentSession.user.id)

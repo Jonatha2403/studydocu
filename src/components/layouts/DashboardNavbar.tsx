@@ -10,6 +10,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
+import LottieAvatar from '@/components/LottieAvatar'
+import { getAvatarImageSrc, getCleanAvatarUrl, isLottieAvatar } from '@/lib/avatar'
 
 export default function DashboardNavbar() {
   const router = useRouter()
@@ -18,9 +20,7 @@ export default function DashboardNavbar() {
   const [menuAbierto, setMenuAbierto] = useState(false)
 
   // Ocultar si NO estamos en dashboard o admin
-  const ocultarNavbar =
-    !pathname.startsWith('/dashboard') &&
-    !pathname.startsWith('/admin') 
+  const ocultarNavbar = !pathname.startsWith('/dashboard') && !pathname.startsWith('/admin')
 
   if (ocultarNavbar) return null
 
@@ -36,6 +36,9 @@ export default function DashboardNavbar() {
   }
 
   const toggleMenu = () => setMenuAbierto(!menuAbierto)
+  const cleanAvatarUrl = getCleanAvatarUrl(perfil?.avatar_url)
+  const isAnimatedAvatar = isLottieAvatar(perfil?.avatar_url)
+  const avatarImageSrc = getAvatarImageSrc(perfil?.avatar_url, perfil?.updated_at)
 
   return (
     <>
@@ -56,21 +59,37 @@ export default function DashboardNavbar() {
 
           {/* Menú Desktop */}
           <nav className="hidden lg:flex items-center gap-4">
-            <Link href="/dashboard" className="hover:underline">Inicio</Link>
-            <Link href="/mi-tablero" className="hover:underline">Tablero</Link>
-            <Link href="/mis-favoritos" className="hover:underline">Favoritos</Link>
-            <Link href="/documentos-subidos" className="hover:underline">Mis Documentos</Link>
-            <Link href="/ajustes" className="hover:underline">Ajustes</Link>
+            <Link href="/dashboard" className="hover:underline">
+              Inicio
+            </Link>
+            <Link href="/mi-tablero" className="hover:underline">
+              Tablero
+            </Link>
+            <Link href="/mis-favoritos" className="hover:underline">
+              Favoritos
+            </Link>
+            <Link href="/documentos-subidos" className="hover:underline">
+              Mis Documentos
+            </Link>
+            <Link href="/ajustes" className="hover:underline">
+              Ajustes
+            </Link>
             {perfil?.role === 'admin' && (
-              <Link href="/admin/dashboard" className="hover:underline text-amber-600">Admin</Link>
+              <Link href="/admin/dashboard" className="hover:underline text-amber-600">
+                Admin
+              </Link>
             )}
           </nav>
 
           {/* Perfil Desktop */}
           <div className="hidden lg:flex items-center gap-4 truncate max-w-md">
-            {perfil?.avatar_url ? (
+            {isAnimatedAvatar && cleanAvatarUrl ? (
+              <div className="h-9 w-9 overflow-hidden rounded-full">
+                <LottieAvatar src={cleanAvatarUrl} size={36} />
+              </div>
+            ) : avatarImageSrc ? (
               <Image
-                src={perfil.avatar_url}
+                src={avatarImageSrc}
                 alt="Avatar"
                 width={36}
                 height={36}
@@ -81,7 +100,9 @@ export default function DashboardNavbar() {
             )}
 
             <div className="flex flex-col text-sm truncate">
-              <span className="font-semibold truncate">{saludo()}, {perfil?.username} 👋</span>
+              <span className="font-semibold truncate">
+                {saludo()}, {perfil?.username} 👋
+              </span>
               <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
                 🎓 {perfil?.universidad || 'Universidad'}
               </span>
@@ -98,11 +119,7 @@ export default function DashboardNavbar() {
               >
                 Volver al dashboard
               </Button>
-              <Button
-                onClick={cerrarSesion}
-                variant="destructive"
-                className="text-xs px-3"
-              >
+              <Button onClick={cerrarSesion} variant="destructive" className="text-xs px-3">
                 <LogOut className="w-4 h-4 mr-1" /> Cerrar sesión
               </Button>
             </div>
@@ -128,21 +145,37 @@ export default function DashboardNavbar() {
             </div>
 
             <nav className="space-y-4">
-              <Link href="/dashboard" onClick={toggleMenu} className="block">Inicio</Link>
-              <Link href="/mi-tablero" onClick={toggleMenu} className="block">Tablero</Link>
-              <Link href="/mis-favoritos" onClick={toggleMenu} className="block">Favoritos</Link>
-              <Link href="/documentos-subidos" onClick={toggleMenu} className="block">Mis Documentos</Link>
-              <Link href="/ajustes" onClick={toggleMenu} className="block">Ajustes</Link>
+              <Link href="/dashboard" onClick={toggleMenu} className="block">
+                Inicio
+              </Link>
+              <Link href="/mi-tablero" onClick={toggleMenu} className="block">
+                Tablero
+              </Link>
+              <Link href="/mis-favoritos" onClick={toggleMenu} className="block">
+                Favoritos
+              </Link>
+              <Link href="/documentos-subidos" onClick={toggleMenu} className="block">
+                Mis Documentos
+              </Link>
+              <Link href="/ajustes" onClick={toggleMenu} className="block">
+                Ajustes
+              </Link>
               {perfil?.role === 'admin' && (
-                <Link href="/admin/dashboard" onClick={toggleMenu} className="block text-amber-600">Panel Admin</Link>
+                <Link href="/admin/dashboard" onClick={toggleMenu} className="block text-amber-600">
+                  Panel Admin
+                </Link>
               )}
             </nav>
 
             <div className="mt-6 border-t pt-4 space-y-3">
               <div className="flex items-center gap-3">
-                {perfil?.avatar_url ? (
+                {isAnimatedAvatar && cleanAvatarUrl ? (
+                  <div className="h-8 w-8 overflow-hidden rounded-full">
+                    <LottieAvatar src={cleanAvatarUrl} size={32} />
+                  </div>
+                ) : avatarImageSrc ? (
                   <Image
-                    src={perfil.avatar_url}
+                    src={avatarImageSrc}
                     alt="Avatar"
                     width={32}
                     height={32}
@@ -152,7 +185,9 @@ export default function DashboardNavbar() {
                   <UserCircle className="w-6 h-6 text-gray-400" />
                 )}
                 <div className="text-sm">
-                  <p className="font-medium">{saludo()}, {perfil?.username}</p>
+                  <p className="font-medium">
+                    {saludo()}, {perfil?.username}
+                  </p>
                   <p className="text-xs text-gray-500">{perfil?.universidad || 'Universidad'}</p>
                 </div>
               </div>

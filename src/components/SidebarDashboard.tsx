@@ -23,6 +23,7 @@ import { toast } from 'sonner'
 import { useUserContext } from '@/context/UserContext'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import LottieAvatar from '@/components/LottieAvatar'
+import { getAvatarImageSrc, getCleanAvatarUrl, isLottieAvatar } from '@/lib/avatar'
 
 export default function SidebarDashboard() {
   const { perfil } = useUserContext()
@@ -45,8 +46,9 @@ export default function SidebarDashboard() {
     { label: 'Configuracion', href: '/dashboard/configuracion', icon: Settings },
   ]
 
-  const cleanAvatarUrl = (perfil?.avatar_url || '').split('?')[0]
-  const isLottieAvatar = cleanAvatarUrl.endsWith('.json')
+  const cleanAvatarUrl = getCleanAvatarUrl(perfil?.avatar_url)
+  const isAnimatedAvatar = isLottieAvatar(perfil?.avatar_url)
+  const avatarImageSrc = getAvatarImageSrc(perfil?.avatar_url, perfil?.updated_at)
   const initial = perfil?.username?.charAt(0).toUpperCase() || 'U'
   const points = Number(perfil?.points ?? 0)
   const nextGoal = points < 50 ? 50 : points < 200 ? 200 : points < 500 ? 500 : 1000
@@ -128,14 +130,11 @@ export default function SidebarDashboard() {
           </div>
 
           <div className="mt-6 flex items-center gap-3">
-            {isLottieAvatar && cleanAvatarUrl ? (
+            {isAnimatedAvatar && cleanAvatarUrl ? (
               <LottieAvatar src={cleanAvatarUrl} size={36} />
             ) : (
               <Avatar className="h-9 w-9">
-                <AvatarImage
-                  src={perfil?.avatar_url || undefined}
-                  alt={perfil?.username || 'Avatar'}
-                />
+                <AvatarImage src={avatarImageSrc} alt={perfil?.username || 'Avatar'} />
                 <AvatarFallback className="text-sm font-semibold">{initial}</AvatarFallback>
               </Avatar>
             )}
@@ -206,14 +205,11 @@ export default function SidebarDashboard() {
                 onClick={handleLogout}
                 className="mt-4 flex items-center gap-2 rounded-md px-4 py-2 text-sm text-red-500 hover:bg-red-100 dark:hover:bg-red-900"
               >
-                {isLottieAvatar && cleanAvatarUrl ? (
+                {isAnimatedAvatar && cleanAvatarUrl ? (
                   <LottieAvatar src={cleanAvatarUrl} size={24} />
                 ) : (
                   <Avatar className="h-6 w-6">
-                    <AvatarImage
-                      src={perfil?.avatar_url || undefined}
-                      alt={perfil?.username || 'Avatar'}
-                    />
+                    <AvatarImage src={avatarImageSrc} alt={perfil?.username || 'Avatar'} />
                     <AvatarFallback className="text-[10px]">{initial}</AvatarFallback>
                   </Avatar>
                 )}
