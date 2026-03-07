@@ -60,7 +60,17 @@ const hasAnyInterests = (value: unknown) => {
     return value.some((v) => String(v ?? '').trim().length > 0)
   }
   if (typeof value === 'string') {
-    return value.trim().length > 0 && value.trim() !== '[]'
+    const raw = value.trim()
+    if (!raw || raw === '[]' || raw === '{}' || raw === 'null') return false
+    try {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        return parsed.some((v) => String(v ?? '').trim().length > 0)
+      }
+      return false
+    } catch {
+      return raw.split(',').some((v) => v.trim().length > 0)
+    }
   }
   return false
 }
