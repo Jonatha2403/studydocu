@@ -70,10 +70,15 @@ const isOnboardingReady = (
   profile: {
     onboarding_complete?: boolean
     intereses?: unknown
+    points?: number | null
   } | null
 ) => {
   if (!profile) return false
-  return profile.onboarding_complete === true && hasAnyInterests(profile.intereses)
+  return (
+    profile.onboarding_complete === true &&
+    hasAnyInterests(profile.intereses) &&
+    Number(profile.points ?? 0) >= 50
+  )
 }
 
 export async function middleware(req: NextRequest) {
@@ -98,7 +103,7 @@ export async function middleware(req: NextRequest) {
     if (user) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('onboarding_complete,intereses')
+        .select('onboarding_complete,intereses,points')
         .eq('id', user.id)
         .maybeSingle()
 
@@ -139,7 +144,7 @@ export async function middleware(req: NextRequest) {
   // 5) Reglas adicionales (admin / premium / onboarding)
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role,subscription_status,onboarding_complete,intereses')
+    .select('role,subscription_status,onboarding_complete,intereses,points')
     .eq('id', user.id)
     .maybeSingle()
 

@@ -29,10 +29,15 @@ const isOnboardingReady = (
   profile: {
     onboarding_complete?: boolean
     intereses?: unknown
+    points?: number | null
   } | null
 ) => {
   if (!profile) return false
-  return profile.onboarding_complete === true && hasAnyInterests(profile.intereses)
+  return (
+    profile.onboarding_complete === true &&
+    hasAnyInterests(profile.intereses) &&
+    Number(profile.points ?? 0) >= 50
+  )
 }
 
 export default function AuthCallbackPage() {
@@ -71,14 +76,20 @@ export default function AuthCallbackPage() {
             if (isPkceVerifierError) {
               const { data: sessionData } = await supabase.auth.getSession()
               if (sessionData?.session) {
-                hardRedirect(next)
+                // No saltar a dashboard aquí: continuamos para aplicar
+                // la validación de onboarding antes del redirect final.
+              } else {
+                const reason = encodeURIComponent(exErr.message || 'exchange_failed')
+                hardRedirect(`/iniciar-sesion?error=auth_callback&reason=${reason}`)
                 return
               }
             }
-
-            const reason = encodeURIComponent(exErr.message || 'exchange_failed')
-            hardRedirect(`/iniciar-sesion?error=auth_callback&reason=${reason}`)
-            return
+            // Si no fue error PKCE recuperable, abortamos.
+            if (!isPkceVerifierError) {
+              const reason = encodeURIComponent(exErr.message || 'exchange_failed')
+              hardRedirect(`/iniciar-sesion?error=auth_callback&reason=${reason}`)
+              return
+            }
           }
         } else {
           // 2) Si viene hash con tokens (#access_token=...&refresh_token=...)
@@ -124,7 +135,7 @@ export default function AuthCallbackPage() {
         if (user?.id) {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('id,onboarding_complete,intereses')
+            .select('id,onboarding_complete,intereses,points')
             .eq('id', user.id)
             .maybeSingle()
 

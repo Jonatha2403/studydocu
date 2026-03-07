@@ -85,7 +85,10 @@ export default function RegisterPage() {
     if (loading || !user) return
 
     const hasIntereses = hasAnyInterests((perfil as any)?.intereses)
-    const onboardingOk = (perfil as any)?.onboarding_complete === true && hasIntereses
+    const onboardingOk =
+      (perfil as any)?.onboarding_complete === true &&
+      hasIntereses &&
+      Number((perfil as any)?.points ?? 0) >= 50
 
     router.replace(onboardingOk ? '/dashboard' : '/onboarding')
   }, [loading, user, perfil, router])

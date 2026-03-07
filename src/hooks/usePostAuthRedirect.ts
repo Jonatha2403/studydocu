@@ -15,7 +15,7 @@ type Props = {
 }
 
 function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export function usePostAuthRedirect({
@@ -24,7 +24,7 @@ export function usePostAuthRedirect({
   showWelcome = true,
   requireTokens = false,
   onStatusChange,
-  onShowWelcome
+  onShowWelcome,
 }: Props) {
   const router = useRouter()
 
@@ -62,7 +62,15 @@ export function usePostAuthRedirect({
         return
       }
 
-      if (!profile.onboarding_complete) {
+      const hasInterests = Array.isArray(profile.intereses)
+        ? profile.intereses.length > 0
+        : typeof profile.intereses === 'string'
+          ? profile.intereses.trim().length > 0 && profile.intereses.trim() !== '[]'
+          : false
+      const onboardingReady =
+        profile.onboarding_complete === true && hasInterests && Number(profile.points ?? 0) >= 50
+
+      if (!onboardingReady) {
         // Usuario nuevo: aún no ha completado el onboarding
         localStorage.setItem('welcome_shown', 'true')
         if (showWelcome) onShowWelcome?.()
@@ -86,6 +94,6 @@ export function usePostAuthRedirect({
     requireTokens,
     onStatusChange,
     onShowWelcome,
-    router
+    router,
   ])
 }
