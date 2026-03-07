@@ -17,6 +17,7 @@ interface Props {
 }
 
 export default function DownloadButton({
+  docId,
   filePath,
   userId: userIdProp,
   subscriptionActiva,
