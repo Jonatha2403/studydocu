@@ -62,7 +62,11 @@ export default function UserDropdown({ className, showName = true }: UserDropdow
         >
           {usesAnimatedAvatar && animatedAvatarSrc ? (
             <div className="h-8 w-8 overflow-hidden rounded-full border border-slate-200 dark:border-slate-700">
-              <LottieAvatar src={animatedAvatarSrc} size={32} className="h-8 w-8 !rounded-none !ring-0" />
+              <LottieAvatar
+                src={animatedAvatarSrc}
+                size={32}
+                className="h-8 w-8 !rounded-none !ring-0"
+              />
             </div>
           ) : (
             <Avatar className="h-8 w-8 border border-slate-200 dark:border-slate-700">
