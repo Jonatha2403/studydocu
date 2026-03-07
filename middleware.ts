@@ -45,6 +45,21 @@ const ONBOARDING_SAFE_ROUTES = new Set(['/onboarding'])
 const pathStartsWithAny = (path: string, prefixes: string[]) =>
   prefixes.some((p) => path === p || path.startsWith(p + '/'))
 
+const isOnboardingReady = (
+  profile: {
+    onboarding_complete?: boolean
+    intereses?: unknown
+    points?: number
+  } | null
+) => {
+  if (!profile) return false
+  const hasIntereses =
+    Array.isArray(profile.intereses) &&
+    profile.intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
+  const points = Number(profile.points ?? 0)
+  return profile.onboarding_complete === true && hasIntereses && points >= 50
+}
+
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
   const url = req.nextUrl
@@ -67,15 +82,11 @@ export async function middleware(req: NextRequest) {
     if (user) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('onboarding_complete,intereses')
+        .select('onboarding_complete,intereses,points')
         .eq('id', user.id)
         .maybeSingle()
-      const onboardingComplete: boolean | undefined = profile?.onboarding_complete
-      const hasIntereses =
-        Array.isArray(profile?.intereses) &&
-        profile.intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
 
-      if (onboardingComplete === true && hasIntereses) {
+      if (isOnboardingReady(profile as any)) {
         return NextResponse.redirect(new URL('/dashboard', req.url))
       }
       return NextResponse.redirect(new URL('/onboarding', req.url))
@@ -112,17 +123,14 @@ export async function middleware(req: NextRequest) {
   // 5) Reglas adicionales (admin / premium / onboarding)
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role,subscription_status,onboarding_complete,intereses')
+    .select('role,subscription_status,onboarding_complete,intereses,points')
     .eq('id', user.id)
     .maybeSingle()
 
   const role: string | undefined = profile?.role || user.user_metadata?.role
   const subscription_status: string | undefined =
     profile?.subscription_status || user.user_metadata?.subscription_status
-  const onboarding_complete: boolean | undefined = profile?.onboarding_complete
-  const hasIntereses =
-    Array.isArray(profile?.intereses) &&
-    profile.intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
+  const onboardingReady = isOnboardingReady(profile as any)
 
   // 5a) Admin gate
   if (pathname.startsWith('/admin') && role !== 'admin') {
@@ -143,11 +151,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // 5c) Onboarding gate (solo para páginas protegidas, no APIs)
-  if (
-    isProtectedPage &&
-    !ONBOARDING_SAFE_ROUTES.has(pathname) &&
-    (onboarding_complete !== true || !hasIntereses)
-  ) {
+  if (isProtectedPage && !ONBOARDING_SAFE_ROUTES.has(pathname) && !onboardingReady) {
     const ob = new URL('/onboarding', req.url)
     ob.searchParams.set('callbackUrl', pathname + (url.search || ''))
     return NextResponse.redirect(ob)

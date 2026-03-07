@@ -5,6 +5,21 @@ import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
+const isOnboardingReady = (
+  profile: {
+    onboarding_complete?: boolean
+    intereses?: unknown
+    points?: number
+  } | null
+) => {
+  if (!profile) return false
+  const hasIntereses =
+    Array.isArray(profile.intereses) &&
+    profile.intereses.some((v: unknown) => String(v ?? '').trim().length > 0)
+  const points = Number(profile.points ?? 0)
+  return profile.onboarding_complete === true && hasIntereses && points >= 50
+}
+
 export default function AuthCallbackPage() {
   const searchParams = useSearchParams()
 
@@ -94,7 +109,7 @@ export default function AuthCallbackPage() {
         if (user?.id) {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('id,onboarding_complete,intereses')
+            .select('id,onboarding_complete,intereses,points')
             .eq('id', user.id)
             .maybeSingle()
 
@@ -122,11 +137,7 @@ export default function AuthCallbackPage() {
             return
           }
 
-          const hasIntereses =
-            Array.isArray(profile.intereses) &&
-            profile.intereses.some((v) => String(v ?? '').trim().length > 0)
-
-          if (profile.onboarding_complete !== true || !hasIntereses) {
+          if (!isOnboardingReady(profile as any)) {
             hardRedirect('/onboarding')
             return
           }
