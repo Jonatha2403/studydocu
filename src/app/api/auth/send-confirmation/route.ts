@@ -8,14 +8,11 @@ import { sendConfirmationEmail } from '@/utils/sendConfirmationEmail'
 function getEnv() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
 
   const finalAppUrl =
-    appUrl && appUrl.startsWith('http')
-      ? appUrl
-      : appUrl
-      ? `https://${appUrl}`
-      : null
+    appUrl && appUrl.startsWith('http') ? appUrl : appUrl ? `https://${appUrl}` : null
 
   if (!supabaseUrl || !supabaseServiceKey || !finalAppUrl) {
     throw new Error(
@@ -32,14 +29,46 @@ function getSupabaseAdmin() {
 }
 
 function normEmail(v: unknown) {
-  return String(v ?? '').trim().toLowerCase()
+  return String(v ?? '')
+    .trim()
+    .toLowerCase()
 }
 function normText(v: unknown) {
   return String(v ?? '').trim()
 }
+function normUsername(v: unknown) {
+  return String(v ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/[^a-z0-9_]/g, '')
+}
 function genUsername(name: string, uid: string) {
-  const base = (name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') || 'user').slice(0, 20)
+  const base = (
+    name
+      .toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/[^a-z0-9_]/g, '') || 'user'
+  ).slice(0, 20)
   return `${base}_${uid.slice(0, 6)}`
+}
+
+async function resolveAvailableUsername(
+  supabaseAdmin: any,
+  requested: string,
+  fallbackName: string,
+  uid: string
+) {
+  const candidate = requested || genUsername(fallbackName, uid)
+  const { data: exists, error } = await supabaseAdmin
+    .from('profiles')
+    .select('id')
+    .ilike('username', candidate)
+    .maybeSingle()
+
+  if (error) throw error
+  if (!exists) return candidate
+  return `${candidate}_${uid.slice(0, 4)}`
 }
 
 export async function POST(request: Request) {
@@ -47,6 +76,7 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}))
     const email = normEmail(body?.email)
     const password = String(body?.password ?? '')
+    const requestedUsername = normUsername(body?.username)
     const nombre_completo = normText(body?.nombre_completo)
     const universidad = body?.universidad ? String(body.universidad) : null
     const referido = body?.referido ? String(body.referido) : null
@@ -57,10 +87,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Correo inválido.' }, { status: 400 })
     }
     if (!password || password.length < 6) {
-      return NextResponse.json({ error: 'La contraseña debe tener al menos 6 caracteres.' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'La contraseña debe tener al menos 6 caracteres.' },
+        { status: 400 }
+      )
     }
     if (!nombre_completo) {
       return NextResponse.json({ error: 'El nombre completo es obligatorio.' }, { status: 400 })
+    }
+    if (!requestedUsername || requestedUsername.length < 3) {
+      return NextResponse.json(
+        { error: 'Username invalido. Debe tener al menos 3 caracteres.' },
+        { status: 400 }
+      )
     }
 
     // -------- Init Supabase Admin (lazy) --------
@@ -68,9 +107,14 @@ export async function POST(request: Request) {
     const { appUrl } = getEnv()
 
     // -------- Chequeo previo en auth.users (RPC) --------
-    const { data: available, error: rpcErr } = await supabaseAdmin.rpc('email_available', { p_email: email })
+    const { data: available, error: rpcErr } = await supabaseAdmin.rpc('email_available', {
+      p_email: email,
+    })
     if (!rpcErr && available === false) {
-      return NextResponse.json({ error: 'Este correo ya está registrado. Intenta iniciar sesión.' }, { status: 409 })
+      return NextResponse.json(
+        { error: 'Este correo ya está registrado. Intenta iniciar sesión.' },
+        { status: 409 }
+      )
     }
 
     // -------- Crear usuario en Auth --------
@@ -79,6 +123,7 @@ export async function POST(request: Request) {
       password,
       email_confirm: false,
       user_metadata: {
+        username: requestedUsername,
         nombre_completo,
         universidad,
         referido,
@@ -92,25 +137,45 @@ export async function POST(request: Request) {
       const msg = (createError?.message || '').toLowerCase()
 
       if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
-        return NextResponse.json({ error: 'Este correo ya está registrado. Intenta iniciar sesión.' }, { status: 409 })
+        return NextResponse.json(
+          { error: 'Este correo ya está registrado. Intenta iniciar sesión.' },
+          { status: 409 }
+        )
       }
       if (msg.includes('password')) {
-        return NextResponse.json({ error: 'La contraseña no cumple la política mínima.' }, { status: 400 })
+        return NextResponse.json(
+          { error: 'La contraseña no cumple la política mínima.' },
+          { status: 400 }
+        )
       }
       if (msg.includes('rate') || msg.includes('limit')) {
-        return NextResponse.json({ error: 'Demasiadas solicitudes. Intenta en un momento.' }, { status: 429 })
+        return NextResponse.json(
+          { error: 'Demasiadas solicitudes. Intenta en un momento.' },
+          { status: 429 }
+        )
       }
       if (msg.includes('domain') || msg.includes('email not allowed')) {
-        return NextResponse.json({ error: 'Dominio de correo no permitido en la configuración de Auth.' }, { status: 400 })
+        return NextResponse.json(
+          { error: 'Dominio de correo no permitido en la configuración de Auth.' },
+          { status: 400 }
+        )
       }
 
-      return NextResponse.json({ error: createError?.message || 'No se pudo crear el usuario.' }, { status: 500 })
+      return NextResponse.json(
+        { error: createError?.message || 'No se pudo crear el usuario.' },
+        { status: 500 }
+      )
     }
 
     const userId = createdUser.user.id
 
     // -------- Crear/actualizar perfil público --------
-    const username = genUsername(nombre_completo, userId)
+    const username = await resolveAvailableUsername(
+      supabaseAdmin,
+      requestedUsername,
+      nombre_completo,
+      userId
+    )
     const { error: profileError } = await supabaseAdmin.from('profiles').upsert({
       id: userId,
       email,
@@ -130,7 +195,10 @@ export async function POST(request: Request) {
       try {
         await supabaseAdmin.auth.admin.deleteUser(userId)
       } catch {}
-      return NextResponse.json({ error: 'Error guardando perfil: ' + profileError.message }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Error guardando perfil: ' + profileError.message },
+        { status: 500 }
+      )
     }
 
     // -------- Magic link --------
@@ -142,7 +210,10 @@ export async function POST(request: Request) {
 
     if (linkError || !linkData?.properties?.action_link) {
       console.error('generateLink error:', linkError)
-      return NextResponse.json({ error: linkError?.message || 'No se pudo generar el enlace de acceso.' }, { status: 500 })
+      return NextResponse.json(
+        { error: linkError?.message || 'No se pudo generar el enlace de acceso.' },
+        { status: 500 }
+      )
     }
 
     let rawLink = linkData.properties.action_link as string
@@ -157,7 +228,10 @@ export async function POST(request: Request) {
 
     await sendConfirmationEmail(email, rawLink)
 
-    return NextResponse.json({ message: 'Cuenta creada. Revisa tu correo para continuar.' }, { status: 200 })
+    return NextResponse.json(
+      { message: 'Cuenta creada. Revisa tu correo para continuar.' },
+      { status: 200 }
+    )
   } catch (err: any) {
     console.error('[send-confirmation] ❌ Error inesperado:', err)
     return NextResponse.json(

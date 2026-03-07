@@ -85,6 +85,8 @@ function getNivelYMedalla(points?: number) {
   return { nivel: 'Nuevo', medalla: '🥉 Bronce' }
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 // Solo para debug en desarrollo (opcional). No bloquea la carga.
 async function validarEsquemaProfilesDevOnly() {
   if (process.env.NODE_ENV !== 'development') return
@@ -204,6 +206,24 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             return
           }
 
+          // Compatibilidad: perfiles anteriores pudieron guardar el id (UUID) de la universidad.
+          let normalizedUniversidad = perfilData.universidad ?? null
+          if (typeof normalizedUniversidad === 'string' && UUID_REGEX.test(normalizedUniversidad)) {
+            const { data: uniData } = await supabase
+              .from('universities')
+              .select('name')
+              .eq('id', normalizedUniversidad)
+              .maybeSingle()
+
+            if (uniData?.name) {
+              normalizedUniversidad = uniData.name
+              void supabase
+                .from('profiles')
+                .update({ universidad: uniData.name, updated_at: new Date().toISOString() })
+                .eq('id', currentSession.user.id)
+            }
+          }
+
           // 4) Tags (si falla, no rompe)
           const { data: tagsRaw, error: tagsErr } = await supabase
             .from('user_tags')
@@ -219,6 +239,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
           const perfilExtendido: PerfilExtendido = {
             ...perfilData,
+            universidad: normalizedUniversidad,
             nivel,
             medalla,
             verificado: Boolean(currentSession.user.email_confirmed_at),

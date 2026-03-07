@@ -260,6 +260,7 @@ export default function RegisterForm() {
         body: JSON.stringify({
           email,
           password: form.password,
+          username: form.username.trim().toLowerCase(),
           nombre_completo: form.nombre_completo.trim(),
           universidad: universidadPayload,
           referido: form.referido?.trim() || null,
@@ -547,7 +548,7 @@ export default function RegisterForm() {
 
                     {!loadingUnis &&
                       universidades.map((u) => (
-                        <option key={u.id} value={u.id}>
+                        <option key={u.id} value={u.name}>
                           {u.name}
                         </option>
                       ))}
