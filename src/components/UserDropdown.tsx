@@ -14,7 +14,8 @@ import { ChevronDown, LayoutDashboard, LogOut, Settings, User } from 'lucide-rea
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { getAvatarImageSrc, isLottieAvatar } from '@/lib/avatar'
+import LottieAvatar from '@/components/LottieAvatar'
+import { getAvatarImageSrc, getCleanAvatarUrl, isLottieAvatar } from '@/lib/avatar'
 import { cn } from '@/lib/utils'
 
 type UserDropdownProps = {
@@ -26,6 +27,7 @@ export default function UserDropdown({ className, showName = true }: UserDropdow
   const { perfil } = useUserContext()
   const router = useRouter()
   const usesAnimatedAvatar = isLottieAvatar(perfil?.avatar_url)
+  const animatedAvatarSrc = getCleanAvatarUrl(perfil?.avatar_url)
   const avatarImageSrc = getAvatarImageSrc(perfil?.avatar_url, perfil?.updated_at)
 
   const handleLogout = async () => {
@@ -58,14 +60,18 @@ export default function UserDropdown({ className, showName = true }: UserDropdow
             className
           )}
         >
-          <Avatar className="h-8 w-8 border border-slate-200 dark:border-slate-700">
-            {!usesAnimatedAvatar && (
+          {usesAnimatedAvatar && animatedAvatarSrc ? (
+            <div className="h-8 w-8 overflow-hidden rounded-full border border-slate-200 dark:border-slate-700">
+              <LottieAvatar src={animatedAvatarSrc} size={32} className="h-8 w-8 !rounded-none !ring-0" />
+            </div>
+          ) : (
+            <Avatar className="h-8 w-8 border border-slate-200 dark:border-slate-700">
               <AvatarImage src={avatarImageSrc ?? ''} alt={perfil.username ?? 'Usuario'} />
-            )}
-            <AvatarFallback className="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100">
-              {perfil.username?.charAt(0).toUpperCase() ?? 'U'}
-            </AvatarFallback>
-          </Avatar>
+              <AvatarFallback className="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100">
+                {perfil.username?.charAt(0).toUpperCase() ?? 'U'}
+              </AvatarFallback>
+            </Avatar>
+          )}
 
           {showName && (
             <span className="hidden max-w-[120px] truncate font-semibold text-slate-800 sm:inline dark:text-slate-100">

@@ -50,7 +50,7 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
         top: { y: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } },
         scrolled: { y: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } },
       }}
-      className="fixed top-0 z-50 w-full"
+      className="fixed top-0 z-50 w-full pt-2 sm:pt-3 lg:pt-0"
     >
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="mx-auto h-[1px] w-full max-w-7xl bg-gradient-to-r from-transparent via-indigo-400/40 to-transparent" />
@@ -58,19 +58,19 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
 
       <div
         className={[
-          'mx-auto flex w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8',
-          scrolled ? 'h-16' : 'h-20',
+          'mx-auto flex w-full max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8',
+          scrolled ? 'h-16 lg:h-16' : 'h-16 lg:h-20',
         ].join(' ')}
       >
-        <div className="absolute left-0 right-0 -z-10 mx-4 sm:mx-6 lg:mx-8">
+        <div className="absolute left-0 right-0 -z-10 mx-3 sm:mx-6 lg:mx-8">
           <div
             className={[
               'rounded-2xl border transition-all',
               scrolled
-                ? 'border-white/10 bg-white/70 shadow-lg backdrop-blur-xl dark:border-white/10 dark:bg-gray-900/70'
-                : 'border-white/10 bg-white/60 shadow-md backdrop-blur-lg dark:border-white/10 dark:bg-gray-900/60',
+                ? 'border-slate-200/90 bg-white/95 shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/90'
+                : 'border-slate-200/90 bg-white/95 shadow-[0_12px_30px_-18px_rgba(15,23,42,0.35)] backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/90',
             ].join(' ')}
-            style={{ height: scrolled ? 64 : 80 }}
+            style={{ height: scrolled ? 64 : 64 }}
           />
         </div>
 
@@ -78,7 +78,7 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
           <span className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200/80 bg-white/90 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <Image src="/icon.png" alt="StudyDocu" width={30} height={30} priority />
           </span>
-          <span className="font-extrabold tracking-tight text-slate-900 dark:text-white text-xl">
+          <span className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-xl">
             StudyDocu
           </span>
         </Link>
@@ -152,7 +152,7 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
           <button
             onClick={() => setMenuOpen((s) => !s)}
             aria-label="Abrir menu"
-            className="rounded-full p-2 transition hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="rounded-xl border border-slate-200/90 bg-white/90 p-2.5 text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -166,9 +166,9 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="px-4 pb-6 pt-3 sm:px-6 lg:hidden"
+            className="px-3 pb-6 pt-2 sm:px-6 lg:hidden"
           >
-            <div className="rounded-2xl border border-white/10 bg-white/80 p-4 shadow-lg backdrop-blur-xl dark:border-white/10 dark:bg-gray-900/80">
+            <div className="rounded-2xl border border-slate-200/90 bg-white/95 p-4 shadow-xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95">
               {isLogged && perfil && (
                 <div className="mb-4">
                   <UserDropdown className="w-full justify-between" showName />
