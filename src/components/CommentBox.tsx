@@ -35,6 +35,38 @@ interface CommentBoxProps {
 /** ---------- Helpers para avatar ---------- */
 const getCleanUrl = (u?: string | null) => (u ? u.split('?')[0] : '')
 const isLottieUrl = (u?: string | null) => getCleanUrl(u).endsWith('.json')
+const COMMENT_MAX_LENGTH = 500
+
+const BLOCKED_WORDS = [
+  'puta',
+  'puto',
+  'mierda',
+  'idiota',
+  'imbecil',
+  'estupido',
+  'pendejo',
+  'cabron',
+  'verga',
+  'cojudo',
+  'cojuda',
+  'huevon',
+  'huevona',
+]
+
+const normalizeForModeration = (text: string) =>
+  text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+const containsBlockedWord = (text: string) => {
+  const normalized = ` ${normalizeForModeration(text)} `
+  const match = BLOCKED_WORDS.find((word) => normalized.includes(` ${word} `))
+  return match || null
+}
 
 /** ---------- Componente ---------- */
 export default function CommentBox({ documentId, user, onCommentSent }: CommentBoxProps) {
@@ -62,7 +94,7 @@ export default function CommentBox({ documentId, user, onCommentSent }: CommentB
         throw error
       }
 
-      const mapped: CommentEntry[] =
+      let mapped: CommentEntry[] =
         ((data as any[] | null) ?? []).map((row) => ({
           id: row.id,
           created_at: row.created_at,
@@ -74,6 +106,35 @@ export default function CommentBox({ documentId, user, onCommentSent }: CommentB
             avatar_url: row.avatar_url ?? null,
           },
         })) || []
+
+      // Fallback: si la vista no trae username/avatar para algunos registros, los completa desde profiles.
+      const missingProfileRows = mapped.filter(
+        (row) => !row.profiles?.username || !row.profiles?.avatar_url
+      )
+      if (missingProfileRows.length > 0) {
+        const userIds = Array.from(new Set(missingProfileRows.map((row) => row.user_id)))
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', userIds)
+
+        if (profilesData?.length) {
+          const profileMap = new Map(
+            profilesData.map((p: any) => [p.id, { username: p.username, avatar_url: p.avatar_url }])
+          )
+          mapped = mapped.map((row) => {
+            const fallback = profileMap.get(row.user_id)
+            if (!fallback) return row
+            return {
+              ...row,
+              profiles: {
+                username: row.profiles?.username || fallback.username || null,
+                avatar_url: row.profiles?.avatar_url || fallback.avatar_url || null,
+              },
+            }
+          })
+        }
+      }
 
       setComments(mapped)
     } catch (error: any) {
@@ -95,6 +156,14 @@ export default function CommentBox({ documentId, user, onCommentSent }: CommentB
       if (!user) return toast.error('Debes iniciar sesión para comentar.')
       const trimmed = newComment.trim()
       if (!trimmed) return toast.info('El comentario no puede estar vacío.')
+      if (trimmed.length > COMMENT_MAX_LENGTH) {
+        return toast.error(`Tu comentario excede el máximo de ${COMMENT_MAX_LENGTH} caracteres.`)
+      }
+
+      const blockedWord = containsBlockedWord(trimmed)
+      if (blockedWord) {
+        return toast.error(`Tu comentario contiene lenguaje no permitido: "${blockedWord}".`)
+      }
 
       setIsSubmitting(true)
       try {
@@ -159,8 +228,12 @@ export default function CommentBox({ documentId, user, onCommentSent }: CommentB
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             disabled={isSubmitting}
+            maxLength={COMMENT_MAX_LENGTH}
             required
           />
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {newComment.length}/{COMMENT_MAX_LENGTH}
+          </p>
           <button
             type="submit"
             disabled={isSubmitting || !newComment.trim()}

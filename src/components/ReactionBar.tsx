@@ -45,7 +45,21 @@ export default function ReactionBar({ documentId }: Props) {
     })
 
     setReactions(counts)
+    return counts
   }, [documentId])
+
+  const syncLikeCounter = useCallback(
+    async (likesCount: number) => {
+      const { error } = await supabase
+        .from('documents')
+        .update({ likes: likesCount })
+        .eq('id', documentId)
+      if (error) {
+        console.warn('[ReactionBar] No se pudo sincronizar contador de likes:', error.message)
+      }
+    },
+    [documentId]
+  )
 
   const fetchUserReaction = useCallback(async () => {
     if (!user) return
@@ -97,7 +111,8 @@ export default function ReactionBar({ documentId }: Props) {
         setUserReaction(type)
       }
 
-      await fetchReactions()
+      const counts = await fetchReactions()
+      await syncLikeCounter(counts?.like || 0)
     } catch (e) {
       toast.error('❌ Error al enviar reacción.')
       console.error(e)

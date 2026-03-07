@@ -37,6 +37,9 @@ export default function UploadForm({
   const [materiaId, setMateriaId] = useState('')
   const [carreraManual, setCarreraManual] = useState('')
   const [materiaManual, setMateriaManual] = useState('')
+  const MAX_FILE_SIZE_MB = 25
+  const MIN_FILE_SIZE_BYTES = 64
+  const MIN_TEXT_CONTENT_LENGTH = 20
 
   const calculateHash = async (file: File) => {
     const buffer = await file.arrayBuffer()
@@ -47,22 +50,91 @@ export default function UploadForm({
   }
 
   const hasText = (value: string) => value.trim().length > 0
+  const extensionOf = (name: string) => name.toLowerCase().split('.').pop() || ''
+  const isTextLikeFile = (name: string) =>
+    ['txt', 'md', 'csv', 'ipynb', 'xlsx', 'xls'].includes(extensionOf(name))
 
   const isCareerValid = () => (carreraId === 'otra' ? hasText(carreraManual) : hasText(carreraId))
 
   const isSubjectValid = () => (materiaId === 'otra' ? hasText(materiaManual) : hasText(materiaId))
 
   const generatePreview = async (file: File) => {
-    if (file.type === 'text/plain') {
+    const lowerName = file.name.toLowerCase()
+
+    if (
+      file.type === 'text/plain' ||
+      file.type === 'text/markdown' ||
+      lowerName.endsWith('.txt') ||
+      lowerName.endsWith('.md') ||
+      lowerName.endsWith('.csv')
+    ) {
       const text = await file.text()
       setPreviewText(text.slice(0, 500))
-    } else if (file.type.includes('pdf')) {
-      setPreviewText('[Vista previa no disponible para PDF]')
-    } else if (file.type.includes('word') || file.name.endsWith('.docx')) {
-      setPreviewText('[Vista previa no disponible para DOCX]')
-    } else {
-      setPreviewText('[Tipo de archivo no soportado para vista previa]')
+      return
     }
+
+    if (lowerName.endsWith('.ipynb')) {
+      const text = await file.text()
+      try {
+        const notebook = JSON.parse(text)
+        const cells = Array.isArray(notebook?.cells) ? notebook.cells : []
+        const extracted = cells
+          .slice(0, 8)
+          .map((cell: any) => {
+            const source = Array.isArray(cell?.source)
+              ? cell.source.join('')
+              : String(cell?.source || '')
+            return source.trim()
+          })
+          .filter(Boolean)
+          .join('\n\n')
+        setPreviewText(extracted.slice(0, 1200) || '[Notebook sin celdas legibles]')
+      } catch {
+        setPreviewText('[No se pudo leer el contenido del archivo .ipynb]')
+      }
+      return
+    }
+
+    if (
+      file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      file.type === 'application/vnd.ms-excel' ||
+      lowerName.endsWith('.xlsx') ||
+      lowerName.endsWith('.xls')
+    ) {
+      try {
+        const XLSX = await import('xlsx')
+        const buffer = await file.arrayBuffer()
+        const workbook = XLSX.read(buffer, { type: 'array' })
+        const firstSheetName = workbook.SheetNames[0]
+        const sheet = firstSheetName ? workbook.Sheets[firstSheetName] : null
+        if (!sheet) {
+          setPreviewText('[No se encontro contenido legible en Excel]')
+          return
+        }
+        const csv = XLSX.utils.sheet_to_csv(sheet)
+        setPreviewText(csv.slice(0, 1200) || '[Excel sin filas legibles]')
+      } catch {
+        setPreviewText('[No se pudo generar vista previa de Excel]')
+      }
+      return
+    }
+
+    if (file.type.includes('pdf') || lowerName.endsWith('.pdf')) {
+      setPreviewText('[Vista previa no disponible para PDF]')
+      return
+    }
+
+    if (file.type.includes('word') || lowerName.endsWith('.doc') || lowerName.endsWith('.docx')) {
+      setPreviewText('[Vista previa no disponible para Word, pero el archivo se puede subir]')
+      return
+    }
+
+    if (lowerName.endsWith('.ppt') || lowerName.endsWith('.pptx')) {
+      setPreviewText('[Vista previa no disponible para PowerPoint, pero el archivo se puede subir]')
+      return
+    }
+
+    setPreviewText('[Tipo de archivo sin vista previa, pero puedes intentar subirlo]')
   }
 
   const handleFileChange = async (selectedFile: File | null) => {
@@ -128,10 +200,31 @@ export default function UploadForm({
 
     const filePath = `${user.id}/${Date.now()}_${sanitizedFileName}`
 
-    const { error: uploadError } = await supabase.storage
-      .from('documents')
-      .upload(filePath, fileToRegister, { upsert: false })
-    if (uploadError) throw new Error(`Error al subir archivo: ${uploadError.message}`)
+    let uploadErrorMessage = ''
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, fileToRegister, { upsert: false })
+
+      if (!uploadError) {
+        uploadErrorMessage = ''
+        break
+      }
+
+      uploadErrorMessage = uploadError.message || 'Error desconocido al subir archivo'
+      if (!/Failed to fetch/i.test(uploadErrorMessage) || attempt === 2) {
+        break
+      }
+      await new Promise((resolve) => setTimeout(resolve, 600))
+    }
+
+    if (uploadErrorMessage) {
+      throw new Error(
+        /Failed to fetch/i.test(uploadErrorMessage)
+          ? 'No se pudo conectar al servidor de archivos. Revisa internet e intenta nuevamente.'
+          : `Error al subir archivo: ${uploadErrorMessage}`
+      )
+    }
 
     const tipoArchivo = fileToRegister.name.split('.').pop()?.toLowerCase() || 'desconocido'
 
@@ -175,6 +268,27 @@ export default function UploadForm({
       setFormError('Completa todos los campos antes de subir.')
       toast.warning('Faltan datos para la subida.')
       return
+    }
+
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      setFormError(`El archivo supera ${MAX_FILE_SIZE_MB}MB. Reduce el tamano e intenta de nuevo.`)
+      toast.warning(`Archivo muy grande. Maximo permitido: ${MAX_FILE_SIZE_MB}MB.`)
+      return
+    }
+
+    if (file.size < MIN_FILE_SIZE_BYTES) {
+      setFormError('El archivo parece vacio o corrupto. Sube un documento con contenido.')
+      toast.warning('Documento vacio o demasiado pequeno.')
+      return
+    }
+
+    if (isTextLikeFile(file.name)) {
+      const previewContent = previewText.replace(/\[[^\]]+\]/g, '').trim()
+      if (previewContent.length < MIN_TEXT_CONTENT_LENGTH) {
+        setFormError('El documento no tiene contenido suficiente para publicarse.')
+        toast.warning('Documento sin contenido util.')
+        return
+      }
     }
 
     setLoading(true)
@@ -225,7 +339,7 @@ export default function UploadForm({
     <div className="p-4 space-y-4">
       <input
         type="file"
-        accept=".pdf,.docx,.xlsx,.txt"
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.md,.csv,.ipynb"
         onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
         disabled={loading || parentDisabled}
         className="w-full border p-2 rounded"

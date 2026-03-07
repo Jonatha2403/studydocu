@@ -8,10 +8,10 @@ import { puedeDescargar } from '@/lib/downloadControl'
 
 interface Props {
   docId?: string
-  filePath: string                 // 🔹 Ruta DENTRO del bucket (ej: "2025/08/archivo.docx")
-  userId?: string                  // opcional: si ya lo tienes arriba
-  subscriptionActiva?: boolean     // opcional: si ya lo sabes arriba
-  tieneDocsAprobados?: boolean     // opcional
+  filePath: string // 🔹 Ruta DENTRO del bucket (ej: "2025/08/archivo.docx")
+  userId?: string // opcional: si ya lo tienes arriba
+  subscriptionActiva?: boolean // opcional: si ya lo sabes arriba
+  tieneDocsAprobados?: boolean // opcional
   label?: string
   className?: string
 }
@@ -42,7 +42,9 @@ export default function DownloadButton({
           if (mounted) setPuede(allowed)
         } else {
           // Si no, consulta sesión y regla de negocio
-          const { data: { session } } = await supabase.auth.getSession()
+          const {
+            data: { session },
+          } = await supabase.auth.getSession()
           const uid = userIdProp ?? session?.user?.id ?? null
           if (mounted) setUserId(uid)
 
@@ -57,8 +59,26 @@ export default function DownloadButton({
     }
 
     verificar()
-    return () => { mounted = false }
+    return () => {
+      mounted = false
+    }
   }, [subscriptionActiva, tieneDocsAprobados, userIdProp])
+
+  const registrarDescarga = async () => {
+    if (!docId) return
+    try {
+      const res = await fetch(`/api/documents/${docId}/download`, { method: 'POST' })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        console.warn(
+          '[DownloadButton] contador descarga no actualizado:',
+          body?.error || res.status
+        )
+      }
+    } catch (e) {
+      console.warn('[DownloadButton] error registrando descarga:', e)
+    }
+  }
 
   const handleDescargar = async () => {
     if (!userId) {
@@ -84,8 +104,7 @@ export default function DownloadButton({
       }
 
       // 1) URL firmada (sirve para bucket privado)
-      const { data: signed, error } = await supabase
-        .storage
+      const { data: signed, error } = await supabase.storage
         .from(BUCKET)
         .createSignedUrl(objectKey, 60 * 60) // 1 hora
 
@@ -100,6 +119,7 @@ export default function DownloadButton({
         return
       }
 
+      await registrarDescarga()
       window.open(url, '_blank')
     } catch (e: any) {
       console.error('[DownloadButton] descargar error:', e)

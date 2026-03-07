@@ -16,6 +16,10 @@ export default function LikeButton({ docId, initialLikes, userId }: LikeButtonPr
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    setLikes(initialLikes)
+  }, [initialLikes])
+
+  useEffect(() => {
     if (!userId) return
 
     const checkLiked = async () => {
@@ -40,30 +44,52 @@ export default function LikeButton({ docId, initialLikes, userId }: LikeButtonPr
     }
 
     setLoading(true)
-    setLiked(true)
-    setLikes((prev) => prev + 1)
 
     try {
-      const { error: updateError } = await supabase
+      const { data: existingReaction, error: reactionReadError } = await supabase
+        .from('reactions')
+        .select('id, type')
+        .eq('document_id', docId)
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      if (reactionReadError) throw reactionReadError
+
+      if (!existingReaction) {
+        const { error: reactionInsertError } = await supabase.from('reactions').insert({
+          document_id: docId,
+          user_id: userId,
+          type: 'like',
+        })
+        if (reactionInsertError) throw reactionInsertError
+      } else if (existingReaction.type !== 'like') {
+        const { error: reactionUpdateError } = await supabase
+          .from('reactions')
+          .update({ type: 'like' })
+          .eq('id', existingReaction.id)
+        if (reactionUpdateError) throw reactionUpdateError
+      }
+
+      const { count, error: likesCountError } = await supabase
+        .from('reactions')
+        .select('id', { count: 'exact', head: true })
+        .eq('document_id', docId)
+        .eq('type', 'like')
+      if (likesCountError) throw likesCountError
+
+      const totalLikes = count || 0
+      const { error: syncLikesError } = await supabase
         .from('documents')
-        .update({ likes: likes + 1 })
+        .update({ likes: totalLikes })
         .eq('id', docId)
+      if (syncLikesError) throw syncLikesError
 
-      if (updateError) throw updateError
-
-      const { error: reactionError } = await supabase.from('reactions').insert({
-        document_id: docId,
-        user_id: userId,
-        type: 'like',
-      })
-
-      if (reactionError) throw reactionError
+      setLiked(true)
+      setLikes(totalLikes)
     } catch (err) {
       const error = err as Error
       console.error('Error al dar like:', error)
       toast.error(`Error al dar Me Gusta: ${error.message}`)
-      setLiked(false)
-      setLikes((prev) => prev - 1)
     } finally {
       setLoading(false)
     }

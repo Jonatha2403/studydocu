@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import CommentBox from '@/components/CommentBox'
 import {
   Loader2,
   Download,
@@ -14,7 +13,6 @@ import {
   Building,
   ArrowLeft,
 } from 'lucide-react'
-import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 // 👇 Usa el mismo componente que en Configuración/Perfil
 import LottieAvatar from '@/components/LottieAvatar'
@@ -38,7 +36,7 @@ interface DocumentSummary {
   file_name: string
   category: string
   created_at: string
-  downloads: number | null
+  download_count: number | null
   likes: number | null
   file_path: string
 }
@@ -55,14 +53,39 @@ interface NivelInfo {
 // ==========================
 function getNivelYMedalla(points: number = 0): NivelInfo {
   if (points >= 500)
-    return { nivel: 'Gran Maestro del Saber', medalla: '💎 Diamante', colorClass: 'text-cyan-500', next: null }
+    return {
+      nivel: 'Gran Maestro del Saber',
+      medalla: '💎 Diamante',
+      colorClass: 'text-cyan-500',
+      next: null,
+    }
   if (points >= 300)
-    return { nivel: 'Maestro Erudito', medalla: '👑 Oro Estelar', colorClass: 'text-yellow-500', next: 500 }
+    return {
+      nivel: 'Maestro Erudito',
+      medalla: '👑 Oro Estelar',
+      colorClass: 'text-yellow-500',
+      next: 500,
+    }
   if (points >= 150)
-    return { nivel: 'Sabio Conocedor', medalla: '🥈 Plata Brillante', colorClass: 'text-gray-400', next: 300 }
+    return {
+      nivel: 'Sabio Conocedor',
+      medalla: '🥈 Plata Brillante',
+      colorClass: 'text-gray-400',
+      next: 300,
+    }
   if (points >= 50)
-    return { nivel: 'Explorador Curioso', medalla: '🥉 Bronce Sólido', colorClass: 'text-orange-500', next: 150 }
-  return { nivel: 'Aprendiz Novato', medalla: '🧑‍🎓 Iniciado', colorClass: 'text-green-500', next: 50 }
+    return {
+      nivel: 'Explorador Curioso',
+      medalla: '🥉 Bronce Sólido',
+      colorClass: 'text-orange-500',
+      next: 150,
+    }
+  return {
+    nivel: 'Aprendiz Novato',
+    medalla: '🧑‍🎓 Iniciado',
+    colorClass: 'text-green-500',
+    next: 50,
+  }
 }
 
 // Helpers para avatar (Lottie vs imagen)
@@ -78,7 +101,6 @@ export default function PerfilPublicoClient({ username }: { username: string }) 
   const [profile, setProfile] = useState<UserProfileData | null>(null)
   const [docs, setDocs] = useState<DocumentSummary[]>([])
   const [favoritos, setFavoritos] = useState<DocumentSummary[]>([])
-  const [loggedInUser, setLoggedInUser] = useState<SupabaseUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -94,14 +116,6 @@ export default function PerfilPublicoClient({ username }: { username: string }) 
     setLoading(true)
     setError(null)
     try {
-      // Sesión actual (para habilitar CommentBox cuando haya login)
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession()
-      if (sessionError) throw sessionError
-      setLoggedInUser(session?.user ?? null)
-
       if (!safeUsername) {
         setError('Nombre de usuario inválido.')
         setProfile(null)
@@ -114,7 +128,7 @@ export default function PerfilPublicoClient({ username }: { username: string }) 
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id, username, avatar_url, points, universidad, carrera') // añade updated_at si lo quieres usar aquí
-        .eq('username', safeUsername)
+        .ilike('username', safeUsername)
         .single<UserProfileData>()
 
       if (profileError || !profileData) {
@@ -129,10 +143,9 @@ export default function PerfilPublicoClient({ username }: { username: string }) 
       // Documentos públicos aprobados
       const { data: docData, error: docError } = await supabase
         .from('documents')
-        .select('id, file_name, category, created_at, downloads, likes, file_path')
+        .select('id, file_name, category, created_at, download_count, likes, file_path')
         .eq('user_id', profileData.id)
         .eq('status', 'aprobado')
-        .eq('public', true)
         .order('created_at', { ascending: false })
       if (docError) throw docError
       setDocs(docData || [])
@@ -140,7 +153,7 @@ export default function PerfilPublicoClient({ username }: { username: string }) 
       // Favoritos
       const { data: favData, error: favError } = await supabase
         .from('favorites')
-        .select('documents (id, file_name, category, created_at, downloads, likes, file_path)')
+        .select('documents (id, file_name, category, created_at, download_count, likes, file_path)')
         .eq('user_id', profileData.id)
       if (favError) throw favError
 
@@ -225,8 +238,12 @@ export default function PerfilPublicoClient({ username }: { username: string }) 
 
           <div className="text-center sm:text-left">
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white">{profile.username}</h1>
-            <p className={`text-sm mt-1 font-medium ${colorClass}`}>🏅 {nivel} ({medalla})</p>
-            <p className="text-green-600 dark:text-green-400 text-sm">🧠 {profile.points || 0} puntos</p>
+            <p className={`text-sm mt-1 font-medium ${colorClass}`}>
+              🏅 {nivel} ({medalla})
+            </p>
+            <p className="text-green-600 dark:text-green-400 text-sm">
+              🧠 {profile.points || 0} puntos
+            </p>
             {next !== null && (
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Faltan {Math.max(0, next - (profile.points || 0))} puntos para el siguiente nivel.
@@ -244,30 +261,40 @@ export default function PerfilPublicoClient({ username }: { username: string }) 
         </div>
         <div className="mt-4 text-sm text-gray-600 dark:text-gray-300">
           {profile.carrera && (
-            <p className="flex items-center gap-2"><GraduationCap size={16} /> Carrera: {profile.carrera}</p>
+            <p className="flex items-center gap-2">
+              <GraduationCap size={16} /> Carrera: {profile.carrera}
+            </p>
           )}
           {profile.universidad && (
-            <p className="flex items-center gap-2"><Building size={16} /> Universidad: {profile.universidad}</p>
+            <p className="flex items-center gap-2">
+              <Building size={16} /> Universidad: {profile.universidad}
+            </p>
           )}
         </div>
       </header>
 
       {docs.length > 0 && (
         <section className="mb-10">
-          <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">📄 Documentos Públicos</h2>
-          <DocTable docs={docs} loggedInUser={loggedInUser} />
+          <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">
+            📄 Documentos Públicos
+          </h2>
+          <DocTable docs={docs} />
         </section>
       )}
 
       {favoritos.length > 0 && (
         <section>
-          <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">⭐ Favoritos</h2>
-          <DocTable docs={favoritos} loggedInUser={loggedInUser} />
+          <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">
+            ⭐ Favoritos
+          </h2>
+          <DocTable docs={favoritos} />
         </section>
       )}
 
       {docs.length === 0 && favoritos.length === 0 && (
-        <p className="text-center text-gray-500 dark:text-gray-400">Este usuario no tiene documentos para mostrar.</p>
+        <p className="text-center text-gray-500 dark:text-gray-400">
+          Este usuario no tiene documentos para mostrar.
+        </p>
       )}
     </div>
   )
@@ -278,12 +305,12 @@ export default function PerfilPublicoClient({ username }: { username: string }) 
 // ==========================
 interface DocTableProps {
   docs: DocumentSummary[]
-  loggedInUser: SupabaseUser | null
 }
 
-function DocTable({ docs, loggedInUser }: DocTableProps) {
+function DocTable({ docs }: DocTableProps) {
   const getPublicUrl = (path: string) => {
-    const { data } = supabase.storage.from('documents').getPublicUrl(path)
+    const objectKey = (path || '').replace(/^\/+/, '').replace(/^documents\//, '')
+    const { data } = supabase.storage.from('documents').getPublicUrl(objectKey)
     return data?.publicUrl || '#'
   }
 
@@ -308,22 +335,21 @@ function DocTable({ docs, loggedInUser }: DocTableProps) {
               className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30"
             >
               <td className="p-2 font-medium">
-                <Link href={`/documents/${doc.id}`} className="hover:underline text-blue-600 dark:text-blue-400">
+                <Link
+                  href={`/documents/${doc.id}`}
+                  className="hover:underline text-blue-600 dark:text-blue-400"
+                >
                   {doc.file_name}
                 </Link>
               </td>
               <td className="p-2">{doc.category}</td>
               <td className="p-2">{new Date(doc.created_at).toLocaleDateString('es-ES')}</td>
-              <td className="text-center p-2">{doc.downloads || 0}</td>
+              <td className="text-center p-2">{doc.download_count || 0}</td>
               <td className="text-center p-2">{doc.likes || 0}</td>
               <td className="text-center p-2">
-                {loggedInUser ? (
-                  <CommentBox documentId={doc.id} user={loggedInUser} />
-                ) : (
-                  <Link href={`/documents/${doc.id}#comments`} aria-label="Ver comentarios">
-                    <MessageSquare size={16} />
-                  </Link>
-                )}
+                <Link href={`/documents/${doc.id}#comments`} aria-label="Ver comentarios">
+                  <MessageSquare size={16} />
+                </Link>
               </td>
               <td className="p-2">
                 <a
