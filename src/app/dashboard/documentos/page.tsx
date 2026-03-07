@@ -6,6 +6,7 @@ import { Loader2, Eye, RefreshCw, FileText, Download, Heart } from 'lucide-react
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useUserContext } from '@/context/UserContext'
 
 type DocRow = {
   id: string
@@ -20,23 +21,23 @@ type DocRow = {
 const DETAIL_BASE = '/vista-previa'
 
 export default function MisDocumentosPage() {
+  const { user, loading: userLoading } = useUserContext()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [docs, setDocs] = useState<DocRow[]>([])
   const [q, setQ] = useState('')
 
   const fetchDocs = useCallback(async () => {
+    if (!user) {
+      setDocs([])
+      setError('Debes iniciar sesion para ver tus documentos.')
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       setError(null)
-
-      const { data: ses } = await supabase.auth.getSession()
-      const user = ses.session?.user
-      if (!user) {
-        setError('Debes iniciar sesion para ver tus documentos.')
-        setDocs([])
-        return
-      }
 
       const { data, error: fetchError } = await supabase
         .from('documents')
@@ -61,11 +62,13 @@ export default function MisDocumentosPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [user])
 
   useEffect(() => {
-    fetchDocs()
-  }, [fetchDocs])
+    if (!userLoading) {
+      void fetchDocs()
+    }
+  }, [fetchDocs, userLoading])
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase()
@@ -83,7 +86,7 @@ export default function MisDocumentosPage() {
   )
   const totalLikes = useMemo(() => docs.reduce((acc, d) => acc + (d.likes ?? 0), 0), [docs])
 
-  if (loading) {
+  if (userLoading || loading) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-10 text-center text-muted-foreground">
         <Loader2 className="mr-2 inline h-5 w-5 animate-spin" />

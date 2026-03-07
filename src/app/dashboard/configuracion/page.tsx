@@ -74,6 +74,14 @@ export default function ConfiguracionPage() {
   }, [user, perfil])
 
   useEffect(() => {
+    const isDark = localStorage.getItem('theme') === 'dark'
+    const notifEnabled = localStorage.getItem('dashboard_notifications_enabled') !== 'false'
+    setDarkMode(isDark)
+    setNotifications(notifEnabled)
+    document.documentElement.classList.toggle('dark', isDark)
+  }, [])
+
+  useEffect(() => {
     const raw = username.trim()
     const current = (perfil?.username ?? '').trim().toLowerCase()
     const normalized = raw.toLowerCase()
@@ -168,14 +176,15 @@ export default function ConfiguracionPage() {
       const { data } = supabase.storage.from('avatars').getPublicUrl(filePath)
       const publicUrl = data.publicUrl
 
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
-        .eq('id', user.id)
-
-      if (updateError) {
-        console.error('[DB_UPDATE_ERROR]', updateError)
-        toast.error('La imagen subio, pero no se pudo guardar en tu perfil.')
+      const updateRes = await fetch('/api/user/update-avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatar_url: publicUrl }),
+      })
+      const updatePayload = await updateRes.json().catch(() => ({}))
+      if (!updateRes.ok) {
+        console.error('[DB_UPDATE_ERROR]', updatePayload)
+        toast.error(updatePayload?.error || 'No se pudo guardar en tu perfil.')
         return
       }
 
@@ -205,14 +214,15 @@ export default function ConfiguracionPage() {
         return
       }
 
-      const { error: updErr } = await supabase
-        .from('profiles')
-        .update({ avatar_url: url, updated_at: new Date().toISOString() })
-        .eq('id', user.id)
-
-      if (updErr) {
-        console.error('[PRESET_CHOOSE_ERROR:UPDATE]', updErr)
-        toast.error('No se pudo guardar el avatar seleccionado.')
+      const updRes = await fetch('/api/user/update-avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatar_url: url }),
+      })
+      const updPayload = await updRes.json().catch(() => ({}))
+      if (!updRes.ok) {
+        console.error('[PRESET_CHOOSE_ERROR:UPDATE]', updPayload)
+        toast.error(updPayload?.error || 'No se pudo guardar el avatar seleccionado.')
         return
       }
 
@@ -262,15 +272,18 @@ export default function ConfiguracionPage() {
         }
       }
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          avatar_url: avatarUrl ? avatarUrl.split('?v=')[0] : null,
-          updated_at: new Date().toISOString(),
+      const cleanAvatar = avatarUrl ? avatarUrl.split('?v=')[0] : null
+      if (cleanAvatar) {
+        const avatarRes = await fetch('/api/user/update-avatar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ avatar_url: cleanAvatar }),
         })
-        .eq('id', user.id)
-
-      if (error) throw error
+        if (!avatarRes.ok) {
+          const payload = await avatarRes.json().catch(() => ({}))
+          throw new Error(payload?.error || 'No se pudo guardar el avatar')
+        }
+      }
 
       toast.success('Perfil guardado correctamente')
       void refrescarUsuario()
@@ -280,6 +293,19 @@ export default function ConfiguracionPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleToggleDarkMode = (checked: boolean) => {
+    setDarkMode(checked)
+    localStorage.setItem('theme', checked ? 'dark' : 'light')
+    document.documentElement.classList.toggle('dark', checked)
+    toast.success(checked ? 'Modo oscuro activado' : 'Modo oscuro desactivado')
+  }
+
+  const handleToggleNotifications = (checked: boolean) => {
+    setNotifications(checked)
+    localStorage.setItem('dashboard_notifications_enabled', String(checked))
+    toast.success(checked ? 'Notificaciones activadas' : 'Notificaciones desactivadas')
   }
 
   const cleanUrl = getCleanUrl(avatarUrl)
@@ -396,7 +422,7 @@ export default function ConfiguracionPage() {
         <h2 className="text-lg font-semibold">Preferencias de interfaz</h2>
         <div className="flex items-center justify-between">
           <Label htmlFor="dark-mode">Modo oscuro</Label>
-          <Switch id="dark-mode" checked={darkMode} onCheckedChange={setDarkMode} />
+          <Switch id="dark-mode" checked={darkMode} onCheckedChange={handleToggleDarkMode} />
         </div>
       </section>
 
@@ -404,7 +430,11 @@ export default function ConfiguracionPage() {
         <h2 className="text-lg font-semibold">Notificaciones</h2>
         <div className="flex items-center justify-between">
           <Label htmlFor="notifications">Activar notificaciones</Label>
-          <Switch id="notifications" checked={notifications} onCheckedChange={setNotifications} />
+          <Switch
+            id="notifications"
+            checked={notifications}
+            onCheckedChange={handleToggleNotifications}
+          />
         </div>
       </section>
 
@@ -415,7 +445,7 @@ export default function ConfiguracionPage() {
         </p>
         <div className="flex flex-wrap gap-3">
           <Button variant="outline" asChild>
-            <a href="/reset-password">Cambiar contrasena</a>
+            <a href="/auth/reset-password">Cambiar contrasena</a>
           </Button>
           <Button variant="destructive" asChild>
             <a href="/dashboard/cuenta/eliminar">Eliminar cuenta</a>

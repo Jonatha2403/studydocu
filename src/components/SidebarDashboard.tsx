@@ -32,7 +32,7 @@ export default function SidebarDashboard() {
 
   const navMain = [
     { label: 'Inicio', href: '/', icon: Home },
-    { label: 'Subir Docs', href: '/subir', icon: FilePlus },
+    { label: 'Subir Docs', href: '/dashboard/subir', icon: FilePlus },
     { label: 'Explorar', href: '/explorar', icon: Search },
     { label: 'Favoritos', href: '/favoritos', icon: BookOpen },
   ]
@@ -48,6 +48,9 @@ export default function SidebarDashboard() {
   const cleanAvatarUrl = (perfil?.avatar_url || '').split('?')[0]
   const isLottieAvatar = cleanAvatarUrl.endsWith('.json')
   const initial = perfil?.username?.charAt(0).toUpperCase() || 'U'
+  const points = Number(perfil?.points ?? 0)
+  const nextGoal = points < 50 ? 50 : points < 200 ? 200 : points < 500 ? 500 : 1000
+  const progress = Math.min((points / nextGoal) * 100, 100)
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -99,9 +102,25 @@ export default function SidebarDashboard() {
           <div>
             <h2 className="mb-2 text-xl font-bold text-gray-800 dark:text-white">StudyDocu</h2>
             {perfil?.username && (
-              <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-                Bienvenido, {perfil.username}
-              </p>
+              <div className="mb-4 space-y-2">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Bienvenido, {perfil.username}
+                </p>
+                <div>
+                  <div className="mb-1 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+                    <span>Progreso</span>
+                    <span>
+                      {points}/{nextGoal}
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
             )}
             <nav className="mb-6 flex flex-col gap-1">{renderLinks(navMain)}</nav>
             <hr className="my-2 border-gray-300 dark:border-gray-700" />
@@ -158,9 +177,25 @@ export default function SidebarDashboard() {
                   </button>
                 </div>
                 {perfil?.username && (
-                  <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-                    Bienvenido, {perfil.username}
-                  </p>
+                  <div className="mb-4 space-y-2">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Bienvenido, {perfil.username}
+                    </p>
+                    <div>
+                      <div className="mb-1 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+                        <span>Progreso</span>
+                        <span>
+                          {points}/{nextGoal}
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                        <div
+                          className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 )}
                 <nav className="mb-6 flex flex-col gap-1">{renderLinks(navMain)}</nav>
                 <hr className="my-2 border-gray-300 dark:border-gray-700" />

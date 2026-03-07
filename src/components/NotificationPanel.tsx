@@ -28,7 +28,13 @@ export default function NotificationPanel({ userId }: NotificationPanelProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [markingStates, setMarkingStates] = useState<Record<string, boolean>>({})
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const panelRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setNotificationsEnabled(localStorage.getItem('dashboard_notifications_enabled') !== 'false')
+  }, [])
 
   const fetchNotifications = useCallback(async () => {
     if (!userId) {
@@ -66,7 +72,7 @@ export default function NotificationPanel({ userId }: NotificationPanelProps) {
   }, [userId, fetchNotifications])
 
   useEffect(() => {
-    if (!userId || !open) return
+    if (!userId || !open || !notificationsEnabled) return
 
     const channel = supabase
       .channel(`notifications_user_${userId}`)
@@ -100,7 +106,7 @@ export default function NotificationPanel({ userId }: NotificationPanelProps) {
       console.log(`Desuscribiendo del canal de notificaciones para ${userId}`)
       supabase.removeChannel(channel)
     }
-  }, [userId, open])
+  }, [userId, open, notificationsEnabled])
 
   const markAsRead = useCallback(
     async (id: string, currentIsRead: boolean) => {

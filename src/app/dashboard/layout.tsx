@@ -78,14 +78,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="mx-auto flex w-full max-w-6xl items-center justify-end gap-2 sm:gap-3">
             <NotificationPanel userId={user?.id ?? null} />
 
-            <Link href="/subir" className="hidden sm:block">
+            <Link href="/dashboard/subir" className="hidden sm:block">
               <Button variant="outline" className="flex items-center gap-2 text-sm">
                 <UploadCloud className="h-4 w-4" />
                 Subir documento
               </Button>
             </Link>
 
-            <Link href="/subir" className="sm:hidden">
+            <Link href="/dashboard/subir" className="sm:hidden">
               <Button variant="outline" size="icon" aria-label="Subir documento">
                 <UploadCloud className="h-4 w-4" />
               </Button>

@@ -143,7 +143,6 @@ export default function PerfilPage() {
           (localProfile.nombre_completo ? localProfile.nombre_completo.trim() : '') || null,
         carrera: (localProfile.carrera ? localProfile.carrera.trim() : '') || null,
         universidad: (localProfile.universidad ? localProfile.universidad.trim() : '') || null,
-        avatar_url: localProfile.avatar_url || null,
         updated_at: new Date().toISOString(),
       }
       const { error } = await supabase.from('profiles').update(updates).eq('id', user.id)
@@ -182,11 +181,15 @@ export default function PerfilPage() {
       if (!pub?.publicUrl) throw new Error('No se pudo obtener la URL pública')
 
       const nowIso = new Date().toISOString()
-      const { error: updErr } = await supabase
-        .from('profiles')
-        .update({ avatar_url: pub.publicUrl, updated_at: nowIso })
-        .eq('id', user.id)
-      if (updErr) throw updErr
+      const avatarRes = await fetch('/api/user/update-avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatar_url: pub.publicUrl }),
+      })
+      if (!avatarRes.ok) {
+        const payload = await avatarRes.json().catch(() => ({}))
+        throw new Error(payload?.error || 'No se pudo actualizar el avatar')
+      }
 
       setLocalProfile((prev) =>
         prev ? { ...prev, avatar_url: pub.publicUrl, updated_at: nowIso } : prev
