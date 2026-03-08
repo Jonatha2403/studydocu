@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { sendResumenToAI } from '@/lib/ai'
-import { Loader2 } from 'lucide-react'
+import { Loader2, FileText } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function ResumenNotas() {
@@ -14,52 +14,59 @@ export default function ResumenNotas() {
 
   const handleGenerarResumen = async () => {
     if (!texto.trim()) {
-      toast.error('✏️ Escribe algo antes de generar el resumen')
+      toast.error('Escribe contenido antes de generar el resumen.')
       return
     }
 
     setLoading(true)
-    const respuesta = await sendResumenToAI(texto)
-    setResumen(respuesta)
-    setLoading(false)
+    try {
+      const respuesta = await sendResumenToAI(texto)
+      setResumen(respuesta)
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'No se pudo generar el resumen.'
+      toast.error(msg)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="space-y-6 p-6 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
-      <div>
-        <label className="block text-base font-semibold text-gray-800 dark:text-white mb-2">
-          ✍️ Tus apuntes o notas:
+    <div className="space-y-5">
+      <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/70">
+        <label className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+          Pega tus apuntes o notas
         </label>
         <Textarea
           rows={8}
-          placeholder="Pega aquí tus notas de clase, texto académico o contenido que desees resumir..."
+          placeholder="Pega aqui tus notas y genera un resumen claro y estructurado."
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
           className="resize-none"
         />
+
+        <Button
+          onClick={handleGenerarResumen}
+          disabled={loading}
+          className="mt-4 w-full bg-blue-600 py-3 text-base text-white hover:bg-blue-700"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              Generando resumen...
+            </>
+          ) : (
+            'Generar resumen con IA'
+          )}
+        </Button>
       </div>
 
-      <Button
-        onClick={handleGenerarResumen}
-        disabled={loading}
-        className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 text-base rounded-xl"
-      >
-        {loading ? (
-          <>
-            <Loader2 className="animate-spin w-5 h-5 mr-2" />
-            Generando...
-          </>
-        ) : (
-          '✨ Generar resumen con IA'
-        )}
-      </Button>
-
       {resumen && (
-        <div className="mt-6 p-5 border rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
-          <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white flex items-center gap-2">
-            📄 Resumen generado:
+        <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/70">
+          <h3 className="mb-3 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-slate-100">
+            <FileText className="h-5 w-5 text-cyan-600" />
+            Resumen generado
           </h3>
-          <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-line">
+          <p className="whitespace-pre-line text-sm leading-relaxed text-slate-700 dark:text-slate-300">
             {resumen}
           </p>
         </div>
