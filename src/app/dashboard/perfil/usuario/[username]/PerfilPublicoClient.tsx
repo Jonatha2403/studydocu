@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Loader2,
@@ -125,11 +125,33 @@ export default function PerfilPublicoClient({ username }: { username: string }) 
       }
 
       // Perfil por username
-      const { data: profileData, error: profileError } = await supabase
+      let { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id, username, avatar_url, points, universidad, carrera') // añade updated_at si lo quieres usar aquí
         .ilike('username', safeUsername)
-        .single<UserProfileData>()
+        .limit(1)
+        .maybeSingle<UserProfileData>()
+
+      // Fallback: si falla por username, intenta por user_id cuando el visitante es el mismo usuario.
+      if (!profileData) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (user) {
+          const fallback = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url, points, universidad, carrera')
+            .eq('id', user.id)
+            .limit(1)
+            .maybeSingle<UserProfileData>()
+
+          if (!fallback.error && fallback.data?.username?.toLowerCase() === safeUsername) {
+            profileData = fallback.data
+            profileError = null
+          }
+        }
+      }
 
       if (profileError || !profileData) {
         setError('Perfil no encontrado.')
