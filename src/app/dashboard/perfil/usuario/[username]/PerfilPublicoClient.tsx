@@ -358,7 +358,7 @@ function DocTable({ docs }: DocTableProps) {
             >
               <td className="p-2 font-medium">
                 <Link
-                  href={`/documents/${doc.id}`}
+                  href={`/vista-previa/${doc.id}`}
                   className="hover:underline text-blue-600 dark:text-blue-400"
                 >
                   {doc.file_name}
@@ -369,7 +369,7 @@ function DocTable({ docs }: DocTableProps) {
               <td className="text-center p-2">{doc.download_count || 0}</td>
               <td className="text-center p-2">{doc.likes || 0}</td>
               <td className="text-center p-2">
-                <Link href={`/documents/${doc.id}#comments`} aria-label="Ver comentarios">
+                <Link href={`/vista-previa/${doc.id}#comments`} aria-label="Ver comentarios">
                   <MessageSquare size={16} />
                 </Link>
               </td>
