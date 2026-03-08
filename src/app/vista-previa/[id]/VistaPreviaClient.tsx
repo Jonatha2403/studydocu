@@ -155,34 +155,46 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
         if (e1) throw new Error(`No se pudo leer el documento: ${e1.message}`)
         if (!d) throw new Error('Documento no encontrado.')
 
-        // 2) Resolver URL del archivo
-        let bucket = process.env.NEXT_PUBLIC_SUPABASE_BUCKET || 'documents'
-
-        const rawPath = (d.file_path || d.file_url || '').trim()
-        if (!rawPath) {
-          throw new Error('El documento no tiene ruta de archivo guardada.')
-        }
-
-        if (isHttpUrl(rawPath)) {
-          // URL completa: si es de Supabase, extrae bucket/key y re-firma; si no, úsala tal cual
-          const parsed = parseSupabaseStorageUrl(rawPath)
-          if (parsed) {
-            bucket = parsed.bucket
-            const { url } = await resolveWorkingUrl(bucket, parsed.key)
+        // 2) Resolver URL del archivo (preferimos backend para visitantes sin sesion)
+        const previewRes = await fetch(`/api/documents/${id}/preview-url`, { cache: 'no-store' })
+        if (previewRes.ok) {
+          const previewBody = await previewRes.json()
+          if (previewBody?.url) {
             if (!mounted) return
-            if (!url) throw new Error('No se pudo generar acceso al archivo (bucket/ruta).')
-            setPublicUrl(url)
+            setPublicUrl(previewBody.url)
           } else {
-            if (!mounted) return
-            setPublicUrl(rawPath)
+            throw new Error('No se pudo obtener la URL de vista previa.')
           }
         } else {
-          // Ruta interna (key relativa)
-          const { url } = await resolveWorkingUrl(bucket, rawPath)
-          if (!mounted) return
-          if (!url)
-            throw new Error('No se pudo generar URL del archivo (bucket o ruta incorrectos).')
-          setPublicUrl(url)
+          // Fallback local por compatibilidad
+          let bucket = process.env.NEXT_PUBLIC_SUPABASE_BUCKET || 'documents'
+
+          const rawPath = (d.file_path || d.file_url || '').trim()
+          if (!rawPath) {
+            throw new Error('El documento no tiene ruta de archivo guardada.')
+          }
+
+          if (isHttpUrl(rawPath)) {
+            // URL completa: si es de Supabase, extrae bucket/key y re-firma; si no, úsala tal cual
+            const parsed = parseSupabaseStorageUrl(rawPath)
+            if (parsed) {
+              bucket = parsed.bucket
+              const { url } = await resolveWorkingUrl(bucket, parsed.key)
+              if (!mounted) return
+              if (!url) throw new Error('No se pudo generar acceso al archivo (bucket/ruta).')
+              setPublicUrl(url)
+            } else {
+              if (!mounted) return
+              setPublicUrl(rawPath)
+            }
+          } else {
+            // Ruta interna (key relativa)
+            const { url } = await resolveWorkingUrl(bucket, rawPath)
+            if (!mounted) return
+            if (!url)
+              throw new Error('No se pudo generar URL del archivo (bucket o ruta incorrectos).')
+            setPublicUrl(url)
+          }
         }
 
         // 3) Perfil del autor (no crítico)
