@@ -143,6 +143,12 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
     ? categoryClasses[doc.category] ||
       'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
     : ''
+  const authorUsername = String(doc.profiles?.username || '')
+    .trim()
+    .replace(/^@+/, '')
+  const authorProfileHref = authorUsername
+    ? `/dashboard/perfil/usuario/${encodeURIComponent(authorUsername)}`
+    : null
 
   const handleCopyLink = async () => {
     try {
@@ -234,12 +240,13 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
 
       <p className="text-sm text-muted-foreground mb-6">
         {doc.profiles?.universidad || 'Universidad desconocida'} - {doc.category} - Subido por{' '}
-        <Link
-          href={`/perfil/usuario/${doc.profiles?.username}`}
-          className="text-primary hover:underline"
-        >
-          @{doc.profiles?.username ?? 'usuario'}
-        </Link>
+        {authorProfileHref ? (
+          <Link href={authorProfileHref} className="text-primary hover:underline">
+            @{authorUsername}
+          </Link>
+        ) : (
+          <span>@usuario</span>
+        )}
       </p>
 
       <div className="grid md:grid-cols-3 gap-6">
@@ -321,12 +328,13 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
           </p>
           <p>
             <strong>Autor:</strong>{' '}
-            <Link
-              className="text-blue-600 hover:underline"
-              href={`/perfil/usuario/${doc.profiles?.username}`}
-            >
-              @{doc.profiles?.username ?? 'usuario'}
-            </Link>
+            {authorProfileHref ? (
+              <Link className="text-blue-600 hover:underline" href={authorProfileHref}>
+                @{authorUsername}
+              </Link>
+            ) : (
+              <span>@usuario</span>
+            )}
           </p>
           <p>
             <strong>Universidad:</strong> {doc.profiles?.universidad || '-'}

@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { Send, MessageSquareText, Loader2, UserCircle, Flag } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
 import { reportarContenido } from '@/lib/report'
 
@@ -275,6 +276,12 @@ export default function CommentBox({ documentId, user, onCommentSent }: CommentB
             const profile = comment.profiles
             const cleanUrl = getCleanUrl(profile?.avatar_url || null)
             const lottie = isLottieUrl(profile?.avatar_url || null)
+            const username = String(profile?.username || '')
+              .trim()
+              .replace(/^@+/, '')
+            const profileHref = username
+              ? `/dashboard/perfil/usuario/${encodeURIComponent(username)}`
+              : null
             const imgSrc =
               !lottie && profile?.avatar_url
                 ? `${profile.avatar_url}${profile.avatar_url.includes('?') ? '&' : '?'}v=${avatarVersion}`
@@ -306,9 +313,18 @@ export default function CommentBox({ documentId, user, onCommentSent }: CommentB
 
                   <div className="flex-1">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-1">
-                      <span className="font-semibold text-blue-700 dark:text-yellow-400 text-sm">
-                        {profile?.username || 'Usuario Anónimo'}
-                      </span>
+                      {profileHref ? (
+                        <Link
+                          href={profileHref}
+                          className="font-semibold text-blue-700 dark:text-yellow-400 text-sm hover:underline"
+                        >
+                          @{username}
+                        </Link>
+                      ) : (
+                        <span className="font-semibold text-blue-700 dark:text-yellow-400 text-sm">
+                          Usuario Anónimo
+                        </span>
+                      )}
                       <span className="text-xs text-gray-500 dark:text-gray-400">
                         {formatDate(comment.created_at)}
                       </span>
