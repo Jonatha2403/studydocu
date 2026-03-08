@@ -650,10 +650,15 @@ function NextMilestone({ puntos }: { puntos: number }) {
   const remain = Math.max(goal - puntos, 0)
   const percent = Math.min((puntos / goal) * 100, 100)
   return (
-    <div className="w-full sm:w-auto">
-      <p className="mb-1 text-xs text-muted-foreground">
-        Saldo actual: <b>{puntos} pts</b> · Siguiente meta: <b>{goal} pts</b> · Te faltan{' '}
-        <b>{remain} pts</b>
+    <div className="w-full rounded-xl border bg-muted/20 p-3 sm:w-auto sm:min-w-[280px]">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">Progreso de nivel</p>
+        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+          {puntos} / {goal} pts
+        </span>
+      </div>
+      <p className="mb-2 text-xs text-muted-foreground">
+        Puntos para siguiente nivel: <b>{remain}</b>
       </p>
       <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700 sm:w-64">
         <div
