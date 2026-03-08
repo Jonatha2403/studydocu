@@ -143,7 +143,7 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
     ? categoryClasses[doc.category] ||
       'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
     : ''
-  const authorUsername = String(doc.profiles?.username || '')
+  const authorUsername = String(doc?.profiles?.username || '')
     .trim()
     .replace(/^@+/, '')
   const authorProfileHref = authorUsername
