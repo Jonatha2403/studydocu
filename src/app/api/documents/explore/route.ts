@@ -3,6 +3,14 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 const VALID_ORDER = new Set(['created_at', 'download_count', 'likes'])
 
+const normalizeUniversity = (value: unknown): string | null => {
+  const raw = String(value || '').trim()
+  if (!raw) return null
+  const lower = raw.toLowerCase()
+  if (lower === 'desconocida' || lower === '-' || lower === 'null') return null
+  return raw
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const q = (searchParams.get('q') || '').trim()
@@ -56,7 +64,10 @@ export async function GET(request: Request) {
   let enriched = rows.map((d) => {
     const profile = profileMap.get(d.user_id)
     const universityName =
-      d.university || uniMap.get(d.university_id) || profile?.universidad || null
+      normalizeUniversity(d.university) ||
+      normalizeUniversity(uniMap.get(d.university_id)) ||
+      normalizeUniversity(profile?.universidad) ||
+      null
     const authorUsername = profile?.username || d.uploaded_by || null
 
     return {

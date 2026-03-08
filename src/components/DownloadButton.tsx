@@ -25,9 +25,6 @@ export default function DownloadButton({
 }: Props) {
   const [loading, setLoading] = useState(false)
 
-  // Nombre del bucket (define NEXT_PUBLIC_SUPABASE_BUCKET en .env.local)
-  const BUCKET = process.env.NEXT_PUBLIC_SUPABASE_BUCKET || 'documents'
-
   const registrarDescarga = async (): Promise<boolean> => {
     if (!docId) return true
     try {
@@ -62,24 +59,28 @@ export default function DownloadButton({
       if (!accessAllowed) return
       onDownloaded?.()
 
-      // Normaliza la ruta: debe ser el "object key" dentro del bucket
-      let objectKey = (filePath || '').replace(/^\/+/, '')
-      if (objectKey.startsWith(`${BUCKET}/`)) {
-        // si por error guardaste "bucket/..." en filePath, recortalo
-        objectKey = objectKey.slice(BUCKET.length + 1)
+      let url: string | null = null
+      if (docId) {
+        const urlRes = await fetch(`/api/documents/${docId}/download-url`, { cache: 'no-store' })
+        const urlBody = await urlRes.json().catch(() => ({}))
+        if (!urlRes.ok || !urlBody?.url) {
+          toast.error(urlBody?.error || 'No se pudo generar la URL de descarga.')
+          return
+        }
+        url = urlBody.url
       }
 
-      // 1) URL firmada (sirve para bucket privado)
-      const { data: signed, error } = await supabase.storage
-        .from(BUCKET)
-        .createSignedUrl(objectKey, 60 * 60) // 1 hora
+      if (!url) {
+        // Fallback legacy cuando no existe docId
+        const bucket = process.env.NEXT_PUBLIC_SUPABASE_BUCKET || 'documents'
+        const objectKey = (filePath || '').replace(/^\/+/, '')
+        const { data: signed, error } = await supabase.storage
+          .from(bucket)
+          .createSignedUrl(objectKey, 60 * 60)
+        if (error) console.warn('[DownloadButton] signed url error:', error)
+        url = signed?.signedUrl || null
+      }
 
-      if (error) console.warn('[DownloadButton] signed url error:', error)
-
-      // 2) Fallback publica (si el bucket es publico)
-      const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(objectKey)
-
-      const url = signed?.signedUrl || pub?.publicUrl
       if (!url) {
         toast.error('No se pudo generar la URL de descarga.')
         return

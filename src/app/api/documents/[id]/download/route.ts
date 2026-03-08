@@ -139,27 +139,27 @@ export async function POST(_: Request, context: { params: RouteParams }) {
       }
     }
 
-    const { error: incrementError } = await supabaseAdmin.rpc('increment_downloads', { doc_id: id })
-    if (incrementError) {
-      const { data: fallbackDoc, error: fallbackError } = await supabaseAdmin
-        .from('documents')
-        .select('download_count')
-        .eq('id', id)
-        .maybeSingle()
+    const { data: currentDoc, error: currentDocError } = await supabaseAdmin
+      .from('documents')
+      .select('download_count')
+      .eq('id', id)
+      .maybeSingle()
 
-      if (fallbackError || !fallbackDoc) {
-        return NextResponse.json({ error: incrementError.message }, { status: 400 })
-      }
+    if (currentDocError || !currentDoc) {
+      return NextResponse.json(
+        { error: currentDocError?.message || 'No se pudo leer el contador de descargas.' },
+        { status: 400 }
+      )
+    }
 
-      const current = Number(fallbackDoc.download_count ?? 0)
-      const { error: updateError } = await supabaseAdmin
-        .from('documents')
-        .update({ download_count: current + 1 })
-        .eq('id', id)
+    const nextDownloadCount = Number(currentDoc.download_count ?? 0) + 1
+    const { error: updateError } = await supabaseAdmin
+      .from('documents')
+      .update({ download_count: nextDownloadCount })
+      .eq('id', id)
 
-      if (updateError) {
-        return NextResponse.json({ error: updateError.message }, { status: 400 })
-      }
+    if (updateError) {
+      return NextResponse.json({ error: updateError.message }, { status: 400 })
     }
 
     return NextResponse.json({
