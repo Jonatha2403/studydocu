@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import Link from 'next/link'
@@ -13,7 +13,6 @@ import FavoriteButton from '@/components/FavoriteButton'
 import DownloadButton from '@/components/DownloadButton'
 import LikeButton from '@/components/LikeButton'
 import ReactionBar from '@/components/ReactionBar'
-import { normalizeStoragePath, parseSupabaseStorageUrl, isHttpUrl } from '@/lib/storagePath'
 
 interface Profile {
   username: string
@@ -51,90 +50,6 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [urlOk, setUrlOk] = useState<boolean>(false)
-  /** Genera posibles keys a partir del file_path y el bucket. */
-  const buildKeyCandidates = useCallback((raw: string, bucket: string): string[] => {
-    const cands = new Set<string>()
-    const push = (s?: string) => {
-      if (s && s.trim()) cands.add(s.trim())
-    }
-
-    // 1) Normalizada base
-    const norm = normalizeStoragePath(raw, bucket)
-    push(norm)
-
-    // 2) Si venía con bucket/... (por si la normalización no lo detectó)
-    const trimmed = raw.trim().replace(/^\/+/, '')
-    if (trimmed.toLowerCase().startsWith(`${bucket.toLowerCase()}/`)) {
-      push(trimmed.slice(bucket.length + 1))
-    }
-
-    // 3) Variantes decodificadas/limpias
-    try {
-      push(decodeURIComponent(norm))
-    } catch {
-      /* noop */
-    }
-    Array.from(cands).forEach((k) => {
-      push(k.replace(/\/{2,}/g, '/'))
-      push(k.replace(/\+/g, ' '))
-    })
-
-    // 4) Si es URL de supabase con otro bucket → usa esa key directamente
-    const parsed = parseSupabaseStorageUrl(raw)
-    if (parsed) {
-      push(parsed.key)
-      try {
-        push(decodeURIComponent(parsed.key))
-      } catch {
-        /* noop */
-      }
-      push(parsed.key.replace(/\+/g, ' '))
-      push(parsed.key.replace(/\/{2,}/g, '/'))
-    }
-
-    // Quita vacíos y dupes
-    return Array.from(cands)
-      .map((s) => s.trim())
-      .filter(Boolean)
-  }, [])
-
-  /** Intenta firmar o sacar publica para el primer key candidato valido. */
-  const resolveWorkingUrl = useCallback(
-    async (bucket: string, rawPath: string) => {
-      const candidates = buildKeyCandidates(rawPath, bucket)
-
-      for (const key of candidates) {
-        let url: string | undefined
-
-        // Intenta firmar (bucket privado)
-        try {
-          const { data: signed, error: signedError } = await supabase.storage
-            .from(bucket)
-            .createSignedUrl(key, 60 * 60)
-          if (!signedError && signed?.signedUrl) url = signed.signedUrl
-        } catch {
-          // noop
-        }
-
-        // Fallback publica (si bucket fuese publico)
-        if (!url) {
-          try {
-            const { data: pub } = supabase.storage.from(bucket).getPublicUrl(key)
-            if (pub?.publicUrl) url = pub.publicUrl
-          } catch {
-            // noop
-          }
-        }
-
-        if (url) {
-          return { url, key }
-        }
-      }
-
-      return { url: undefined as string | undefined, key: undefined as string | undefined }
-    },
-    [buildKeyCandidates]
-  )
 
   useEffect(() => {
     if (!id) return
@@ -145,7 +60,6 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
         setLoading(true)
         setError(null)
 
-        // 1) Documento base
         const { data: d, error: e1 } = await supabase
           .from('documents')
           .select('*')
@@ -155,49 +69,6 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
         if (e1) throw new Error(`No se pudo leer el documento: ${e1.message}`)
         if (!d) throw new Error('Documento no encontrado.')
 
-        // 2) Resolver URL del archivo (preferimos backend para visitantes sin sesion)
-        const previewRes = await fetch(`/api/documents/${id}/preview-url`, { cache: 'no-store' })
-        if (previewRes.ok) {
-          const previewBody = await previewRes.json()
-          if (previewBody?.url) {
-            if (!mounted) return
-            setPublicUrl(previewBody.url)
-          } else {
-            throw new Error('No se pudo obtener la URL de vista previa.')
-          }
-        } else {
-          // Fallback local por compatibilidad
-          let bucket = process.env.NEXT_PUBLIC_SUPABASE_BUCKET || 'documents'
-
-          const rawPath = (d.file_path || d.file_url || '').trim()
-          if (!rawPath) {
-            throw new Error('El documento no tiene ruta de archivo guardada.')
-          }
-
-          if (isHttpUrl(rawPath)) {
-            // URL completa: si es de Supabase, extrae bucket/key y re-firma; si no, úsala tal cual
-            const parsed = parseSupabaseStorageUrl(rawPath)
-            if (parsed) {
-              bucket = parsed.bucket
-              const { url } = await resolveWorkingUrl(bucket, parsed.key)
-              if (!mounted) return
-              if (!url) throw new Error('No se pudo generar acceso al archivo (bucket/ruta).')
-              setPublicUrl(url)
-            } else {
-              if (!mounted) return
-              setPublicUrl(rawPath)
-            }
-          } else {
-            // Ruta interna (key relativa)
-            const { url } = await resolveWorkingUrl(bucket, rawPath)
-            if (!mounted) return
-            if (!url)
-              throw new Error('No se pudo generar URL del archivo (bucket o ruta incorrectos).')
-            setPublicUrl(url)
-          }
-        }
-
-        // 3) Perfil del autor (no crítico)
         const { data: p } = await supabase
           .from('profiles')
           .select('username, universidad')
@@ -206,8 +77,7 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
 
         if (!mounted) return
         setDoc({ ...(d as DocumentRow), profiles: p ?? undefined })
-
-        // 4) Marca OK si ya tenemos URL
+        setPublicUrl(`/api/documents/${id}/preview-file`)
         setUrlOk(true)
       } catch (e: any) {
         if (!mounted) return
@@ -221,7 +91,7 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
     return () => {
       mounted = false
     }
-  }, [id, resolveWorkingUrl])
+  }, [id])
 
   const ext = useMemo(() => {
     const name = (doc?.file_name || doc?.file_path || '').toLowerCase().trim()
@@ -232,13 +102,15 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
   const isPDF = ext === 'pdf'
   const isOffice = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)
 
-  const officeViewerUrl = useMemo(
-    () =>
-      publicUrl
-        ? `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(publicUrl)}`
-        : null,
-    [publicUrl]
-  )
+  const officeViewerUrl = useMemo(() => {
+    if (!publicUrl) return null
+    const absoluteUrl =
+      publicUrl.startsWith('http') || typeof window === 'undefined'
+        ? publicUrl
+        : `${window.location.origin}${publicUrl}`
+
+    return `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(absoluteUrl)}`
+  }, [publicUrl])
 
   useEffect(() => {
     if (typeof window === 'undefined' || user) return
@@ -273,13 +145,13 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href)
-      toast.success('📎 Enlace copiado')
+      toast.success('Enlace copiado')
     } catch {
       toast.error('No se pudo copiar el enlace')
     }
   }
 
-  const handleReport = () => toast('⚠️ Funcionalidad de reporte en desarrollo')
+  const handleReport = () => toast('Funcionalidad de reporte en desarrollo')
 
   if (!id) {
     return (
@@ -291,9 +163,9 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
           <ArrowLeft className="w-4 h-4" /> Volver
         </button>
         <div className="rounded-2xl border p-6">
-          <h1 className="text-xl font-semibold mb-2">❌ ID inválido</h1>
+          <h1 className="text-xl font-semibold mb-2">ID invalido</h1>
           <p className="text-sm text-muted-foreground">
-            No se recibió un identificador de documento.
+            No se recibio un identificador de documento.
           </p>
         </div>
       </div>
@@ -318,7 +190,7 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
           <ArrowLeft className="w-4 h-4" /> Volver
         </button>
         <div className="rounded-2xl border p-6">
-          <h1 className="text-xl font-semibold mb-2">❌ Documento no encontrado</h1>
+          <h1 className="text-xl font-semibold mb-2">Documento no encontrado</h1>
           <p className="text-sm text-muted-foreground">{error ?? 'Intenta nuevamente.'}</p>
         </div>
       </div>
@@ -353,14 +225,13 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
         </button>
       </div>
 
-      {/* Encabezado + favorito */}
       <div className="flex items-start justify-between gap-3 mb-2">
-        <h1 className="text-2xl font-bold">👁️ Vista previa de documento</h1>
+        <h1 className="text-2xl font-bold">Vista previa de documento</h1>
         <FavoriteButton userId={user?.id ?? null} documentId={doc.id} />
       </div>
 
       <p className="text-sm text-muted-foreground mb-6">
-        {doc.profiles?.universidad || 'Universidad desconocida'} · {doc.category} · Subido por{' '}
+        {doc.profiles?.universidad || 'Universidad desconocida'} � {doc.category} � Subido por{' '}
         <Link
           href={`/perfil/usuario/${doc.profiles?.username}`}
           className="text-primary hover:underline"
@@ -370,13 +241,10 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
       </p>
 
       <div className="grid md:grid-cols-3 gap-6">
-        {/* Visor */}
         <div className="md:col-span-2">
           <div className="rounded-2xl overflow-hidden border bg-background">
-            {/* PDF */}
             {publicUrl && isPDF && urlOk && <DocumentPreview filePath={publicUrl} />}
 
-            {/* Office (doc/xls/ppt) */}
             {publicUrl && !isPDF && isOffice && urlOk && (
               <iframe
                 src={officeViewerUrl ?? undefined}
@@ -385,7 +253,6 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
               />
             )}
 
-            {/* Fallbacks */}
             {publicUrl && !urlOk && (
               <div className="p-6 text-center">
                 <p className="text-sm text-muted-foreground mb-4">
@@ -427,20 +294,19 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
           <CommentBox documentId={doc.id} user={user} />
         </div>
 
-        {/* Meta */}
         <aside className="bg-white dark:bg-gray-900 p-4 border rounded shadow space-y-3 text-sm">
           <p>
-            <strong>📄 Nombre:</strong> {doc.file_name}
+            <strong>Nombre:</strong> {doc.file_name}
           </p>
           <p>
-            <strong>🏷️ Categoría:</strong>{' '}
+            <strong>Categoria:</strong>{' '}
             <span className={`px-2 py-1 rounded text-xs ${categoryStyle}`}>{doc.category}</span>
           </p>
           <p>
-            <strong>📅 Fecha:</strong> {new Date(doc.created_at).toLocaleDateString()}
+            <strong>Fecha:</strong> {new Date(doc.created_at).toLocaleDateString()}
           </p>
           <p>
-            <strong>👤 Autor:</strong>{' '}
+            <strong>Autor:</strong>{' '}
             <Link
               className="text-blue-600 hover:underline"
               href={`/perfil/usuario/${doc.profiles?.username}`}
@@ -449,7 +315,7 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
             </Link>
           </p>
           <p>
-            <strong>🎓 Universidad:</strong> {doc.profiles?.universidad || '-'}
+            <strong>Universidad:</strong> {doc.profiles?.universidad || '-'}
           </p>
           <p className="flex items-center gap-2 text-green-700 dark:text-green-400">
             <Download size={16} /> Descargas: <strong>{doc.downloads ?? 0}</strong>
