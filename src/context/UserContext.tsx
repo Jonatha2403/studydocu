@@ -329,6 +329,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [cargarDatos])
 
+  useEffect(() => {
+    const onPointsUpdated = () => {
+      void cargarDatos(true)
+    }
+    window.addEventListener('studydocu:points-updated', onPointsUpdated)
+    return () => window.removeEventListener('studydocu:points-updated', onPointsUpdated)
+  }, [cargarDatos])
+
   const value = useMemo<UserContextType>(
     () => ({
       user,

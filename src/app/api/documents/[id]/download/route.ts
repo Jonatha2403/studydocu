@@ -112,8 +112,23 @@ export async function POST(_: Request, context: { params: RouteParams }) {
         if (profile.subscription_active) {
           accessMode = 'premium'
         } else {
-          const freeUsed = Number(profile.free_downloads_used ?? 0)
+          let freeUsed = Number(profile.free_downloads_used ?? 0)
           const points = Number(profile.points ?? 0)
+
+          if (!hasFreeCounterColumn) {
+            try {
+              const { count: freeDownloadCount } = await supabaseAdmin
+                .from('audit_logs')
+                .select('id', { head: true, count: 'exact' })
+                .eq('user_id', user.id)
+                .eq('action', 'download')
+                .contains('details', { access_mode: 'free' })
+
+              freeUsed = Number(freeDownloadCount ?? 0)
+            } catch {
+              freeUsed = 0
+            }
+          }
 
           if (hasFreeCounterColumn && freeUsed < FREE_DOWNLOAD_LIMIT) {
             const nextFreeUsed = freeUsed + 1
@@ -128,6 +143,10 @@ export async function POST(_: Request, context: { params: RouteParams }) {
                 { status: 500 }
               )
             }
+            accessMode = 'free'
+            remainingFreeDownloads = Math.max(0, FREE_DOWNLOAD_LIMIT - nextFreeUsed)
+          } else if (!hasFreeCounterColumn && freeUsed < FREE_DOWNLOAD_LIMIT) {
+            const nextFreeUsed = freeUsed + 1
             accessMode = 'free'
             remainingFreeDownloads = Math.max(0, FREE_DOWNLOAD_LIMIT - nextFreeUsed)
           } else if (points >= POINTS_PER_DOWNLOAD) {

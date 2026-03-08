@@ -24,9 +24,17 @@ export default function DownloadButton({
   onDownloaded,
 }: Props) {
   const [loading, setLoading] = useState(false)
+  const notifyPointsRefresh = () => {
+    if (typeof window === 'undefined') return
+    window.dispatchEvent(new CustomEvent('studydocu:points-updated'))
+  }
 
-  const registrarDescarga = async (): Promise<boolean> => {
-    if (!docId) return true
+  const registrarDescarga = async (): Promise<{
+    ok: boolean
+    accessMode?: 'owner' | 'premium' | 'free' | 'contributor' | 'points' | 'repeat'
+    pointsCharged?: number
+  }> => {
+    if (!docId) return { ok: true }
     try {
       const res = await fetch(`/api/documents/${docId}/download`, { method: 'POST' })
       const body = await res.json().catch(() => ({}))
@@ -34,7 +42,7 @@ export default function DownloadButton({
       if (!res.ok) {
         const msg = body?.error || 'No tienes permiso para descargar este documento.'
         toast.error(msg)
-        return false
+        return { ok: false }
       }
 
       if (body?.accessMode === 'free' && typeof body?.remainingFreeDownloads === 'number') {
@@ -59,11 +67,15 @@ export default function DownloadButton({
         toast.success('Ya habias descargado este documento. No se descontaron puntos.')
       }
 
-      return true
+      return {
+        ok: true,
+        accessMode: body?.accessMode,
+        pointsCharged: Number(body?.pointsCharged || 0),
+      }
     } catch (e) {
       console.warn('[DownloadButton] error registrando descarga:', e)
       toast.error('No se pudo validar tu descarga. Intenta nuevamente.')
-      return false
+      return { ok: false }
     }
   }
 
@@ -71,8 +83,11 @@ export default function DownloadButton({
     try {
       setLoading(true)
 
-      const accessAllowed = await registrarDescarga()
-      if (!accessAllowed) return
+      const accessResult = await registrarDescarga()
+      if (!accessResult.ok) return
+      if (accessResult.accessMode === 'points' || accessResult.accessMode === 'free') {
+        notifyPointsRefresh()
+      }
       onDownloaded?.()
 
       let url: string | null = null
