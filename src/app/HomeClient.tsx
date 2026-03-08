@@ -1006,7 +1006,7 @@ export default function HomeClient() {
         <Footer />
 
         {/* CTA flotante */}
-        <div className="fixed bottom-2 left-0 right-0 z-30 pointer-events-none sm:bottom-3">
+        <div className="fixed bottom-0 left-0 right-0 z-30 translate-y-2 pointer-events-none sm:translate-y-1">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 flex justify-center">
             <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/45 dark:border-white/10 bg-white/55 dark:bg-gray-950/18 md:backdrop-blur-md shadow-[0_20px_60px_-35px_rgba(15,23,42,0.6)] px-3 py-2">
               <Button onClick={handleStart} className="rounded-full px-4 py-2 h-auto">
