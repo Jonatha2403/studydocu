@@ -352,7 +352,16 @@ export default function UploadForm({
       }
       const newDocDetails = await registrarDocumento(file, category)
       const nuevosLogros = (await checkAndGrantAchievements(user!.id)) || []
-      await sumarPuntos(user!.id, 15, 'Documento subido')
+      const puntosActualizados = await sumarPuntos(user!.id, 15, 'Documento subido')
+      if (puntosActualizados === null) {
+        const { data: perfilFallback } = await supabase
+          .from('profiles')
+          .select('points')
+          .eq('id', user!.id)
+          .maybeSingle()
+        const nextPoints = Number(perfilFallback?.points ?? 0) + 15
+        await supabase.from('profiles').update({ points: nextPoints }).eq('id', user!.id)
+      }
       await registrarLogro(user!.id, 'primer_documento')
       await checkMissions(user!.id)
 

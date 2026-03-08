@@ -3,6 +3,7 @@ import { supabaseServer } from '@/lib/supabaseServer'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 const FREE_DOWNLOAD_LIMIT = 2
+const POINTS_PER_DOWNLOAD = 15
 
 type RouteParams = { id: string } | Promise<{ id: string }>
 
@@ -39,20 +40,23 @@ export async function POST(_: Request, context: { params: RouteParams }) {
       )
     }
 
-    let accessMode: 'owner' | 'premium' | 'free' | 'contributor' = 'owner'
+    let accessMode: 'owner' | 'premium' | 'free' | 'contributor' | 'points' = 'owner'
     let remainingFreeDownloads: number | null = null
+    let pointsCharged = 0
+    let remainingPoints: number | null = null
 
     const isOwner = doc.user_id === user.id
     if (!isOwner) {
       let profile: {
         subscription_active?: boolean | null
         free_downloads_used?: number | null
+        points?: number | null
       } | null = null
       let hasFreeCounterColumn = true
 
       const { data: profileWithCounter, error: profileWithCounterError } = await supabaseAdmin
         .from('profiles')
-        .select('subscription_active, free_downloads_used')
+        .select('subscription_active, free_downloads_used, points')
         .eq('id', user.id)
         .maybeSingle()
 
@@ -61,7 +65,7 @@ export async function POST(_: Request, context: { params: RouteParams }) {
         const { data: profileWithoutCounter, error: profileWithoutCounterError } =
           await supabaseAdmin
             .from('profiles')
-            .select('subscription_active')
+            .select('subscription_active, points')
             .eq('id', user.id)
             .maybeSingle()
         if (profileWithoutCounterError) {
@@ -92,6 +96,7 @@ export async function POST(_: Request, context: { params: RouteParams }) {
         accessMode = 'premium'
       } else {
         const freeUsed = Number(profile.free_downloads_used ?? 0)
+        const points = Number(profile.points ?? 0)
 
         if (hasFreeCounterColumn && freeUsed < FREE_DOWNLOAD_LIMIT) {
           const nextFreeUsed = freeUsed + 1
@@ -108,6 +113,23 @@ export async function POST(_: Request, context: { params: RouteParams }) {
           }
           accessMode = 'free'
           remainingFreeDownloads = Math.max(0, FREE_DOWNLOAD_LIMIT - nextFreeUsed)
+        } else if (points >= POINTS_PER_DOWNLOAD) {
+          const nextPoints = points - POINTS_PER_DOWNLOAD
+          const { error: pointsError } = await supabaseAdmin
+            .from('profiles')
+            .update({ points: nextPoints })
+            .eq('id', user.id)
+
+          if (pointsError) {
+            return NextResponse.json(
+              { error: `No se pudieron descontar puntos: ${pointsError.message}` },
+              { status: 500 }
+            )
+          }
+
+          accessMode = 'points'
+          pointsCharged = POINTS_PER_DOWNLOAD
+          remainingPoints = nextPoints
         } else {
           const { count: approvedOwnedCount, error: approvedOwnedError } = await supabaseAdmin
             .from('documents')
@@ -129,8 +151,7 @@ export async function POST(_: Request, context: { params: RouteParams }) {
           } else {
             return NextResponse.json(
               {
-                error:
-                  'Ya usaste tus 2 descargas gratis. Para seguir descargando debes subir un documento aprobado o activar Premium.',
+                error: `Ya usaste tus 2 descargas gratis y no tienes puntos suficientes. Necesitas ${POINTS_PER_DOWNLOAD} puntos, subir un documento aprobado o activar Premium.`,
               },
               { status: 402 }
             )
@@ -166,6 +187,9 @@ export async function POST(_: Request, context: { params: RouteParams }) {
       success: true,
       accessMode,
       remainingFreeDownloads,
+      pointsCharged,
+      remainingPoints,
+      pointsPerDownload: POINTS_PER_DOWNLOAD,
       freeDownloadLimit: FREE_DOWNLOAD_LIMIT,
     })
   } catch (e: any) {

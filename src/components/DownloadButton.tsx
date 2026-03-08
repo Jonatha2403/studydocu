@@ -43,6 +43,18 @@ export default function DownloadButton({
         )
       }
 
+      if (body?.accessMode === 'points' && body?.pointsCharged) {
+        const rest =
+          typeof body?.remainingPoints === 'number'
+            ? ` Te quedan ${body.remainingPoints} puntos.`
+            : ''
+        toast.success(`Se descontaron ${body.pointsCharged} puntos por esta descarga.${rest}`)
+      }
+
+      if (body?.accessMode === 'contributor') {
+        toast.success('Descarga habilitada por tener documentos aprobados.')
+      }
+
       return true
     } catch (e) {
       console.warn('[DownloadButton] error registrando descarga:', e)
