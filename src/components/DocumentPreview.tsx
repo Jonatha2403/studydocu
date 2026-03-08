@@ -108,14 +108,7 @@ export default function DocumentPreview({
 
   return (
     <div className="w-full">
-      {isPdf && (
-        <iframe
-          src={pdfIframeUrl}
-          className="w-full h-[80vh]"
-          title="PDF"
-          sandbox={disablePdfToolbar ? 'allow-same-origin' : undefined}
-        />
-      )}
+      {isPdf && <iframe src={pdfIframeUrl} className="w-full h-[80vh]" title="PDF" />}
 
       {isOffice && officeViewerUrl && (
         <iframe src={officeViewerUrl} className="w-full h-[80vh]" title="Office" />
