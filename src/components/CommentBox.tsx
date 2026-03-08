@@ -254,7 +254,12 @@ export default function CommentBox({ documentId, user, onCommentSent }: CommentB
       ) : (
         <p className="mb-6 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700/50 p-3 rounded-md text-center">
           Debes{' '}
-          <a href="/auth" className="text-blue-600 dark:text-yellow-400 font-semibold underline">
+          <a
+            href={`/iniciar-sesion?next=${encodeURIComponent(
+              typeof window !== 'undefined' ? window.location.pathname : '/explorar'
+            )}`}
+            className="text-blue-600 dark:text-yellow-400 font-semibold underline"
+          >
             iniciar sesión
           </a>{' '}
           para comentar.
