@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/client'
 import { useUserContext } from '@/context/UserContext'
 import { useUserStatus } from '@/hooks/useUserStatus'
 import { useMembership } from '@/hooks/useMembership'
@@ -32,6 +32,7 @@ import {
 import PremiumBadge from '@/components/PremiumBadge'
 import LottieAvatar from '@/components/LottieAvatar'
 import { getAvatarImageSrc, getCleanAvatarUrl, isLottieAvatar } from '@/lib/avatar'
+import { ACHIEVEMENTS_CATALOG } from '@/lib/achievementsCatalog'
 
 type UserDashboardStats = {
   puntos: number
@@ -48,6 +49,12 @@ type FetchedDocument = {
   created_at: string
 }
 
+type PointMovement = {
+  action: string | null
+  points_changed: number | null
+  created_at: string
+}
+
 export default function DashboardPage() {
   const { user, perfil, loading: sessionLoading } = useUserContext()
   const { isPremium } = useMembership()
@@ -58,6 +65,12 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [downloads, setDownloads] = useState<FetchedDocument[]>([])
+  const [freeDownloadsUsed, setFreeDownloadsUsed] = useState(0)
+  const [pointMovements, setPointMovements] = useState<PointMovement[]>([])
+  const [unlockedAchievementKeys, setUnlockedAchievementKeys] = useState<string[]>([])
+
+  const FREE_DOWNLOAD_LIMIT = 2
+  const POINTS_PER_DOWNLOAD = 15
 
   const router = useRouter()
 
@@ -108,6 +121,40 @@ export default function DashboardPage() {
       })
 
       setRanking(typeof rankData === 'number' ? rankData : null)
+
+      try {
+        const [{ data: movementsData }, { count: freeCount }, { data: achievementsData }] =
+          await Promise.all([
+            supabase
+              .from('audit_logs')
+              .select('action, points_changed, created_at')
+              .eq('user_id', user.id)
+              .not('points_changed', 'is', null)
+              .order('created_at', { ascending: false })
+              .limit(20),
+            supabase
+              .from('audit_logs')
+              .select('id', { head: true, count: 'exact' })
+              .eq('user_id', user.id)
+              .eq('action', 'download')
+              .contains('details', { access_mode: 'free' }),
+            supabase
+              .from('user_achievements')
+              .select('achievement_key, achievement')
+              .eq('user_id', user.id),
+          ])
+
+        setPointMovements((movementsData || []) as PointMovement[])
+        setFreeDownloadsUsed(Number(freeCount ?? 0))
+        const keys = ((achievementsData || []) as any[])
+          .map((row) => String(row?.achievement_key || row?.achievement || '').trim())
+          .filter(Boolean)
+        setUnlockedAchievementKeys(Array.from(new Set(keys)))
+      } catch {
+        setPointMovements([])
+        setFreeDownloadsUsed(0)
+        setUnlockedAchievementKeys([])
+      }
 
       try {
         const { data: logs } = await supabase
@@ -204,6 +251,21 @@ export default function DashboardPage() {
 
   const puntosUi = stats?.puntos ?? ((perfil as any)?.points || 0)
   const medalla = getMedalla(puntosUi)
+  const remainingFreeDownloads = Math.max(0, FREE_DOWNLOAD_LIMIT - freeDownloadsUsed)
+  const paidDownloadsAvailable = Math.floor(Math.max(0, puntosUi) / POINTS_PER_DOWNLOAD)
+  const unlockedAchievementsCount = unlockedAchievementKeys.length
+  const totalAchievements = ACHIEVEMENTS_CATALOG.length
+  const lockedAchievementsCount = Math.max(0, totalAchievements - unlockedAchievementsCount)
+  const docsUploaded = Number(stats?.documentosTotales ?? 0)
+  const docsForFiveUploads = Math.max(0, 5 - docsUploaded)
+  const nextAchievementHint = !unlockedAchievementKeys.includes('five_uploads')
+    ? docsForFiveUploads > 0
+      ? `Siguiente logro recomendado: sube ${docsForFiveUploads} documento(s) mas para "Colaborador Activo".`
+      : 'Siguiente logro recomendado: "Colaborador Activo" se desbloqueara al validar tus 5 subidas.'
+    : !unlockedAchievementKeys.includes('popular_doc')
+      ? 'Siguiente logro recomendado: consigue 10 likes en un documento para "Documento Popular".'
+      : 'Ya completaste los logros base. Sigue subiendo documentos para ganar mas puntos y desbloquear futuras misiones.'
+  const lastPointsMovement = pointMovements.find((m) => Number(m.points_changed || 0) !== 0) || null
 
   return (
     <div className="w-full px-3 pb-16 pt-3 sm:px-6">
@@ -302,6 +364,45 @@ export default function DashboardPage() {
       </section>
 
       <ProgressBar puntos={puntosUi} />
+
+      <section className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <ChartCard title="Estado de puntos y descargas">
+          <div className="space-y-3 text-sm">
+            <p>
+              <b>Puntos actuales:</b> {puntosUi}
+            </p>
+            <p>
+              <b>Descargas gratis restantes:</b> {remainingFreeDownloads}/{FREE_DOWNLOAD_LIMIT}
+            </p>
+            <p>
+              <b>Descargas posibles con puntos:</b> {paidDownloadsAvailable} (a{' '}
+              {POINTS_PER_DOWNLOAD} pts c/u)
+            </p>
+            <p className="text-muted-foreground">
+              Cuando uses las 2 descargas gratis, cada descarga nueva resta {POINTS_PER_DOWNLOAD}{' '}
+              puntos. Si repites el mismo documento, no descuenta puntos.
+            </p>
+          </div>
+        </ChartCard>
+
+        <ChartCard title="Progreso de logros y actividad">
+          <div className="space-y-3 text-sm">
+            <p>
+              <b>Logros desbloqueados:</b> {unlockedAchievementsCount}/{totalAchievements}
+            </p>
+            <p>
+              <b>Logros pendientes:</b> {lockedAchievementsCount}
+            </p>
+            <p className="text-muted-foreground">{nextAchievementHint}</p>
+            <p>
+              <b>Ultimo movimiento de puntos:</b>{' '}
+              {lastPointsMovement
+                ? `${lastPointsMovement.points_changed! > 0 ? '+' : ''}${lastPointsMovement.points_changed} pts (${lastPointsMovement.action || 'accion'}) - ${new Date(lastPointsMovement.created_at).toLocaleString()}`
+                : 'Sin movimientos registrados'}
+            </p>
+          </div>
+        </ChartCard>
+      </section>
 
       <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard
