@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 import { useUserContext } from '@/context/UserContext'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { registrarLogro } from '@/lib/gamification'
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { perfil, user, loading } = useUserContext()
@@ -23,6 +24,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       router.replace('/iniciar-sesion')
     }
   }, [loading, user, router])
+
+  useEffect(() => {
+    if (loading || !user?.id) return
+    ;(async () => {
+      await registrarLogro(user.id, 'primer_login')
+      if ((perfil as any)?.onboarding_complete === true) {
+        await registrarLogro(user.id, 'bienvenida')
+      }
+    })()
+  }, [loading, user?.id, perfil])
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut()
