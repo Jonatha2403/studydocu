@@ -13,6 +13,7 @@ interface Props {
   tieneDocsAprobados?: boolean // opcional
   label?: string
   className?: string
+  onDownloaded?: () => void
 }
 
 export default function DownloadButton({
@@ -21,6 +22,7 @@ export default function DownloadButton({
   userId: userIdProp,
   label = 'Descargar',
   className = 'text-xs text-blue-600 dark:text-blue-400 hover:underline',
+  onDownloaded,
 }: Props) {
   const [userId, setUserId] = useState<string | null>(userIdProp ?? null)
   const [loading, setLoading] = useState(false)
@@ -90,6 +92,7 @@ export default function DownloadButton({
 
       const accessAllowed = await registrarDescarga()
       if (!accessAllowed) return
+      onDownloaded?.()
 
       // Normaliza la ruta: debe ser el "object key" dentro del bucket
       let objectKey = (filePath || '').replace(/^\/+/, '')

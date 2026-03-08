@@ -24,7 +24,7 @@ interface Documento {
   likes: number
   approved: boolean
   university: string | null
-  uploaded_by: string
+  author_username: string | null
 }
 
 export default function ExplorarPage() {
@@ -58,35 +58,21 @@ export default function ExplorarPage() {
     setCargando(true)
 
     try {
-      let query = supabase
-        .from('documents')
-        .select('*')
-        .eq('approved', true)
-        .order(orden, { ascending: false })
+      const params = new URLSearchParams({
+        q: busqueda.trim(),
+        categoria,
+        universidad,
+        formato,
+        orden,
+      })
+      const res = await fetch(`/api/documents/explore?${params.toString()}`, { cache: 'no-store' })
+      const body = await res.json().catch(() => ({}))
 
-      if (busqueda.trim()) {
-        query = query.ilike('file_name', `%${busqueda.trim()}%`)
-      }
-
-      if (categoria !== 'Todos') {
-        query = query.eq('category', categoria)
-      }
-
-      if (universidad !== 'Todas') {
-        query = query.eq('university', universidad)
-      }
-
-      const { data, error } = await query
-
-      if (error) {
-        console.error('Error al cargar documentos:', error)
+      if (!res.ok) {
+        console.error('Error al cargar documentos:', body?.error)
         setResultados([])
       } else {
-        const filtrados =
-          formato === 'Todos'
-            ? data
-            : data?.filter((d) => d.file_path?.toLowerCase().endsWith(`.${formato}`))
-        setResultados((filtrados || []) as Documento[])
+        setResultados((body?.items || []) as Documento[])
       }
     } finally {
       setCargando(false)
@@ -253,7 +239,7 @@ export default function ExplorarPage() {
                     <GraduationCap className="h-3.5 w-3.5" />
                     {doc.university || 'Desconocida'}
                   </p>
-                  <p>Autor: @{(doc.uploaded_by || 'anonimo').slice(0, 8)}</p>
+                  <p>Autor: @{doc.author_username || 'usuario'}</p>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                   <p>Descargas: {doc.download_count || 0}</p>
@@ -294,9 +280,7 @@ export default function ExplorarPage() {
                     <td className="px-4 py-3 font-medium">{doc.file_name}</td>
                     <td className="px-4 py-3 text-center">{doc.category || '-'}</td>
                     <td className="px-4 py-3 text-center">{doc.university || 'Desconocida'}</td>
-                    <td className="px-4 py-3 text-center">
-                      @{(doc.uploaded_by || 'anonimo').slice(0, 8)}...
-                    </td>
+                    <td className="px-4 py-3 text-center">@{doc.author_username || 'usuario'}</td>
                     <td className="px-4 py-3 text-center">{doc.download_count || 0}</td>
                     <td className="px-4 py-3 text-center">{doc.likes || 0}</td>
                     <td className="px-4 py-3 text-center">

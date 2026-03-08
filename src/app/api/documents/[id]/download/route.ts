@@ -140,7 +140,25 @@ export async function POST(_: Request, context: { params: RouteParams }) {
 
     const { error: incrementError } = await supabaseAdmin.rpc('increment_downloads', { doc_id: id })
     if (incrementError) {
-      return NextResponse.json({ error: incrementError.message }, { status: 400 })
+      const { data: fallbackDoc, error: fallbackError } = await supabaseAdmin
+        .from('documents')
+        .select('download_count')
+        .eq('id', id)
+        .maybeSingle()
+
+      if (fallbackError || !fallbackDoc) {
+        return NextResponse.json({ error: incrementError.message }, { status: 400 })
+      }
+
+      const current = Number(fallbackDoc.download_count ?? 0)
+      const { error: updateError } = await supabaseAdmin
+        .from('documents')
+        .update({ download_count: current + 1 })
+        .eq('id', id)
+
+      if (updateError) {
+        return NextResponse.json({ error: updateError.message }, { status: 400 })
+      }
     }
 
     return NextResponse.json({

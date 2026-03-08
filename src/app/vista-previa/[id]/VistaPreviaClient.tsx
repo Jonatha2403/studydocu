@@ -1,8 +1,7 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Loader2, Download, Heart, Copy, AlertTriangle, ArrowLeft } from 'lucide-react'
 import CommentBox from '@/components/CommentBox'
@@ -27,10 +26,11 @@ interface DocumentRow {
   category: string
   created_at: string
   user_id: string
-  downloads?: number
   likes?: number
   download_count?: number
   approved?: boolean
+  author_username?: string | null
+  author_university?: string | null
 }
 
 interface DocumentData extends DocumentRow {
@@ -60,29 +60,27 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
         setLoading(true)
         setError(null)
 
-        const { data: d, error: e1 } = await supabase
-          .from('documents')
-          .select('*')
-          .eq('id', id)
-          .maybeSingle()
+        const metaRes = await fetch(`/api/documents/${id}/public-metadata`, { cache: 'no-store' })
+        const metaBody = await metaRes.json().catch(() => ({}))
+        if (!metaRes.ok) throw new Error(metaBody?.error || 'No se pudo leer el documento.')
 
-        if (e1) throw new Error(`No se pudo leer el documento: ${e1.message}`)
-        if (!d) throw new Error('Documento no encontrado.')
-
-        const { data: p } = await supabase
-          .from('profiles')
-          .select('username, universidad')
-          .eq('id', d.user_id)
-          .maybeSingle()
-
-        if (!mounted) return
         const previewRes = await fetch(`/api/documents/${id}/preview-url`, { cache: 'no-store' })
         const previewBody = await previewRes.json().catch(() => ({}))
         if (!previewRes.ok || !previewBody?.url) {
           throw new Error(previewBody?.error || 'No se pudo obtener la URL de vista previa.')
         }
 
-        setDoc({ ...(d as DocumentRow), profiles: p ?? undefined })
+        if (!mounted) return
+        const authorUsername = metaBody?.author_username || 'usuario'
+        const authorUniversity = metaBody?.author_university || null
+
+        setDoc({
+          ...(metaBody as DocumentRow),
+          profiles: {
+            username: authorUsername,
+            universidad: authorUniversity || undefined,
+          },
+        })
         setPublicUrl(previewBody.url)
         setUrlOk(true)
       } catch (e: any) {
@@ -235,7 +233,7 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
       </div>
 
       <p className="text-sm text-muted-foreground mb-6">
-        {doc.profiles?.universidad || 'Universidad desconocida'} � {doc.category} � Subido por{' '}
+        {doc.profiles?.universidad || 'Universidad desconocida'} - {doc.category} - Subido por{' '}
         <Link
           href={`/perfil/usuario/${doc.profiles?.username}`}
           className="text-primary hover:underline"
@@ -334,7 +332,7 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
             <strong>Universidad:</strong> {doc.profiles?.universidad || '-'}
           </p>
           <p className="flex items-center gap-2 text-green-700 dark:text-green-400">
-            <Download size={16} /> Descargas: <strong>{doc.downloads ?? 0}</strong>
+            <Download size={16} /> Descargas: <strong>{doc.download_count ?? 0}</strong>
           </p>
           <p className="flex items-center gap-2 text-pink-600 dark:text-pink-400">
             <Heart size={16} /> Likes: <strong>{doc.likes ?? 0}</strong>
@@ -343,6 +341,11 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
             <DownloadButton
               docId={doc.id}
               filePath={doc.file_path}
+              onDownloaded={() =>
+                setDoc((prev) =>
+                  prev ? { ...prev, download_count: Number(prev.download_count ?? 0) + 1 } : prev
+                )
+              }
               className="inline-flex w-full items-center justify-center gap-2 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
               label="Descargar documento"
             />
