@@ -124,6 +124,7 @@ export async function registrarLogro(userId: string, tipo: string) {
       {
         user_id: userId,
         achievement_key: tipo,
+        unlocked: true,
         created_at: nowIso,
       },
     ])
@@ -132,6 +133,7 @@ export async function registrarLogro(userId: string, tipo: string) {
         {
           user_id: userId,
           achievement: tipo,
+          unlocked: true,
           created_at: nowIso,
         },
       ])
@@ -216,6 +218,7 @@ export async function checkMissions(userId: string) {
           user_id: userId,
           mission_id: mission.id,
           achievement_key: mission.key || null,
+          unlocked: true,
           created_at: new Date().toISOString(),
         })
 

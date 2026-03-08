@@ -32,7 +32,11 @@ export async function removePoints(userId: string, action: string): Promise<void
 }
 
 // ✅ Suma puntos al usuario y registra acción
-export async function sumarPuntos(userId: string, cantidad: number, motivo: string): Promise<number | null> {
+export async function sumarPuntos(
+  userId: string,
+  cantidad: number,
+  motivo: string
+): Promise<number | null> {
   try {
     const { data: perfil, error } = await supabase
       .from('profiles')
@@ -81,6 +85,7 @@ export async function registrarLogro(userId: string, tipo: string): Promise<bool
     const { error: insertError } = await supabase.from('user_achievements').insert({
       user_id: userId,
       achievement: tipo,
+      unlocked: true,
       created_at: new Date().toISOString(),
     })
 
@@ -95,28 +100,31 @@ export async function registrarLogro(userId: string, tipo: string): Promise<bool
 
 // 🧠 Determina nivel y medalla del usuario por puntos
 export function obtenerNivelYMedalla(puntos: number) {
-  if (puntos >= 500) return {
-    nivel: 'Experto',
-    medalla: '🥇 Oro',
-    progreso: 100,
-    siguiente: null
-  }
-  if (puntos >= 200) return {
-    nivel: 'Avanzado',
-    medalla: '🥈 Plata',
-    progreso: (puntos / 500) * 100,
-    siguiente: 500
-  }
-  if (puntos >= 50) return {
-    nivel: 'Explorador',
-    medalla: '🥉 Bronce',
-    progreso: (puntos / 200) * 100,
-    siguiente: 200
-  }
+  if (puntos >= 500)
+    return {
+      nivel: 'Experto',
+      medalla: '🥇 Oro',
+      progreso: 100,
+      siguiente: null,
+    }
+  if (puntos >= 200)
+    return {
+      nivel: 'Avanzado',
+      medalla: '🥈 Plata',
+      progreso: (puntos / 500) * 100,
+      siguiente: 500,
+    }
+  if (puntos >= 50)
+    return {
+      nivel: 'Explorador',
+      medalla: '🥉 Bronce',
+      progreso: (puntos / 200) * 100,
+      siguiente: 200,
+    }
   return {
     nivel: 'Nuevo',
     medalla: '🎓 Principiante',
     progreso: (puntos / 50) * 100,
-    siguiente: 50
+    siguiente: 50,
   }
 }

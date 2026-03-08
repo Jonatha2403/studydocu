@@ -22,11 +22,11 @@ async function listUnlockedAchievementKeys(userId: string) {
 }
 
 async function insertAchievements(userId: string, keys: string[]) {
-  const withKey = keys.map((key) => ({ user_id: userId, achievement_key: key }))
+  const withKey = keys.map((key) => ({ user_id: userId, achievement_key: key, unlocked: true }))
   const firstTry = await supabase.from('user_achievements').insert(withKey)
   if (!firstTry.error) return
 
-  const legacy = keys.map((key) => ({ user_id: userId, achievement: key }))
+  const legacy = keys.map((key) => ({ user_id: userId, achievement: key, unlocked: true }))
   const secondTry = await supabase.from('user_achievements').insert(legacy)
   if (secondTry.error) throw new Error(secondTry.error.message)
 }
