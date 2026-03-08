@@ -367,20 +367,26 @@ export default function DashboardPage() {
 
       <section className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ChartCard title="Estado de puntos y descargas">
-          <div className="space-y-3 text-sm">
-            <p>
-              <b>Puntos actuales:</b> {puntosUi}
-            </p>
-            <p>
-              <b>Descargas gratis restantes:</b> {remainingFreeDownloads}/{FREE_DOWNLOAD_LIMIT}
-            </p>
-            <p>
-              <b>Descargas posibles con puntos:</b> {paidDownloadsAvailable} (a{' '}
-              {POINTS_PER_DOWNLOAD} pts c/u)
-            </p>
-            <p className="text-muted-foreground">
-              Cuando uses las 2 descargas gratis, cada descarga nueva resta {POINTS_PER_DOWNLOAD}{' '}
-              puntos. Si repites el mismo documento, no descuenta puntos.
+          <div className="space-y-4 text-sm">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border bg-muted/30 p-3">
+                <p className="text-xs text-muted-foreground">Saldo actual</p>
+                <p className="text-xl font-semibold">{puntosUi} pts</p>
+              </div>
+              <div className="rounded-xl border bg-muted/30 p-3">
+                <p className="text-xs text-muted-foreground">Gratis disponibles</p>
+                <p className="text-xl font-semibold">
+                  {remainingFreeDownloads}/{FREE_DOWNLOAD_LIMIT}
+                </p>
+              </div>
+              <div className="rounded-xl border bg-muted/30 p-3">
+                <p className="text-xs text-muted-foreground">Descargas por puntos</p>
+                <p className="text-xl font-semibold">{paidDownloadsAvailable}</p>
+              </div>
+            </div>
+            <p className="rounded-lg border-l-4 border-blue-500 bg-blue-50 px-3 py-2 text-xs text-blue-900 dark:bg-blue-900/20 dark:text-blue-100">
+              Resumen rapido: primero usas tus 2 descargas gratis. Luego, cada descarga nueva
+              descuenta {POINTS_PER_DOWNLOAD} puntos. Si repites el mismo documento, no descuenta.
             </p>
           </div>
         </ChartCard>
@@ -416,7 +422,7 @@ export default function DashboardPage() {
           icon={<Layers size={16} />}
         />
         <StatCard
-          label="Puntos"
+          label="Saldo de puntos"
           value={
             <div className="flex items-center gap-3">
               <span>{loading ? '...' : puntosUi}</span>
@@ -646,7 +652,8 @@ function NextMilestone({ puntos }: { puntos: number }) {
   return (
     <div className="w-full sm:w-auto">
       <p className="mb-1 text-xs text-muted-foreground">
-        Proximo hito: <b>{goal} pts</b> · Te faltan <b>{remain}</b>
+        Saldo actual: <b>{puntos} pts</b> · Siguiente meta: <b>{goal} pts</b> · Te faltan{' '}
+        <b>{remain} pts</b>
       </p>
       <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700 sm:w-64">
         <div
