@@ -55,6 +55,10 @@ export default function DownloadButton({
         toast.success('Descarga habilitada por tener documentos aprobados.')
       }
 
+      if (body?.accessMode === 'repeat') {
+        toast.success('Ya habias descargado este documento. No se descontaron puntos.')
+      }
+
       return true
     } catch (e) {
       console.warn('[DownloadButton] error registrando descarga:', e)
