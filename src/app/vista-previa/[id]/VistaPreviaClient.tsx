@@ -253,7 +253,11 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
         <div className="md:col-span-2">
           <div className="rounded-2xl overflow-hidden border bg-background">
             {publicUrl && isPDF && urlOk && (
-              <DocumentPreview filePath={publicUrl} disablePdfToolbar={!user} />
+              <DocumentPreview
+                filePath={publicUrl}
+                disablePdfToolbar={!user}
+                allowExternalOpen={!!user}
+              />
             )}
 
             {publicUrl && !isPDF && isOffice && urlOk && (
@@ -264,14 +268,20 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
                   title="Vista previa Office"
                 />
                 <div className="p-3 text-center text-sm">
-                  <a
-                    href={officeViewerUrl ?? undefined}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    Abrir vista externa
-                  </a>
+                  {user ? (
+                    <a
+                      href={officeViewerUrl ?? undefined}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      Abrir vista externa
+                    </a>
+                  ) : (
+                    <p className="text-muted-foreground">
+                      Inicia sesion para abrir este archivo en una pestaña externa.
+                    </p>
+                  )}
                 </div>
               </div>
             )}

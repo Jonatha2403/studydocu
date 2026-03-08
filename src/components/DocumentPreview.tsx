@@ -17,6 +17,8 @@ interface Props {
   bucketOverride?: string
   /** Oculta controles internos del visor PDF (descarga/impresion) */
   disablePdfToolbar?: boolean
+  /** Permite enlaces para abrir/descargar fuera del visor */
+  allowExternalOpen?: boolean
 }
 
 /**
@@ -29,6 +31,7 @@ export default function DocumentPreview({
   canViewFull,
   bucketOverride,
   disablePdfToolbar = false,
+  allowExternalOpen = true,
 }: Props) {
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -111,7 +114,7 @@ export default function DocumentPreview({
         <iframe src={officeViewerUrl} className="w-full h-[80vh]" title="Office" />
       )}
 
-      {!isPdf && !isOffice && (
+      {!isPdf && !isOffice && allowExternalOpen && (
         <div className="p-6 text-center">
           <a
             href={resolvedUrl}
@@ -124,8 +127,14 @@ export default function DocumentPreview({
         </div>
       )}
 
+      {!isPdf && !isOffice && !allowExternalOpen && (
+        <div className="p-6 text-center text-sm text-muted-foreground">
+          Inicia sesion para abrir este archivo en una pestaña externa.
+        </div>
+      )}
+
       {/* Enlace adicional para abrir en pestana completa */}
-      {canViewFull && resolvedUrl && (
+      {canViewFull && allowExternalOpen && resolvedUrl && (
         <div className="mt-3 text-center">
           <a
             href={resolvedUrl}
