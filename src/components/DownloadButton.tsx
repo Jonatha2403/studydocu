@@ -67,6 +67,14 @@ export default function DownloadButton({
         toast.success('Ya habias descargado este documento. No se descontaron puntos.')
       }
 
+      if (body?.accessMode === 'owner') {
+        toast.success('Este documento es tuyo. Tu descarga es gratis y no descuenta puntos.')
+      }
+
+      if (body?.accessMode === 'premium') {
+        toast.success('Descarga premium aplicada. No se descontaron puntos.')
+      }
+
       return {
         ok: true,
         accessMode: body?.accessMode,
