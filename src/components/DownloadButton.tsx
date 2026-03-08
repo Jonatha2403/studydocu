@@ -1,7 +1,7 @@
 // /components/DownloadButton.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 
@@ -19,37 +19,14 @@ interface Props {
 export default function DownloadButton({
   docId,
   filePath,
-  userId: userIdProp,
   label = 'Descargar',
   className = 'text-xs text-blue-600 dark:text-blue-400 hover:underline',
   onDownloaded,
 }: Props) {
-  const [userId, setUserId] = useState<string | null>(userIdProp ?? null)
   const [loading, setLoading] = useState(false)
 
   // Nombre del bucket (define NEXT_PUBLIC_SUPABASE_BUCKET en .env.local)
   const BUCKET = process.env.NEXT_PUBLIC_SUPABASE_BUCKET || 'documents'
-
-  useEffect(() => {
-    let mounted = true
-
-    const cargarSesion = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
-        const uid = userIdProp ?? session?.user?.id ?? null
-        if (mounted) setUserId(uid)
-      } catch (e) {
-        console.warn('[DownloadButton] sesion error:', e)
-      }
-    }
-
-    void cargarSesion()
-    return () => {
-      mounted = false
-    }
-  }, [userIdProp])
 
   const registrarDescarga = async (): Promise<boolean> => {
     if (!docId) return true
@@ -69,10 +46,6 @@ export default function DownloadButton({
         )
       }
 
-      if (body?.accessMode === 'points' && body?.pointsCharged) {
-        toast.success(`Se descontaron ${body.pointsCharged} puntos por esta descarga.`)
-      }
-
       return true
     } catch (e) {
       console.warn('[DownloadButton] error registrando descarga:', e)
@@ -82,11 +55,6 @@ export default function DownloadButton({
   }
 
   const handleDescargar = async () => {
-    if (!userId) {
-      toast.error('Debes iniciar sesion para descargar.')
-      return
-    }
-
     try {
       setLoading(true)
 

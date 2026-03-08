@@ -3,7 +3,6 @@ import { supabaseServer } from '@/lib/supabaseServer'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 const FREE_DOWNLOAD_LIMIT = 2
-const POINTS_PER_DOWNLOAD = 15
 
 type RouteParams = { id: string } | Promise<{ id: string }>
 
@@ -40,22 +39,20 @@ export async function POST(_: Request, context: { params: RouteParams }) {
       )
     }
 
-    let accessMode: 'owner' | 'premium' | 'free' | 'points' = 'owner'
+    let accessMode: 'owner' | 'premium' | 'free' | 'contributor' = 'owner'
     let remainingFreeDownloads: number | null = null
-    let pointsCharged = 0
 
     const isOwner = doc.user_id === user.id
     if (!isOwner) {
       let profile: {
         subscription_active?: boolean | null
-        points?: number | null
         free_downloads_used?: number | null
       } | null = null
       let hasFreeCounterColumn = true
 
       const { data: profileWithCounter, error: profileWithCounterError } = await supabaseAdmin
         .from('profiles')
-        .select('subscription_active, points, free_downloads_used')
+        .select('subscription_active, free_downloads_used')
         .eq('id', user.id)
         .maybeSingle()
 
@@ -64,7 +61,7 @@ export async function POST(_: Request, context: { params: RouteParams }) {
         const { data: profileWithoutCounter, error: profileWithoutCounterError } =
           await supabaseAdmin
             .from('profiles')
-            .select('subscription_active, points')
+            .select('subscription_active')
             .eq('id', user.id)
             .maybeSingle()
         if (profileWithoutCounterError) {
@@ -95,7 +92,6 @@ export async function POST(_: Request, context: { params: RouteParams }) {
         accessMode = 'premium'
       } else {
         const freeUsed = Number(profile.free_downloads_used ?? 0)
-        const points = Number(profile.points ?? 0)
 
         if (hasFreeCounterColumn && freeUsed < FREE_DOWNLOAD_LIMIT) {
           const nextFreeUsed = freeUsed + 1
@@ -112,28 +108,33 @@ export async function POST(_: Request, context: { params: RouteParams }) {
           }
           accessMode = 'free'
           remainingFreeDownloads = Math.max(0, FREE_DOWNLOAD_LIMIT - nextFreeUsed)
-        } else if (points >= POINTS_PER_DOWNLOAD) {
-          const { error: pointsUpdateError } = await supabaseAdmin
-            .from('profiles')
-            .update({ points: points - POINTS_PER_DOWNLOAD })
-            .eq('id', user.id)
+        } else {
+          const { count: approvedOwnedCount, error: approvedOwnedError } = await supabaseAdmin
+            .from('documents')
+            .select('id', { head: true, count: 'exact' })
+            .eq('user_id', user.id)
+            .eq('approved', true)
 
-          if (pointsUpdateError) {
+          if (approvedOwnedError) {
             return NextResponse.json(
-              { error: `No se pudieron descontar puntos: ${pointsUpdateError.message}` },
+              {
+                error: `No se pudo validar tus documentos aprobados: ${approvedOwnedError.message}`,
+              },
               { status: 500 }
             )
           }
 
-          pointsCharged = POINTS_PER_DOWNLOAD
-          accessMode = 'points'
-        } else {
-          return NextResponse.json(
-            {
-              error: `No tienes descargas gratis ni puntos suficientes. Necesitas ${POINTS_PER_DOWNLOAD} puntos o Premium.`,
-            },
-            { status: 402 }
-          )
+          if (Number(approvedOwnedCount ?? 0) > 0) {
+            accessMode = 'contributor'
+          } else {
+            return NextResponse.json(
+              {
+                error:
+                  'Ya usaste tus 2 descargas gratis. Para seguir descargando debes subir un documento aprobado o activar Premium.',
+              },
+              { status: 402 }
+            )
+          }
         }
       }
     }
@@ -165,8 +166,6 @@ export async function POST(_: Request, context: { params: RouteParams }) {
       success: true,
       accessMode,
       remainingFreeDownloads,
-      pointsCharged,
-      pointsPerDownload: POINTS_PER_DOWNLOAD,
       freeDownloadLimit: FREE_DOWNLOAD_LIMIT,
     })
   } catch (e: any) {
