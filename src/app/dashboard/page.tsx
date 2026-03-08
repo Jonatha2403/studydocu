@@ -566,7 +566,13 @@ export default function DashboardPage() {
               ))}
             </ul>
           ) : (
-            <NoDataMessage loading={loading} compact emptyText="Sin descargas registradas." />
+            <NoDataMessage
+              loading={loading}
+              compact
+              emptyText="Sin descargas registradas."
+              ctaLabel="Explorar documentos"
+              ctaHref="/explorar"
+            />
           )}
         </ChartCard>
       </section>
@@ -623,10 +629,14 @@ function NoDataMessage({
   loading = false,
   compact = false,
   emptyText = 'Aun no hay datos',
+  ctaLabel = 'Sube tu primer documento',
+  ctaHref = '/subir',
 }: {
   loading?: boolean
   compact?: boolean
   emptyText?: string
+  ctaLabel?: string
+  ctaHref?: string
 }) {
   if (loading) {
     return (
@@ -640,10 +650,10 @@ function NoDataMessage({
     <div className={`text-center ${compact ? 'py-8' : 'py-10'}`}>
       <p className="mb-3 text-gray-500 dark:text-gray-400">{emptyText}</p>
       <a
-        href="/subir"
+        href={ctaHref}
         className="inline-block rounded-xl bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
       >
-        Sube tu primer documento
+        {ctaLabel}
       </a>
     </div>
   )
