@@ -2,6 +2,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Mail, MessageCircle, ShieldCheck, ArrowRight } from 'lucide-react'
 
 const WHATSAPP_URL =
@@ -18,7 +19,15 @@ export default function Footer() {
           {/* Brand */}
           <div className="lg:col-span-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-slate-900 shadow-[0_10px_26px_-18px_rgba(2,6,23,0.35)]" />
+              <div className="h-10 w-10 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_26px_-18px_rgba(2,6,23,0.35)]">
+                <Image
+                  src="/logo.png"
+                  alt="Logo StudyDocu"
+                  width={40}
+                  height={40}
+                  className="h-full w-full object-cover"
+                />
+              </div>
               <div>
                 <p className="text-base font-semibold text-slate-900">StudyDocu</p>
                 <p className="text-xs text-slate-500">Plataforma académica con IA en Ecuador</p>
