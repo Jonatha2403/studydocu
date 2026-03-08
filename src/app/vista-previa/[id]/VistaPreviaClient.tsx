@@ -252,7 +252,9 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
           <div className="rounded-2xl overflow-hidden border bg-background">
-            {publicUrl && isPDF && urlOk && <DocumentPreview filePath={publicUrl} />}
+            {publicUrl && isPDF && urlOk && (
+              <DocumentPreview filePath={publicUrl} disablePdfToolbar={!user} />
+            )}
 
             {publicUrl && !isPDF && isOffice && urlOk && (
               <div>

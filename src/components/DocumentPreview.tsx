@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -11,10 +11,12 @@ function isHttpUrl(s?: string | null) {
 interface Props {
   /** Puede ser una URL completa (public/signed) o una key relativa del Storage */
   filePath: string
-  /** Si lo usas para permitir abrir en pestaña completa */
+  /** Si lo usas para permitir abrir en pestana completa */
   canViewFull?: boolean
-  /** Opcional: si envías key y quieres forzar otro bucket */
+  /** Opcional: si envias key y quieres forzar otro bucket */
   bucketOverride?: string
+  /** Oculta controles internos del visor PDF (descarga/impresion) */
+  disablePdfToolbar?: boolean
 }
 
 /**
@@ -22,7 +24,12 @@ interface Props {
  * - Si `filePath` es URL http(s) => la usa tal cual.
  * - Si es una key de Storage => la firma con el bucket.
  */
-export default function DocumentPreview({ filePath, canViewFull, bucketOverride }: Props) {
+export default function DocumentPreview({
+  filePath,
+  canViewFull,
+  bucketOverride,
+  disablePdfToolbar = false,
+}: Props) {
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -73,7 +80,7 @@ export default function DocumentPreview({ filePath, canViewFull, bucketOverride 
   if (loading) {
     return (
       <div className="w-full h-[70vh] grid place-items-center text-sm text-muted-foreground">
-        Cargando documento…
+        Cargando documento...
       </div>
     )
   }
@@ -91,12 +98,14 @@ export default function DocumentPreview({ filePath, canViewFull, bucketOverride 
   const officeViewerUrl = isOffice
     ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(resolvedUrl)}`
     : null
+  const pdfIframeUrl =
+    isPdf && disablePdfToolbar
+      ? `${resolvedUrl}${resolvedUrl.includes('#') ? '&' : '#'}toolbar=0&navpanes=0&scrollbar=0`
+      : resolvedUrl
 
   return (
     <div className="w-full">
-      {isPdf && (
-        <iframe src={resolvedUrl} className="w-full h-[80vh]" title="PDF" />
-      )}
+      {isPdf && <iframe src={pdfIframeUrl} className="w-full h-[80vh]" title="PDF" />}
 
       {isOffice && officeViewerUrl && (
         <iframe src={officeViewerUrl} className="w-full h-[80vh]" title="Office" />
@@ -115,7 +124,7 @@ export default function DocumentPreview({ filePath, canViewFull, bucketOverride 
         </div>
       )}
 
-      {/* 🔗 Enlace adicional para abrir en pestaña completa */}
+      {/* Enlace adicional para abrir en pestana completa */}
       {canViewFull && resolvedUrl && (
         <div className="mt-3 text-center">
           <a
@@ -124,7 +133,7 @@ export default function DocumentPreview({ filePath, canViewFull, bucketOverride 
             rel="noopener noreferrer"
             className="text-sm text-blue-600 underline"
           >
-            Ver en pestaña completa
+            Ver en pestana completa
           </a>
         </div>
       )}
