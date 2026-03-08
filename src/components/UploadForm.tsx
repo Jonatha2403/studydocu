@@ -144,7 +144,9 @@ export default function UploadForm({
     }
 
     if (file.type.includes('word') || lowerName.endsWith('.doc') || lowerName.endsWith('.docx')) {
-      setPreviewText('[Vista previa no disponible para Word, pero el archivo se puede subir]')
+      setPreviewText(
+        '[Tu documento esta listo para compartirse. Cada aporte suma puntos y ayuda a mas estudiantes.]'
+      )
       return
     }
 
