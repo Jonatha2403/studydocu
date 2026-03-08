@@ -119,16 +119,19 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
 
     const onKeyDown = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase()
-      if ((event.ctrlKey || event.metaKey) && key === 'p') {
+      if ((event.ctrlKey || event.metaKey) && (key === 'p' || event.code === 'KeyP')) {
         event.preventDefault()
         event.stopPropagation()
+        event.stopImmediatePropagation?.()
         toast.error('Para imprimir o descargar debes iniciar sesion.')
       }
     }
 
     window.addEventListener('keydown', onKeyDown, true)
+    document.addEventListener('keydown', onKeyDown, true)
     return () => {
       window.removeEventListener('keydown', onKeyDown, true)
+      document.removeEventListener('keydown', onKeyDown, true)
     }
   }, [user])
 
