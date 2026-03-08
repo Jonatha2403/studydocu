@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/client'
 import { ACHIEVEMENTS_CATALOG, getAchievementMeta } from '@/lib/achievementsCatalog'
 
 type AchievementRow = {

@@ -360,10 +360,19 @@ export default function UploadForm({
           .eq('id', user!.id)
           .maybeSingle()
         const nextPoints = Number(perfilFallback?.points ?? 0) + 15
-        await supabase.from('profiles').update({ points: nextPoints }).eq('id', user!.id)
+        const { error: fallbackUpdateError } = await supabase
+          .from('profiles')
+          .update({ points: nextPoints })
+          .eq('id', user!.id)
+        if (fallbackUpdateError) {
+          console.warn('[UPLOAD_POINTS_FALLBACK_ERROR]', fallbackUpdateError.message)
+        }
       }
       await registrarLogro(user!.id, 'primer_documento')
       await checkMissions(user!.id)
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('studydocu:points-updated'))
+      }
 
       if (nuevosLogros.length > 0) {
         nuevosLogros.forEach((logro) => toast.success(`🏆 Nuevo logro desbloqueado: ${logro.name}`))

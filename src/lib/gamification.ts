@@ -1,5 +1,5 @@
 // src/lib/gamification.ts
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
 declare const window: any

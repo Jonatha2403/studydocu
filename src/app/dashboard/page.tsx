@@ -82,10 +82,14 @@ export default function DashboardPage() {
   const fetchStats = useCallback(async () => {
     if (!user) return
     try {
-      const { data: documentsData, error: documentsError } = await supabase
-        .from('documents')
-        .select('id, file_name, category, created_at')
-        .eq('user_id', user.id)
+      const [{ data: documentsData, error: documentsError }, { data: profileData }] =
+        await Promise.all([
+          supabase
+            .from('documents')
+            .select('id, file_name, category, created_at')
+            .eq('user_id', user.id),
+          supabase.from('profiles').select('points').eq('id', user.id).maybeSingle(),
+        ])
 
       if (documentsError) throw documentsError
       const documents: FetchedDocument[] = (documentsData as any) || []
@@ -113,7 +117,7 @@ export default function DashboardPage() {
         .slice(0, 5)
 
       setStats({
-        puntos: (perfil as any)?.points || 0,
+        puntos: Number((profileData as any)?.points ?? (perfil as any)?.points ?? 0),
         documentosTotales: documents.length,
         categorias: docsPorCategoria,
         porMes: docsPorMes,
