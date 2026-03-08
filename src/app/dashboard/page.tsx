@@ -613,8 +613,8 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 }
 
 function ProgressBar({ puntos }: { puntos: number }) {
-  const goal = puntos < 50 ? 50 : puntos < 200 ? 200 : puntos < 500 ? 500 : 1000
-  const percent = Math.min((puntos / goal) * 100, 100)
+  const stage = getLevelStage(puntos)
+  const percent = stage.progressPercent
   return (
     <div className="mb-6 h-4 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
       <div
@@ -660,26 +660,34 @@ function NoDataMessage({
 }
 
 function NextMilestone({ puntos }: { puntos: number }) {
-  const goal = puntos < 50 ? 50 : puntos < 200 ? 200 : puntos < 500 ? 500 : 1000
-  const remain = Math.max(goal - puntos, 0)
-  const percent = Math.min((puntos / goal) * 100, 100)
+  const stage = getLevelStage(puntos)
   return (
     <div className="w-full rounded-xl border bg-muted/20 p-3 sm:w-auto sm:min-w-[280px]">
       <div className="mb-2 flex items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">Progreso de nivel</p>
         <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-          {puntos} / {goal} pts
+          {puntos} pts
         </span>
       </div>
       <p className="mb-2 text-xs text-muted-foreground">
-        Puntos para siguiente nivel: <b>{remain}</b>
+        Nivel actual: <b>{stage.currentLevel}</b>
+      </p>
+      <p className="mb-2 text-xs text-muted-foreground">
+        {stage.nextLevel
+          ? `Siguiente nivel: ${stage.nextLevel} (faltan ${stage.remainingToNext} pts)`
+          : 'Ya alcanzaste el nivel maximo actual'}
       </p>
       <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700 sm:w-64">
         <div
           className="h-3 bg-gradient-to-r from-blue-500 to-purple-500"
-          style={{ width: `${percent}%` }}
+          style={{ width: `${stage.progressPercent}%` }}
         />
       </div>
+      {stage.nextTarget && (
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Tramo actual: {Math.max(stage.floor, puntos)} / {stage.nextTarget} pts
+        </p>
+      )}
     </div>
   )
 }
@@ -689,6 +697,56 @@ function getMedalla(puntos: number) {
   if (puntos >= 200) return { nivel: 'Avanzado', medalla: 'Plata', color: 'text-gray-400' }
   if (puntos >= 50) return { nivel: 'Explorador', medalla: 'Bronce', color: 'text-orange-400' }
   return { nivel: 'Nuevo', medalla: 'Inicial', color: 'text-green-500' }
+}
+
+function getLevelStage(puntos: number) {
+  if (puntos >= 500) {
+    return {
+      currentLevel: 'Experto',
+      nextLevel: null as string | null,
+      floor: 500,
+      nextTarget: null as number | null,
+      remainingToNext: 0,
+      progressPercent: 100,
+    }
+  }
+
+  if (puntos >= 200) {
+    const floor = 200
+    const nextTarget = 500
+    return {
+      currentLevel: 'Avanzado',
+      nextLevel: 'Experto',
+      floor,
+      nextTarget,
+      remainingToNext: nextTarget - puntos,
+      progressPercent: Math.min(Math.max(((puntos - floor) / (nextTarget - floor)) * 100, 0), 100),
+    }
+  }
+
+  if (puntos >= 50) {
+    const floor = 50
+    const nextTarget = 200
+    return {
+      currentLevel: 'Explorador',
+      nextLevel: 'Avanzado',
+      floor,
+      nextTarget,
+      remainingToNext: nextTarget - puntos,
+      progressPercent: Math.min(Math.max(((puntos - floor) / (nextTarget - floor)) * 100, 0), 100),
+    }
+  }
+
+  const floor = 0
+  const nextTarget = 50
+  return {
+    currentLevel: 'Nuevo',
+    nextLevel: 'Explorador',
+    floor,
+    nextTarget,
+    remainingToNext: nextTarget - puntos,
+    progressPercent: Math.min(Math.max((puntos / nextTarget) * 100, 0), 100),
+  }
 }
 
 function buildAchievementChips(puntos: number) {

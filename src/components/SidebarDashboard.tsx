@@ -51,8 +51,8 @@ export default function SidebarDashboard() {
   const avatarImageSrc = getAvatarImageSrc(perfil?.avatar_url, perfil?.updated_at)
   const initial = perfil?.username?.charAt(0).toUpperCase() || 'U'
   const points = Number(perfil?.points ?? 0)
-  const nextGoal = points < 50 ? 50 : points < 200 ? 200 : points < 500 ? 500 : 1000
-  const progress = Math.min((points / nextGoal) * 100, 100)
+  const stage = getLevelStage(points)
+  const progress = stage.progressPercent
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -110,10 +110,8 @@ export default function SidebarDashboard() {
                 </p>
                 <div>
                   <div className="mb-1 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
-                    <span>Progreso</span>
-                    <span>
-                      {points}/{nextGoal}
-                    </span>
+                    <span>{stage.currentLevel}</span>
+                    <span>{points} pts</span>
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                     <div
@@ -121,6 +119,11 @@ export default function SidebarDashboard() {
                       style={{ width: `${progress}%` }}
                     />
                   </div>
+                  <p className="mt-1 text-[10px] text-gray-500 dark:text-gray-400">
+                    {stage.nextLevel
+                      ? `Siguiente: ${stage.nextLevel} (${stage.remainingToNext} pts)`
+                      : 'Nivel maximo actual'}
+                  </p>
                 </div>
               </div>
             )}
@@ -182,10 +185,8 @@ export default function SidebarDashboard() {
                     </p>
                     <div>
                       <div className="mb-1 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
-                        <span>Progreso</span>
-                        <span>
-                          {points}/{nextGoal}
-                        </span>
+                        <span>{stage.currentLevel}</span>
+                        <span>{points} pts</span>
                       </div>
                       <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                         <div
@@ -193,6 +194,11 @@ export default function SidebarDashboard() {
                           style={{ width: `${progress}%` }}
                         />
                       </div>
+                      <p className="mt-1 text-[10px] text-gray-500 dark:text-gray-400">
+                        {stage.nextLevel
+                          ? `Siguiente: ${stage.nextLevel} (${stage.remainingToNext} pts)`
+                          : 'Nivel maximo actual'}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -222,4 +228,45 @@ export default function SidebarDashboard() {
       </AnimatePresence>
     </>
   )
+}
+
+function getLevelStage(points: number) {
+  if (points >= 500) {
+    return {
+      currentLevel: 'Experto',
+      nextLevel: null as string | null,
+      remainingToNext: 0,
+      progressPercent: 100,
+    }
+  }
+
+  if (points >= 200) {
+    const floor = 200
+    const nextTarget = 500
+    return {
+      currentLevel: 'Avanzado',
+      nextLevel: 'Experto',
+      remainingToNext: nextTarget - points,
+      progressPercent: Math.min(Math.max(((points - floor) / (nextTarget - floor)) * 100, 0), 100),
+    }
+  }
+
+  if (points >= 50) {
+    const floor = 50
+    const nextTarget = 200
+    return {
+      currentLevel: 'Explorador',
+      nextLevel: 'Avanzado',
+      remainingToNext: nextTarget - points,
+      progressPercent: Math.min(Math.max(((points - floor) / (nextTarget - floor)) * 100, 0), 100),
+    }
+  }
+
+  const nextTarget = 50
+  return {
+    currentLevel: 'Nuevo',
+    nextLevel: 'Explorador',
+    remainingToNext: nextTarget - points,
+    progressPercent: Math.min(Math.max((points / nextTarget) * 100, 0), 100),
+  }
 }

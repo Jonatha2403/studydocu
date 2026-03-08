@@ -36,6 +36,15 @@ interface PerfilExtendido {
 
 type UsernameStatus = 'idle' | 'checking' | 'available' | 'unavailable'
 
+function getLevelInfo(points: number) {
+  if (points >= 500) return { nivel: 'Experto', medalla: 'Oro', nextGoal: null, remaining: 0 }
+  if (points >= 200)
+    return { nivel: 'Avanzado', medalla: 'Plata', nextGoal: 500, remaining: 500 - points }
+  if (points >= 50)
+    return { nivel: 'Explorador', medalla: 'Bronce', nextGoal: 200, remaining: 200 - points }
+  return { nivel: 'Nuevo', medalla: 'Inicial', nextGoal: 50, remaining: 50 - points }
+}
+
 // Helpers avatar
 const getCleanUrl = (u?: string | null) => (u ? u.split('?')[0] : '')
 const isLottieUrl = (u?: string | null) => getCleanUrl(u).endsWith('.json')
@@ -251,6 +260,8 @@ export default function PerfilPage() {
   // Construye src para imagen con cache-buster; si es Lottie no se usa
   const cleanUrl = getCleanUrl(localProfile.avatar_url)
   const lottie = isLottieUrl(localProfile.avatar_url)
+  const currentPoints = Number(localProfile.points ?? 0)
+  const levelInfo = getLevelInfo(currentPoints)
   const avatarSrc =
     !lottie && localProfile.avatar_url
       ? `${localProfile.avatar_url}${
@@ -328,6 +339,14 @@ export default function PerfilPage() {
                   {localProfile.points != null && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-xs">
                       <Crown className="h-3.5 w-3.5" /> {localProfile.points} pts
+                    </span>
+                  )}
+                  <span className="inline-flex items-center rounded-full border px-2 py-1 text-xs text-muted-foreground">
+                    Nivel: {levelInfo.medalla} {levelInfo.nivel}
+                  </span>
+                  {levelInfo.nextGoal && (
+                    <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-xs text-primary">
+                      Siguiente meta: {levelInfo.nextGoal} ({levelInfo.remaining} pts)
                     </span>
                   )}
                   {localProfile.subscription_status && (
