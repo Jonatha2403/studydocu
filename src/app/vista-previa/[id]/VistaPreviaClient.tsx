@@ -76,8 +76,14 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
           .maybeSingle()
 
         if (!mounted) return
+        const previewRes = await fetch(`/api/documents/${id}/preview-url`, { cache: 'no-store' })
+        const previewBody = await previewRes.json().catch(() => ({}))
+        if (!previewRes.ok || !previewBody?.url) {
+          throw new Error(previewBody?.error || 'No se pudo obtener la URL de vista previa.')
+        }
+
         setDoc({ ...(d as DocumentRow), profiles: p ?? undefined })
-        setPublicUrl(`/api/documents/${id}/preview-file`)
+        setPublicUrl(previewBody.url)
         setUrlOk(true)
       } catch (e: any) {
         if (!mounted) return
@@ -102,15 +108,13 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
   const isPDF = ext === 'pdf'
   const isOffice = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)
 
-  const officeViewerUrl = useMemo(() => {
-    if (!publicUrl) return null
-    const absoluteUrl =
-      publicUrl.startsWith('http') || typeof window === 'undefined'
-        ? publicUrl
-        : `${window.location.origin}${publicUrl}`
-
-    return `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(absoluteUrl)}`
-  }, [publicUrl])
+  const officeViewerUrl = useMemo(
+    () =>
+      publicUrl
+        ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`
+        : null,
+    [publicUrl]
+  )
 
   useEffect(() => {
     if (typeof window === 'undefined' || user) return
@@ -246,11 +250,23 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
             {publicUrl && isPDF && urlOk && <DocumentPreview filePath={publicUrl} />}
 
             {publicUrl && !isPDF && isOffice && urlOk && (
-              <iframe
-                src={officeViewerUrl ?? undefined}
-                className="w-full h-[80vh]"
-                title="Vista previa Office"
-              />
+              <div>
+                <iframe
+                  src={officeViewerUrl ?? undefined}
+                  className="w-full h-[80vh]"
+                  title="Vista previa Office"
+                />
+                <div className="p-3 text-center text-sm">
+                  <a
+                    href={officeViewerUrl ?? undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    Abrir vista externa
+                  </a>
+                </div>
+              </div>
             )}
 
             {publicUrl && !urlOk && (
