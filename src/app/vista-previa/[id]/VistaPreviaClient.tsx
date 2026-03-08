@@ -223,10 +223,28 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
   const officeViewerUrl = useMemo(
     () =>
       publicUrl
-        ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`
+        ? `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(publicUrl)}`
         : null,
     [publicUrl]
   )
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || user) return
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase()
+      if ((event.ctrlKey || event.metaKey) && key === 'p') {
+        event.preventDefault()
+        event.stopPropagation()
+        toast.error('Para imprimir o descargar debes iniciar sesion.')
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown, true)
+    }
+  }, [user])
 
   const categoryClasses: Record<string, string> = {
     Resumen: 'bg-blue-100 text-blue-600 dark:bg-blue-950/30 dark:text-blue-300',
@@ -297,6 +315,23 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
 
   return (
     <div className="mx-auto mt-8 max-w-6xl px-4 pb-8 md:pb-12">
+      {!user && (
+        <style jsx global>{`
+          @media print {
+            body * {
+              visibility: hidden !important;
+            }
+            body::before {
+              content: 'Para imprimir este documento debes iniciar sesion y descargarlo con permisos.';
+              visibility: visible !important;
+              display: block !important;
+              padding: 32px;
+              font-size: 18px;
+              color: #111827;
+            }
+          }
+        `}</style>
+      )}
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={() => router.back()}
@@ -327,7 +362,7 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
         <div className="md:col-span-2">
           <div className="rounded-2xl overflow-hidden border bg-background">
             {/* PDF */}
-            {publicUrl && isPDF && urlOk && <DocumentPreview filePath={publicUrl} canViewFull />}
+            {publicUrl && isPDF && urlOk && <DocumentPreview filePath={publicUrl} />}
 
             {/* Office (doc/xls/ppt) */}
             {publicUrl && !isPDF && isOffice && urlOk && (
@@ -342,16 +377,8 @@ export default function VistaPreviaClient({ id }: VistaPreviaClientProps) {
             {publicUrl && !urlOk && (
               <div className="p-6 text-center">
                 <p className="text-sm text-muted-foreground mb-4">
-                  No se pudo cargar la vista previa. Abre o descarga el archivo directamente.
+                  No se pudo cargar la vista previa en linea. Intenta nuevamente mas tarde.
                 </p>
-                <a
-                  href={publicUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-primary underline"
-                >
-                  Abrir / descargar archivo <Download className="w-4 h-4" />
-                </a>
               </div>
             )}
 

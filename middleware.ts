@@ -32,7 +32,6 @@ const PROTECTED_PREFIXES = [
   '/mi-tablero',
   '/documento',
   '/favoritos',
-  '/vista-previa',
   '/admin', // /admin también pasa por el middleware
 ]
 

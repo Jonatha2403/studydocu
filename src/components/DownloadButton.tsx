@@ -4,13 +4,12 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
-import { puedeDescargar } from '@/lib/downloadControl'
 
 interface Props {
   docId?: string
-  filePath: string // 🔹 Ruta DENTRO del bucket (ej: "2025/08/archivo.docx")
+  filePath: string // Ruta DENTRO del bucket (ej: "2025/08/archivo.docx")
   userId?: string // opcional: si ya lo tienes arriba
-  subscriptionActiva?: boolean // opcional: si ya lo sabes arriba
+  subscriptionActiva?: boolean // opcional
   tieneDocsAprobados?: boolean // opcional
   label?: string
   className?: string
@@ -20,12 +19,9 @@ export default function DownloadButton({
   docId,
   filePath,
   userId: userIdProp,
-  subscriptionActiva,
-  tieneDocsAprobados,
   label = 'Descargar',
   className = 'text-xs text-blue-600 dark:text-blue-400 hover:underline',
 }: Props) {
-  const [puede, setPuede] = useState(false)
   const [userId, setUserId] = useState<string | null>(userIdProp ?? null)
   const [loading, setLoading] = useState(false)
 
@@ -35,35 +31,23 @@ export default function DownloadButton({
   useEffect(() => {
     let mounted = true
 
-    const verificar = async () => {
+    const cargarSesion = async () => {
       try {
-        // Si arriba ya tienes flags, úsalos directamente
-        if (typeof subscriptionActiva === 'boolean' || typeof tieneDocsAprobados === 'boolean') {
-          const allowed = !!subscriptionActiva || !!tieneDocsAprobados
-          if (mounted) setPuede(allowed)
-        } else {
-          // Si no, consulta sesión y regla de negocio
-          const {
-            data: { session },
-          } = await supabase.auth.getSession()
-          const uid = userIdProp ?? session?.user?.id ?? null
-          if (mounted) setUserId(uid)
-
-          if (uid) {
-            const allowed = await puedeDescargar(uid)
-            if (mounted) setPuede(allowed)
-          }
-        }
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        const uid = userIdProp ?? session?.user?.id ?? null
+        if (mounted) setUserId(uid)
       } catch (e) {
-        console.warn('[DownloadButton] verificar error:', e)
+        console.warn('[DownloadButton] sesion error:', e)
       }
     }
 
-    verificar()
+    void cargarSesion()
     return () => {
       mounted = false
     }
-  }, [subscriptionActiva, tieneDocsAprobados, userIdProp])
+  }, [userIdProp])
 
   const registrarDescarga = async (): Promise<boolean> => {
     if (!docId) return true
@@ -97,14 +81,7 @@ export default function DownloadButton({
 
   const handleDescargar = async () => {
     if (!userId) {
-      toast.error('Debes iniciar sesión para descargar.')
-      return
-    }
-
-    if (!puede) {
-      toast('🚫 Debes suscribirte o subir un documento aprobado para descargar.', {
-        action: { label: 'Ver opciones', onClick: () => (window.location.href = '/suscripcion') },
-      })
+      toast.error('Debes iniciar sesion para descargar.')
       return
     }
 
@@ -117,7 +94,7 @@ export default function DownloadButton({
       // Normaliza la ruta: debe ser el "object key" dentro del bucket
       let objectKey = (filePath || '').replace(/^\/+/, '')
       if (objectKey.startsWith(`${BUCKET}/`)) {
-        // si por error guardaste "bucket/..." en filePath, recórtalo
+        // si por error guardaste "bucket/..." en filePath, recortalo
         objectKey = objectKey.slice(BUCKET.length + 1)
       }
 
@@ -128,7 +105,7 @@ export default function DownloadButton({
 
       if (error) console.warn('[DownloadButton] signed url error:', error)
 
-      // 2) Fallback pública (si el bucket es público)
+      // 2) Fallback publica (si el bucket es publico)
       const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(objectKey)
 
       const url = signed?.signedUrl || pub?.publicUrl
@@ -153,7 +130,7 @@ export default function DownloadButton({
       className={className}
       aria-disabled={loading}
     >
-      {loading ? 'Preparando…' : label}
+      {loading ? 'Preparando...' : label}
     </button>
   )
 }

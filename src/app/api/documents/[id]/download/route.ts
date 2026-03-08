@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabaseServer'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
-const FREE_DOWNLOAD_LIMIT = 1
+const FREE_DOWNLOAD_LIMIT = 2
 const POINTS_PER_DOWNLOAD = 15
 
 type RouteParams = { id: string } | Promise<{ id: string }>
