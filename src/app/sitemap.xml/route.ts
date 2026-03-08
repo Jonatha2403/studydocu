@@ -1,49 +1,38 @@
-import { createClient } from '@supabase/supabase-js'
-// ✅ Ya no se necesita NextResponse
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://studydocu.ec'
+const DOCS_PER_SITEMAP = 20000
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // Requiere clave segura para acceso de solo lectura
-)
+const xml = (content: string) => `<?xml version="1.0" encoding="UTF-8"?>\n${content}`
 
 export async function GET() {
-  const { data, error } = await supabase
+  const { count } = await supabaseAdmin
     .from('documents')
-    .select('id, updated_at')
-    .eq('publico', true)
-    .eq('aprobado', true)
+    .select('id', { head: true, count: 'exact' })
+    .eq('approved', true)
 
-  if (error) return new Response('Error al generar sitemap', { status: 500 })
+  const total = Number(count || 0)
+  const pages = Math.ceil(total / DOCS_PER_SITEMAP)
+  const nowIso = new Date().toISOString()
 
-  const urls = data
-    .map((doc) => {
-      return `
-        <url>
-          <loc>https://studydocu.ec/documento/${doc.id}</loc>
-          <lastmod>${new Date(doc.updated_at).toISOString()}</lastmod>
-        </url>
-      `
-    })
-    .join('')
+  const entries: string[] = [
+    `<sitemap><loc>${SITE_URL}/sitemaps/static.xml</loc><lastmod>${nowIso}</lastmod></sitemap>`,
+  ]
 
-  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-  <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    <url>
-      <loc>https://studydocu.ec/</loc>
-      <lastmod>${new Date().toISOString()}</lastmod>
-    </url>
-    <url>
-      <loc>https://studydocu.ec/explorar</loc>
-      <lastmod>${new Date().toISOString()}</lastmod>
-    </url>
-    ${urls}
-  </urlset>
-  `
+  for (let i = 1; i <= pages; i += 1) {
+    entries.push(
+      `<sitemap><loc>${SITE_URL}/sitemaps/documents/${i}</loc><lastmod>${nowIso}</lastmod></sitemap>`
+    )
+  }
 
-  return new Response(sitemap, {
+  const body = xml(
+    `<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${entries.join('')}</sitemapindex>`
+  )
+
+  return new Response(body, {
     headers: {
-      'Content-Type': 'application/xml',
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
     },
   })
 }

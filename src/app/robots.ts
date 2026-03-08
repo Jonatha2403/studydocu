@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 
 export default function robots(): MetadataRoute.Robots {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://studydocu.ec'
   return {
     rules: [
       {
@@ -10,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
 
-    sitemap: 'https://www.studydocu.ec/sitemap.xml',
-    host: 'https://www.studydocu.ec',
+    sitemap: `${siteUrl}/sitemap.xml`,
+    host: siteUrl,
   }
 }
