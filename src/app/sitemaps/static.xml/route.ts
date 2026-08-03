@@ -15,6 +15,7 @@ const STATIC_ROUTES = [
   '/examenes-bimestrales',
   '/examen-complexivo',
   '/examenes-validacion',
+  '/examen-admision-universidad',
   '/ayuda-en-tesis-ecuador',
 ]
 

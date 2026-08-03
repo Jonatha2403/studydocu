@@ -109,6 +109,17 @@ const allServicios: Servicio[] = [
      ======================= */
 
   {
+    titulo: '🎓 Preparación para examen de admisión universitaria',
+    categoria: 'Exámenes',
+    descripcion:
+      'Diagnóstico, plan de estudio, práctica por áreas y simulacros para tu prueba de ingreso.',
+    destacado: true,
+    icon: iconByCategoria.Exámenes,
+    href: '/examen-admision-universidad',
+    buttonText: 'Ver preparación',
+  },
+
+  {
     titulo: '🧠 Exámenes bimestrales y de recuperación',
     categoria: 'Exámenes',
     descripcion: 'Acompañamiento en parciales, bimestrales, quices y recuperaciones.',
