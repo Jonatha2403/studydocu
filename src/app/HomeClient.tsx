@@ -249,7 +249,7 @@ export default function HomeClient() {
       />
 
       <main className="overflow-hidden bg-[#f5f5f7] text-[#1d1d1f] dark:bg-[#070709] dark:text-white">
-        <section className="relative px-5 pb-7 pt-20 sm:px-8 sm:pb-10 sm:pt-24 lg:pb-16 lg:pt-32">
+        <section className="relative px-5 pb-7 pt-20 sm:px-8 sm:pb-10 sm:pt-24 lg:pb-16 lg:pt-24">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_20%,rgba(59,130,246,.22),transparent_30%),radial-gradient(circle_at_82%_24%,rgba(139,92,246,.18),transparent_28%),radial-gradient(circle_at_60%_82%,rgba(34,211,238,.10),transparent_28%)] dark:opacity-70" />
           <motion.div
             aria-hidden
