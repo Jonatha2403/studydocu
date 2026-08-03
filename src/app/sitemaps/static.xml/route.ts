@@ -1,3 +1,5 @@
+import { seoServices } from '@/lib/servicesCatalog'
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://studydocu.ec'
 
 const STATIC_ROUTES = [
@@ -17,6 +19,7 @@ const STATIC_ROUTES = [
   '/examenes-validacion',
   '/examen-admision-universidad',
   '/ayuda-en-tesis-ecuador',
+  ...seoServices.map(({ slug }) => `/servicios/${slug}`),
 ]
 
 const xml = (content: string) => `<?xml version="1.0" encoding="UTF-8"?>\n${content}`

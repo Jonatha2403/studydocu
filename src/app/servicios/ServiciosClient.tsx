@@ -1,722 +1,540 @@
-// src/app/servicios/ServiciosClient.tsx
 'use client'
 
-import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import {
-  Sparkles,
-  CheckCircle2,
-  GraduationCap,
-  Clock,
-  BookOpen,
-  Filter,
-  ArrowRight,
-  FileText,
-  BadgeCheck,
-  ShieldCheck,
-  Layers,
-} from 'lucide-react'
+import Link from 'next/link'
+import { motion, useReducedMotion } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
-import { motion } from 'framer-motion'
-import { toast } from 'sonner'
+import {
+  ArrowRight,
+  BadgeCheck,
+  BookOpen,
+  BrainCircuit,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  FileCheck2,
+  FileText,
+  Filter,
+  GraduationCap,
+  Laptop,
+  MessageCircle,
+  MonitorPlay,
+  Palette,
+  Presentation,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  X,
+} from 'lucide-react'
 
-type Categoria =
-  | 'Todos'
-  | 'Ensayos'
-  | 'Exámenes'
-  | 'Plataformas'
-  | 'Diseño'
-  | 'Normas'
-  | 'Asesorías'
+type Category = 'Todos' | 'Exámenes' | 'Tesis' | 'Escritura' | 'Plataformas' | 'Diseño'
 
-type Servicio = {
-  titulo: string
-  categoria: Exclude<Categoria, 'Todos'>
-  descripcion: string
-  destacado?: boolean
+type SpecialistRoute = {
+  title: string
+  description: string
+  href: string
+  category: Exclude<Category, 'Todos'>
   icon: LucideIcon
-
-  /** ✅ NUEVO: si existe, el botón navega a esta página */
-  href?: string
-  /** ✅ NUEVO: texto del botón cuando tiene href */
-  buttonText?: string
-
-  /** ✅ NUEVO: link secundario (ej: Validación aparte) */
-  secondaryHref?: string
-  secondaryText?: string
+  accent: string
+  featured?: boolean
 }
 
-/* ---------------- WhatsApp ---------------- */
+type SupportService = {
+  slug: string
+  title: string
+  description: string
+  category: Exclude<Category, 'Todos' | 'Tesis'>
+  icon: LucideIcon
+}
+
 const WHATSAPP_NUMBER = '593958757302'
 
-const buildWhatsAppUrl = (servicio?: string) => {
-  const base = 'Hola StudyDocu, deseo contratar un servicio académico'
-  const extra = servicio ? `: ${servicio}` : ''
-  const text = encodeURIComponent(`${base}${extra}`)
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`
-}
+const whatsappUrl = (service?: string) =>
+  `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+    service
+      ? `Hola StudyDocu, deseo información sobre el servicio: ${service}.`
+      : 'Hola StudyDocu, necesito orientación para elegir un servicio académico.'
+  )}`
 
-const categorias: Categoria[] = [
-  'Todos',
-  'Ensayos',
-  'Exámenes',
-  'Plataformas',
-  'Diseño',
-  'Normas',
-  'Asesorías',
-]
+const categories: Category[] = ['Todos', 'Exámenes', 'Tesis', 'Escritura', 'Plataformas', 'Diseño']
 
-const iconByCategoria: Record<Exclude<Categoria, 'Todos'>, LucideIcon> = {
-  Ensayos: FileText,
-  Exámenes: CheckCircle2,
-  Plataformas: BookOpen,
-  Diseño: Sparkles,
-  Normas: BadgeCheck,
-  Asesorías: GraduationCap,
-}
-
-const allServicios: Servicio[] = [
+const specialistRoutes: SpecialistRoute[] = [
   {
-    titulo: '📄 Ensayos académicos personalizados',
-    categoria: 'Ensayos',
-    descripcion: 'Redacción original, con citas y referencias en formato académico.',
-    destacado: true,
-    icon: iconByCategoria.Ensayos,
-  },
-  {
-    titulo: '📄 Ensayos en formato APA con fuentes confiables',
-    categoria: 'Ensayos',
-    descripcion: 'Ensayos listos para entregar, basados en bibliografía verificada.',
-    icon: iconByCategoria.Ensayos,
-  },
-  {
-    titulo: '✍️ Resúmenes académicos claros y estructurados',
-    categoria: 'Ensayos',
-    descripcion: 'Síntesis de textos, libros o clases en lenguaje claro.',
-    icon: iconByCategoria.Ensayos,
-  },
-  {
-    titulo: '📌 Tareas o deberes personalizados explicados paso a paso',
-    categoria: 'Ensayos',
-    descripcion: 'Te explicamos la resolución para que también aprendas.',
-    icon: iconByCategoria.Ensayos,
-  },
-
-  /* =======================
-     ✅ EXÁMENES (ENLAZADOS)
-     ======================= */
-
-  {
-    titulo: '🎓 Preparación para examen de admisión universitaria',
-    categoria: 'Exámenes',
-    descripcion:
-      'Diagnóstico, plan de estudio, práctica por áreas y simulacros para tu prueba de ingreso.',
-    destacado: true,
-    icon: iconByCategoria.Exámenes,
+    title: 'Examen de admisión universitaria',
+    description: 'Diagnóstico, preparación por áreas y simulacros para tu prueba de ingreso.',
     href: '/examen-admision-universidad',
-    buttonText: 'Ver preparación',
+    category: 'Exámenes',
+    icon: GraduationCap,
+    accent: 'from-blue-600 to-cyan-500',
+    featured: true,
   },
-
   {
-    titulo: '🧠 Exámenes bimestrales y de recuperación',
-    categoria: 'Exámenes',
-    descripcion: 'Acompañamiento en parciales, bimestrales, quices y recuperaciones.',
-    destacado: true,
-    icon: iconByCategoria.Exámenes,
+    title: 'Exámenes bimestrales',
+    description: 'Repaso organizado, ejercicios guiados y preparación para evaluaciones.',
     href: '/examenes-bimestrales',
-    buttonText: 'Ver detalles',
+    category: 'Exámenes',
+    icon: CheckCircle2,
+    accent: 'from-indigo-600 to-blue-500',
   },
   {
-    titulo: '🧪 Exámenes complexivos y de validación',
-    categoria: 'Exámenes',
-    descripcion: 'Preparación intensiva con repaso por áreas, simulacros y guía paso a paso.',
-    icon: iconByCategoria.Exámenes,
+    title: 'Examen complexivo',
+    description: 'Preparación estratégica por áreas, simulacros y orientación académica.',
     href: '/examen-complexivo',
-    buttonText: 'Ver complexivo',
-    secondaryHref: '/examenes-validacion',
-    secondaryText: 'Ver validación',
+    category: 'Exámenes',
+    icon: BrainCircuit,
+    accent: 'from-violet-600 to-indigo-500',
   },
   {
-    titulo: '📝 Asistencia en quices y exámenes online',
-    categoria: 'Exámenes',
-    descripcion: 'Soporte en evaluaciones online con enfoque práctico y claridad.',
-    icon: iconByCategoria.Exámenes,
-    href: '/examenes-bimestrales',
-    buttonText: 'Ver detalles',
-  },
-
-  /* =======================
-     OTROS SERVICIOS
-     ======================= */
-
-  {
-    titulo: '💻 Programación Python – UTPL',
-    categoria: 'Plataformas',
-    descripcion: 'Resolución y guía en tareas de programación y lógica.',
-    icon: iconByCategoria.Plataformas,
+    title: 'Exámenes de validación',
+    description: 'Ruta de preparación adaptada a tu evaluación y necesidades de refuerzo.',
+    href: '/examenes-validacion',
+    category: 'Exámenes',
+    icon: Target,
+    accent: 'from-fuchsia-600 to-violet-500',
   },
   {
-    titulo: '🎓 Aprobamos plataformas universitarias de todas las carreras',
-    categoria: 'Plataformas',
-    descripcion: 'Soporte en el uso de plataformas académicas y actividades virtuales.',
-    destacado: true,
-    icon: iconByCategoria.Plataformas,
+    title: 'Tesis de pregrado',
+    description: 'Orientación desde el planteamiento hasta la revisión del documento final.',
+    href: '/tesis-pregrado',
+    category: 'Tesis',
+    icon: FileText,
+    accent: 'from-emerald-600 to-teal-500',
+    featured: true,
   },
   {
-    titulo: '⚖️ Plataforma completa de Derecho',
-    categoria: 'Plataformas',
-    descripcion: 'Casos prácticos, foros, tareas y evaluaciones de Derecho.',
-    icon: iconByCategoria.Plataformas,
+    title: 'Tesis de maestría',
+    description: 'Acompañamiento metodológico y académico para proyectos de posgrado.',
+    href: '/tesis-maestria',
+    category: 'Tesis',
+    icon: BadgeCheck,
+    accent: 'from-teal-600 to-cyan-500',
   },
   {
-    titulo: '📊 Plataforma completa de Administración de Empresas',
-    categoria: 'Plataformas',
-    descripcion: 'Apoyo en proyectos, casos, Excel y actividades de administración.',
-    icon: iconByCategoria.Plataformas,
+    title: 'Tesis doctoral',
+    description: 'Orientación rigurosa en metodología, análisis y comunicación científica.',
+    href: '/tesis-doctorado',
+    category: 'Tesis',
+    icon: BookOpen,
+    accent: 'from-slate-700 to-slate-950',
   },
   {
-    titulo: '📒 Plataforma completa de Contabilidad y Auditoría',
-    categoria: 'Plataformas',
-    descripcion: 'Estados financieros, NIIF, análisis de casos y más.',
-    icon: iconByCategoria.Plataformas,
+    title: 'Tesis UTPL',
+    description: 'Acompañamiento enfocado en procesos, estructura y requerimientos UTPL.',
+    href: '/tesis-utpl',
+    category: 'Tesis',
+    icon: GraduationCap,
+    accent: 'from-amber-500 to-orange-500',
   },
   {
-    titulo: '🧠 Plataforma completa de Psicología',
-    categoria: 'Plataformas',
-    descripcion: 'Actividades, casos y proyectos de varias ramas de Psicología.',
-    icon: iconByCategoria.Plataformas,
+    title: 'Ayuda en tesis Ecuador',
+    description: 'Guía para organizar, corregir y avanzar tu proyecto de investigación.',
+    href: '/ayuda-en-tesis-ecuador',
+    category: 'Tesis',
+    icon: FileCheck2,
+    accent: 'from-green-600 to-emerald-500',
   },
   {
-    titulo: '🧩 Mapas conceptuales estructurados',
-    categoria: 'Diseño',
-    descripcion: 'Diseño visual claro para resúmenes y exposiciones.',
-    icon: iconByCategoria.Diseño,
-  },
-  {
-    titulo: '📊 Presentaciones PowerPoint profesionales',
-    categoria: 'Diseño',
-    descripcion: 'Diapositivas visuales, limpias y listas para exponer.',
-    icon: iconByCategoria.Diseño,
-  },
-  {
-    titulo: '📚 Revisión de normas APA',
-    categoria: 'Normas',
-    descripcion: 'Corrección de citas, referencias y formato según normas APA.',
-    icon: iconByCategoria.Normas,
-  },
-  {
-    titulo: '🧾 Asesorías por Zoom en tiempo real',
-    categoria: 'Asesorías',
-    descripcion: 'Sesiones privadas para resolver dudas específicas.',
-    destacado: true,
-    icon: iconByCategoria.Asesorías,
+    title: 'Tareas UTPL',
+    description: 'Orientación y recursos para organizar actividades académicas de la UTPL.',
+    href: '/tareas-utpl',
+    category: 'Plataformas',
+    icon: Laptop,
+    accent: 'from-blue-700 to-indigo-600',
   },
 ]
 
-/**
- * 🔥 OTROS SERVICIOS (TESIS)
- * ✅ enlaza a /tesis-pregrado (página pilar)
- */
-const otrosServicios = [
+const supportServices: SupportService[] = [
   {
-    titulo: 'TESIS PREGRADO',
-    descripcion:
-      'Estructura, planteamiento del problema, marco teórico, metodología, análisis y formato.',
-    icon: GraduationCap,
-    href: '/tesis-pregrado#pregrado',
-  },
-  {
-    titulo: 'TESIS POSGRADO',
-    descripcion:
-      'Asesoría avanzada, redacción académica, matrices, análisis y normas de publicación.',
-    icon: BadgeCheck,
-    href: '/tesis-pregrado#maestria',
-  },
-  {
-    titulo: 'TESIS DOCTORADO',
-    descripcion:
-      'Acompañamiento riguroso: estado del arte, diseño metodológico, análisis y publicación.',
+    slug: 'ensayos-academicos',
+    title: 'Ensayos académicos',
+    description: 'Estructura, argumentación, citas y referencias con orientación académica.',
+    category: 'Escritura',
     icon: FileText,
-    href: '/tesis-pregrado#doctorado',
   },
-] as const
+  {
+    slug: 'resumenes-academicos',
+    title: 'Resúmenes académicos',
+    description: 'Síntesis claras de textos, libros, clases o documentos extensos.',
+    category: 'Escritura',
+    icon: BookOpen,
+  },
+  {
+    slug: 'normas-apa',
+    title: 'Revisión de normas APA',
+    description: 'Corrección de formato, citas y referencias bibliográficas.',
+    category: 'Escritura',
+    icon: FileCheck2,
+  },
+  {
+    slug: 'orientacion-tareas-universitarias',
+    title: 'Orientación para tareas',
+    description: 'Explicación paso a paso para comprender y resolver actividades.',
+    category: 'Escritura',
+    icon: CheckCircle2,
+  },
+  {
+    slug: 'programacion-python-universidad',
+    title: 'Programación Python',
+    description: 'Apoyo en lógica, ejercicios y fundamentos de programación.',
+    category: 'Plataformas',
+    icon: Laptop,
+  },
+  {
+    slug: 'plataformas-universitarias',
+    title: 'Plataformas universitarias',
+    description: 'Orientación para actividades virtuales y organización de entregas.',
+    category: 'Plataformas',
+    icon: MonitorPlay,
+  },
+  {
+    slug: 'asesorias-academicas-online',
+    title: 'Asesorías por videollamada',
+    description: 'Sesiones privadas para resolver dudas académicas específicas.',
+    category: 'Plataformas',
+    icon: MessageCircle,
+  },
+  {
+    slug: 'mapas-conceptuales',
+    title: 'Mapas conceptuales',
+    description: 'Información organizada visualmente para estudiar o exponer.',
+    category: 'Diseño',
+    icon: Palette,
+  },
+  {
+    slug: 'presentaciones-universitarias',
+    title: 'Presentaciones profesionales',
+    description: 'Diapositivas claras, ordenadas y listas para una exposición.',
+    category: 'Diseño',
+    icon: Presentation,
+  },
+]
 
-function Badge({
-  children,
-  variant = 'premium',
-}: {
-  children: string
-  variant?: 'premium' | 'destacado'
-}) {
-  const cls =
-    variant === 'destacado'
-      ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-200 dark:border-emerald-500/20'
-      : 'bg-indigo-50 text-indigo-800 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-200 dark:border-indigo-500/20'
-
-  return (
-    <span className={`text-[10px] uppercase tracking-wide px-2 py-1 rounded-full border ${cls}`}>
-      {children}
-    </span>
-  )
-}
-
-function ServiceCard({
-  title,
-  subtitle,
-  description,
-  Icon,
-  destacado,
-  href,
-  buttonText = 'Solicitar asesoría',
-  secondaryHref,
-  secondaryText,
-}: {
-  title: string
-  subtitle: string
-  description: string
-  Icon: LucideIcon
-  destacado?: boolean
-  href?: string
-  buttonText?: string
-  secondaryHref?: string
-  secondaryText?: string
-}) {
-  const waUrl = buildWhatsAppUrl(title)
-
-  return (
-    <Card
-      className={[
-        'group relative rounded-2xl border bg-white/85 dark:bg-slate-900/65 backdrop-blur',
-        'border-slate-200/80 dark:border-slate-700/70',
-        'shadow-[0_10px_28px_-20px_rgba(2,6,23,0.35)] hover:shadow-[0_18px_55px_-32px_rgba(2,6,23,0.55)]',
-        'transition-all',
-        destacado
-          ? 'ring-1 ring-indigo-400/35 dark:ring-indigo-500/35'
-          : 'hover:border-slate-300/80 dark:hover:border-slate-600/70',
-      ].join(' ')}
-    >
-      <div
-        className={[
-          'absolute inset-x-0 top-0 h-[2px] rounded-t-2xl',
-          destacado
-            ? 'bg-gradient-to-r from-indigo-500 via-violet-500 to-amber-400'
-            : 'bg-gradient-to-r from-transparent via-slate-200/70 to-transparent dark:via-slate-700/60',
-        ].join(' ')}
-      />
-
-      <CardContent className="p-5 flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div
-              className={[
-                'h-10 w-10 rounded-xl flex items-center justify-center',
-                'bg-indigo-600/10 dark:bg-indigo-400/10',
-                'ring-1 ring-indigo-600/10 dark:ring-indigo-400/10',
-                'transition-transform duration-300 group-hover:scale-[1.03]',
-              ].join(' ')}
-            >
-              <Icon className="text-indigo-700 dark:text-indigo-200" size={20} />
-            </div>
-
-            <div>
-              <p className="text-[11px] uppercase tracking-widest text-indigo-700/90 dark:text-indigo-200/90">
-                {subtitle}
-              </p>
-              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 leading-snug">
-                {title}
-              </h3>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Badge variant="premium">Premium</Badge>
-            {destacado ? <Badge variant="destacado">Más solicitado</Badge> : null}
-          </div>
-        </div>
-
-        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{description}</p>
-
-        <div className="pt-1">
-          <Button
-            asChild
-            className={[
-              'w-full rounded-xl text-white',
-              'bg-gradient-to-r from-indigo-600 to-violet-600',
-              'hover:from-indigo-700 hover:to-violet-700',
-              'shadow-[0_14px_35px_-22px_rgba(99,102,241,0.65)]',
-            ].join(' ')}
-          >
-            {href ? (
-              <Link href={href}>
-                {buttonText} <ArrowRight size={16} className="ml-2" />
-              </Link>
-            ) : (
-              <Link href={waUrl} target="_blank" rel="noopener noreferrer">
-                {buttonText} <ArrowRight size={16} className="ml-2" />
-              </Link>
-            )}
-          </Button>
-
-          {/* ✅ link secundario opcional */}
-          {secondaryHref && secondaryText ? (
-            <div className="mt-2 text-center">
-              <Link
-                href={secondaryHref}
-                className="text-[12px] font-medium text-indigo-700 hover:text-indigo-800 dark:text-indigo-200 dark:hover:text-indigo-100 underline underline-offset-4"
-              >
-                {secondaryText}
-              </Link>
-            </div>
-          ) : null}
-
-          <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-            Respuesta rápida por WhatsApp • Enfoque en aprobación y aprendizaje
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  )
+const matches = (title: string, description: string, search: string) => {
+  const term = search.trim().toLocaleLowerCase('es')
+  return !term || `${title} ${description}`.toLocaleLowerCase('es').includes(term)
 }
 
 export default function ServiciosClient() {
-  const [visibleCount, setVisibleCount] = useState(9)
-  const [filtroCategoria, setFiltroCategoria] = useState<Categoria>('Todos')
+  const [category, setCategory] = useState<Category>('Todos')
+  const [search, setSearch] = useState('')
+  const reduceMotion = useReducedMotion()
 
-  const totalFiltrado = useMemo(() => {
-    return filtroCategoria === 'Todos'
-      ? allServicios.length
-      : allServicios.filter((s) => s.categoria === filtroCategoria).length
-  }, [filtroCategoria])
+  const filteredRoutes = useMemo(
+    () =>
+      specialistRoutes.filter(
+        (service) =>
+          (category === 'Todos' || service.category === category) &&
+          matches(service.title, service.description, search)
+      ),
+    [category, search]
+  )
 
-  const serviciosFiltrados = useMemo(() => {
-    const base =
-      filtroCategoria === 'Todos'
-        ? allServicios
-        : allServicios.filter((s) => s.categoria === filtroCategoria)
-    return base.slice(0, visibleCount)
-  }, [visibleCount, filtroCategoria])
+  const filteredSupport = useMemo(
+    () =>
+      supportServices.filter(
+        (service) =>
+          (category === 'Todos' || service.category === category) &&
+          matches(service.title, service.description, search)
+      ),
+    [category, search]
+  )
 
-  const waGeneral = buildWhatsAppUrl()
-  const waTesis = buildWhatsAppUrl('Tesis (Pregrado / Posgrado / Doctorado)')
+  const resultCount = filteredRoutes.length + filteredSupport.length
+  const reveal = reduceMotion
+    ? {}
+    : { initial: { opacity: 0, y: 18 }, whileInView: { opacity: 1, y: 0 } }
 
-  const goWhatsApp = (url: string) => {
-    toast.success('Redirigiendo a WhatsApp...')
-    window.open(url, '_blank', 'noopener,noreferrer')
+  const resetFilters = () => {
+    setCategory('Todos')
+    setSearch('')
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 pb-12 pt-24 sm:pt-28 lg:pt-24 lg:pb-16">
-      {/* Hero */}
-      <motion.section
-        className="mb-12 grid items-center gap-8 lg:mb-16 lg:grid-cols-[1.7fr,1.1fr]"
-        initial={{ opacity: 0, y: -18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55 }}
-      >
-        <div className="text-center lg:text-left">
-          <div className="inline-flex items-center gap-2 justify-center lg:justify-start mb-3">
-            <Sparkles className="text-indigo-600" size={22} />
-            <span className="text-indigo-700 dark:text-indigo-200 font-semibold text-xs sm:text-sm uppercase tracking-wider">
-              Servicios académicos StudyDocu
-            </span>
-          </div>
+    <main className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] dark:bg-[#09090b] dark:text-white">
+      <section className="relative overflow-hidden px-5 pb-20 pt-32 sm:px-8 lg:pb-24 lg:pt-40">
+        <div className="absolute inset-x-0 top-0 h-[620px] bg-[radial-gradient(circle_at_18%_12%,rgba(59,130,246,.2),transparent_32%),radial-gradient(circle_at_82%_22%,rgba(139,92,246,.16),transparent_28%)]" />
+        <div className="relative mx-auto max-w-7xl">
+          <nav
+            aria-label="Migas de pan"
+            className="flex items-center gap-2 text-sm text-[#6e6e73] dark:text-zinc-400"
+          >
+            <Link href="/" className="hover:text-[#1d1d1f] dark:hover:text-white">
+              Inicio
+            </Link>
+            <ChevronRight className="h-4 w-4" />
+            <span className="font-medium text-[#1d1d1f] dark:text-white">Servicios</span>
+          </nav>
 
-          <h1 className="text-2xl font-bold leading-tight text-slate-900 dark:text-white sm:text-4xl">
-            Servicios académicos profesionales
-            <span className="block text-indigo-700 dark:text-indigo-200">
-              para estudiantes universitarios
-            </span>
-          </h1>
-
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-300 sm:text-base lg:mx-0">
-            Te acompañamos en todo tu ciclo académico: ensayos, exámenes, plataformas
-            universitarias, resúmenes, normas APA y asesorías personalizadas. Enfoque fuerte para
-            UTPL y universidades de Ecuador.
-          </p>
-
-          <div className="mt-5 flex flex-wrap gap-3 justify-center lg:justify-start">
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
-              <ShieldCheck className="text-emerald-600 dark:text-emerald-300" size={18} />
-              <span>Calidad académica verificada</span>
+          <motion.div
+            initial={reduceMotion ? undefined : { opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mt-12 grid gap-10 lg:grid-cols-[1fr_.68fr] lg:items-end"
+          >
+            <div>
+              <span className="inline-flex items-center gap-2 rounded-full border border-black/[.07] bg-white/70 px-4 py-2 text-sm font-semibold shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/[.07]">
+                <Sparkles className="h-4 w-4 text-blue-600" /> Acompañamiento académico
+              </span>
+              <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-6xl lg:text-7xl">
+                Encuentra la ayuda adecuada.{' '}
+                <span className="text-[#6e6e73] dark:text-zinc-400">Sin perder tiempo.</span>
+              </h1>
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-[#6e6e73] dark:text-zinc-300">
+                Explora todas las rutas de preparación y servicios de StudyDocu. Filtra por área o
+                busca exactamente lo que necesitas.
+              </p>
             </div>
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
-              <Clock className="text-indigo-600 dark:text-indigo-300" size={18} />
-              <span>Respuestas rápidas</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
-              <GraduationCap className="text-amber-600 dark:text-amber-300" size={18} />
-              <span>Enfoque en aprobación y aprendizaje</span>
-            </div>
-          </div>
-        </div>
 
-        <Card className="border border-slate-200/60 dark:border-slate-700/60 shadow-xl bg-gradient-to-br from-indigo-600 via-violet-600 to-amber-500 text-white relative overflow-hidden rounded-2xl">
-          <div className="absolute inset-0 bg-black/10" />
-          <CardContent className="relative p-6 flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-white/15 flex items-center justify-center backdrop-blur">
-                <Layers size={20} />
+            <div className="rounded-[1.75rem] border border-black/[.07] bg-white/75 p-6 shadow-sm backdrop-blur-2xl dark:border-white/10 dark:bg-white/[.06]">
+              <div className="flex items-start gap-4">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-emerald-50 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
+                  <ShieldCheck className="h-6 w-6" />
+                </span>
+                <div>
+                  <p className="font-semibold">¿No sabes cuál elegir?</p>
+                  <p className="mt-1 text-sm leading-6 text-[#6e6e73] dark:text-zinc-400">
+                    Cuéntanos tu objetivo y te indicaremos la opción adecuada.
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-widest text-white/80">
-                  Acompañamiento completo
-                </p>
-                <h2 className="text-lg font-semibold">Todo en un solo lugar</h2>
-              </div>
-            </div>
-
-            <ul className="space-y-2 text-sm">
-              <li className="flex gap-2">
-                <CheckCircle2 size={16} className="mt-0.5 text-emerald-200" />
-                Ensayos, resúmenes y presentaciones listos para entregar.
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle2 size={16} className="mt-0.5 text-emerald-200" />
-                Apoyo en exámenes, quices y plataformas universitarias.
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle2 size={16} className="mt-0.5 text-emerald-200" />
-                Asesorías personalizadas para tareas y proyectos complejos.
-              </li>
-            </ul>
-
-            <Button
-              asChild
-              size="lg"
-              className="mt-2 bg-white text-slate-900 hover:bg-slate-100 rounded-xl"
-            >
-              <Link
-                href={waGeneral}
+              <a
+                href={whatsappUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => toast.success('Redirigiendo a WhatsApp...')}
+                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#0071e3] px-5 py-3 font-semibold text-white transition hover:bg-[#0077ed]"
               >
-                📲 Hablar con un asesor
-              </Link>
-            </Button>
-
-            <p className="text-[11px] text-white/80">
-              Cuéntanos tu caso y te sugerimos el servicio adecuado para tu materia o plataforma.
-            </p>
-          </CardContent>
-        </Card>
-      </motion.section>
-
-      {/* Acceso destacado: preparación para admisión */}
-      <motion.section
-        className="relative mb-10 overflow-hidden rounded-[1.75rem] border border-blue-200/70 bg-[#071a3d] p-6 text-white shadow-xl sm:p-8 lg:mb-12"
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.45 }}
-      >
-        <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-blue-500/30 blur-3xl" />
-        <div className="absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-violet-500/20 blur-3xl" />
-        <div className="relative grid gap-7 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-blue-100">
-              <GraduationCap size={16} /> Nuevo servicio
-            </span>
-            <h2 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">
-              Preparación para examen de admisión universitaria
-            </h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-blue-100 sm:text-base">
-              Diagnóstico inicial, plan de estudio, práctica por áreas y simulacros para prepararte
-              para tu prueba de ingreso en Ecuador.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-blue-50">
-              <span className="flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-emerald-400" /> Razonamiento lógico
-              </span>
-              <span className="flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-emerald-400" /> Práctica guiada
-              </span>
-              <span className="flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-emerald-400" /> Simulacros
-              </span>
+                <MessageCircle className="h-5 w-5" /> Recibir orientación
+              </a>
             </div>
-          </div>
-          <Button
-            asChild
-            size="lg"
-            className="w-full rounded-xl bg-amber-400 font-bold text-[#071a3d] shadow-lg hover:bg-amber-300 lg:w-auto"
-          >
-            <Link href="/examen-admision-universidad">
-              Ver preparación <ArrowRight size={17} className="ml-2" />
-            </Link>
-          </Button>
-        </div>
-      </motion.section>
-
-      {/* OTROS SERVICIOS (Tesis) */}
-      <motion.section
-        className="mb-10 lg:mb-12"
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.45 }}
-      >
-        <div className="flex items-end justify-between gap-4 mb-4">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Nuevo
-            </p>
-            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
-              OTROS SERVICIOS
-            </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-              Acompañamiento de alto nivel para trabajos de titulación y proyectos de investigación.
-            </p>
-          </div>
-
-          <Button
-            variant="outline"
-            className="rounded-xl border-slate-200 dark:border-slate-700"
-            onClick={() => goWhatsApp(waTesis)}
-          >
-            Cotizar tesis <ArrowRight size={16} className="ml-2" />
-          </Button>
-        </div>
-
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {otrosServicios.map((item) => (
-            <motion.div
-              key={item.titulo}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.28 }}
-            >
-              <ServiceCard
-                title={item.titulo}
-                subtitle="Investigación"
-                description={item.descripcion}
-                Icon={item.icon}
-                destacado
-                href={item.href}
-                buttonText="Ver detalles"
-              />
-            </motion.div>
-          ))}
-        </div>
-      </motion.section>
-
-      {/* Filtro */}
-      <section className="mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <Filter size={16} className="text-indigo-600" />
-          <span className="text-xs uppercase tracking-wide text-slate-600 dark:text-slate-300">
-            Filtrar por tipo de servicio
-          </span>
-          <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">
-            Mostrando {Math.min(visibleCount, totalFiltrado)} de {totalFiltrado}
-          </span>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {categorias.map((cat) => {
-            const isActive = filtroCategoria === cat
-            return (
-              <button
-                key={cat}
-                onClick={() => {
-                  setFiltroCategoria(cat)
-                  setVisibleCount(9)
-                }}
-                className={[
-                  'px-3 py-1.5 rounded-full text-xs sm:text-sm border transition-all',
-                  isActive
-                    ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-transparent shadow-sm'
-                    : 'bg-white/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700/70 hover:bg-slate-100 dark:hover:bg-slate-800',
-                ].join(' ')}
-              >
-                {cat}
-              </button>
-            )
-          })}
-        </div>
-      </section>
-
-      {/* Grid servicios */}
-      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {serviciosFiltrados.map((servicio, index) => (
-          <motion.div
-            key={`${servicio.titulo}-${index}`}
-            initial={{ opacity: 0, y: 22 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.28, delay: index * 0.03 }}
-          >
-            <ServiceCard
-              title={servicio.titulo}
-              subtitle={servicio.categoria}
-              description={servicio.descripcion}
-              Icon={servicio.icon}
-              destacado={servicio.destacado}
-              href={servicio.href}
-              buttonText={
-                servicio.buttonText ?? (servicio.href ? 'Ver detalles' : 'Solicitar asesoría')
-              }
-              secondaryHref={servicio.secondaryHref}
-              secondaryText={servicio.secondaryText}
-            />
           </motion.div>
-        ))}
-      </section>
-
-      {/* Ver más */}
-      {visibleCount < totalFiltrado && (
-        <div className="text-center mt-10">
-          <Button
-            onClick={() => setVisibleCount((prev) => prev + 9)}
-            className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 px-6 py-3 rounded-xl shadow-sm transition"
-          >
-            Ver más servicios
-          </Button>
         </div>
-      )}
-
-      {/* SEO */}
-      <section className="mt-14 max-w-4xl mx-auto text-center lg:text-left">
-        <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-3">
-          ¿Por qué contratar los servicios académicos de StudyDocu?
-        </h2>
-        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mb-4">
-          En StudyDocu apoyamos a estudiantes de la UTPL y diversas universidades del Ecuador con un
-          enfoque responsable y orientado al aprendizaje. Nuestros servicios optimizan tu tiempo y
-          mejoran tu rendimiento académico.
-        </p>
-        <ul className="grid gap-3 sm:grid-cols-2 text-sm text-slate-700 dark:text-slate-200">
-          <li>✅ Ensayos académicos en formato APA con fuentes confiables.</li>
-          <li>✅ Acompañamiento en exámenes bimestrales, quices y complexivos.</li>
-          <li>✅ Manejo experto de plataformas universitarias (incluida UTPL).</li>
-          <li>✅ Mapas conceptuales y presentaciones profesionales para tus clases.</li>
-          <li>✅ Explicaciones paso a paso para tareas y proyectos.</li>
-          <li>✅ Asesorías en vivo por Zoom o videollamada.</li>
-        </ul>
       </section>
 
-      {/* CTA final */}
-      <div className="mt-14 text-center">
-        <Button
-          asChild
-          className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white text-lg px-10 py-4 rounded-2xl shadow-xl transition duration-300"
-        >
-          <Link
-            href={waGeneral}
+      <section className="sticky top-16 z-30 border-y border-black/[.06] bg-[#f5f5f7]/85 px-5 py-4 backdrop-blur-2xl dark:border-white/[.08] dark:bg-[#09090b]/85 sm:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center">
+          <label className="relative block flex-1">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#86868b]" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar examen, tesis, APA, presentación..."
+              className="h-12 w-full rounded-2xl border border-black/[.07] bg-white pl-12 pr-11 text-sm outline-none transition placeholder:text-[#86868b] focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 dark:border-white/10 dark:bg-white/[.07]"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                aria-label="Limpiar búsqueda"
+                className="absolute right-3 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-black/[.06] dark:bg-white/10"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </label>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
+            <Filter className="h-4 w-4 shrink-0 text-[#86868b]" />
+            {categories.map((item) => (
+              <button
+                key={item}
+                onClick={() => setCategory(item)}
+                className={`shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold transition ${category === item ? 'bg-[#1d1d1f] text-white shadow-sm dark:bg-white dark:text-black' : 'border border-black/[.07] bg-white/70 text-[#424245] hover:bg-white dark:border-white/10 dark:bg-white/[.06] dark:text-zinc-300 dark:hover:bg-white/10'}`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 py-20 sm:px-8 lg:py-24">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+            <div>
+              <p className="text-sm font-semibold text-blue-600">Páginas especializadas</p>
+              <h2 className="mt-2 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
+                Preparación y orientación en profundidad
+              </h2>
+              <p className="mt-3 max-w-2xl text-[#6e6e73] dark:text-zinc-400">
+                Cada ruta tiene información completa sobre el proceso, lo que incluye y cómo
+                solicitar ayuda.
+              </p>
+            </div>
+            <span className="text-sm text-[#6e6e73] dark:text-zinc-400">
+              {resultCount} {resultCount === 1 ? 'resultado' : 'resultados'}
+            </span>
+          </div>
+
+          {filteredRoutes.length > 0 && (
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredRoutes.map(
+                (
+                  {
+                    title,
+                    description,
+                    href,
+                    category: serviceCategory,
+                    icon: Icon,
+                    accent,
+                    featured,
+                  },
+                  index
+                ) => (
+                  <motion.article
+                    key={href}
+                    {...reveal}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.45, delay: index * 0.035 }}
+                  >
+                    <Link
+                      href={href}
+                      className="group flex h-full min-h-[315px] flex-col overflow-hidden rounded-[1.75rem] border border-black/[.06] bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:border-white/[.08] dark:bg-white/[.055]"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <span
+                          className={`grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br ${accent} text-white shadow-lg`}
+                        >
+                          <Icon className="h-6 w-6" />
+                        </span>
+                        {featured && (
+                          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-400/10 dark:text-blue-300">
+                            Destacado
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-7 text-xs font-bold uppercase tracking-[.15em] text-[#86868b]">
+                        {serviceCategory}
+                      </p>
+                      <h3 className="mt-2 text-2xl font-semibold tracking-tight">{title}</h3>
+                      <p className="mt-3 leading-7 text-[#6e6e73] dark:text-zinc-400">
+                        {description}
+                      </p>
+                      <span className="mt-auto inline-flex items-center gap-2 pt-7 font-semibold text-blue-600">
+                        Ver página{' '}
+                        <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                      </span>
+                    </Link>
+                  </motion.article>
+                )
+              )}
+            </div>
+          )}
+
+          {filteredSupport.length > 0 && (
+            <div className="mt-20">
+              <p className="text-sm font-semibold text-violet-600">Catálogo de apoyo</p>
+              <h2 className="mt-2 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
+                Servicios para necesidades específicas
+              </h2>
+              <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredSupport.map(
+                  ({ slug, title, description, category: serviceCategory, icon: Icon }, index) => (
+                    <motion.article
+                      key={title}
+                      {...reveal}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: index * 0.03 }}
+                      className="flex flex-col rounded-2xl border border-black/[.06] bg-white p-6 dark:border-white/[.08] dark:bg-white/[.055]"
+                    >
+                      <div className="flex items-start gap-4">
+                        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-violet-50 text-violet-700 dark:bg-violet-400/10 dark:text-violet-300">
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-wider text-[#86868b]">
+                            {serviceCategory}
+                          </p>
+                          <h3 className="mt-1 text-lg font-semibold">{title}</h3>
+                        </div>
+                      </div>
+                      <p className="mt-4 flex-1 text-sm leading-6 text-[#6e6e73] dark:text-zinc-400">
+                        {description}
+                      </p>
+                      <Link
+                        href={`/servicios/${slug}`}
+                        className="mt-5 inline-flex items-center justify-between rounded-xl bg-[#f5f5f7] px-4 py-3 text-sm font-semibold transition hover:bg-blue-50 hover:text-blue-700 dark:bg-white/[.06] dark:hover:bg-blue-400/10 dark:hover:text-blue-300"
+                      >
+                        Ver información <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </motion.article>
+                  )
+                )}
+              </div>
+            </div>
+          )}
+
+          {resultCount === 0 && (
+            <div className="mt-10 rounded-[1.75rem] border border-dashed border-black/15 bg-white/60 px-6 py-16 text-center dark:border-white/15 dark:bg-white/[.04]">
+              <Search className="mx-auto h-9 w-9 text-[#86868b]" />
+              <h2 className="mt-4 text-2xl font-semibold">No encontramos ese servicio</h2>
+              <p className="mt-2 text-[#6e6e73] dark:text-zinc-400">
+                Prueba con otra palabra o vuelve a mostrar todas las opciones.
+              </p>
+              <button
+                onClick={resetFilters}
+                className="mt-6 rounded-full bg-[#1d1d1f] px-5 py-2.5 text-sm font-semibold text-white dark:bg-white dark:text-black"
+              >
+                Limpiar filtros
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="bg-white px-5 py-20 dark:bg-[#0d0d0f] sm:px-8 lg:py-24">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_.75fr] lg:items-center">
+          <div>
+            <p className="text-sm font-semibold text-emerald-600">Proceso claro</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
+              Cuéntanos tu meta. Organizamos el siguiente paso.
+            </h2>
+            <p className="mt-4 max-w-2xl leading-7 text-[#6e6e73] dark:text-zinc-400">
+              La orientación inicial permite entender tu universidad, fecha, materia y alcance antes
+              de recomendarte una opción.
+            </p>
+          </div>
+          <div className="space-y-3">
+            {[
+              'Describe lo que necesitas',
+              'Recibe una orientación inicial',
+              'Elige una ruta de trabajo clara',
+            ].map((item, index) => (
+              <div
+                key={item}
+                className="flex items-center gap-4 rounded-2xl bg-[#f5f5f7] p-4 dark:bg-white/[.06]"
+              >
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-emerald-500 text-sm font-bold text-white">
+                  {index + 1}
+                </span>
+                <span className="font-medium">{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 py-20 sm:px-8 lg:py-24">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 overflow-hidden rounded-[2rem] bg-[#1d1d1f] px-7 py-12 text-center text-white shadow-xl sm:px-12 lg:flex-row lg:text-left">
+          <div>
+            <div className="inline-flex items-center gap-2 text-sm font-semibold text-blue-300">
+              <Check className="h-4 w-4" /> Orientación sin compromiso
+            </div>
+            <h2 className="mt-3 max-w-3xl text-3xl font-semibold tracking-tight sm:text-4xl">
+              ¿Aún no encuentras exactamente lo que buscas?
+            </h2>
+            <p className="mt-3 text-zinc-300">
+              Escríbenos y revisaremos tu caso de forma personalizada.
+            </p>
+          </div>
+          <a
+            href={whatsappUrl()}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => toast.success('Redirigiendo a WhatsApp...')}
+            className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 font-semibold text-black transition hover:bg-zinc-100 sm:w-auto"
           >
-            📲 Solicitar servicio por WhatsApp
-          </Link>
-        </Button>
-        <p className="mt-3 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-          Respuesta rápida. Cuéntanos qué necesitas y te ofrecemos la mejor opción académica.
-        </p>
-      </div>
+            <MessageCircle className="h-5 w-5" /> Hablar por WhatsApp
+          </a>
+        </div>
+      </section>
     </main>
   )
 }

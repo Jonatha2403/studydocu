@@ -1,6 +1,7 @@
 ﻿// src/app/servicios/page.tsx
 import type { Metadata } from 'next'
 import ServiciosClient from './ServiciosClient'
+import { seoServices } from '@/lib/servicesCatalog'
 
 const SITE_URL = 'https://www.studydocu.ec'
 const PAGE_PATH = '/servicios'
@@ -168,6 +169,18 @@ export default function Page() {
         'Asesorías por Zoom',
         'Tesis (pregrado, posgrado y doctorado)',
       ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'Directorio de servicios académicos StudyDocu',
+      numberOfItems: seoServices.length,
+      itemListElement: seoServices.map((service, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: service.title,
+        url: `${SITE_URL}/servicios/${service.slug}`,
+      })),
     },
   ]
 
