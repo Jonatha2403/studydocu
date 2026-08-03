@@ -11,7 +11,6 @@ import {
   BrainCircuit,
   Check,
   CheckCircle2,
-  ChevronRight,
   FileCheck2,
   FileText,
   Filter,
@@ -22,7 +21,6 @@ import {
   Palette,
   Presentation,
   Search,
-  ShieldCheck,
   Sparkles,
   Target,
   X,
@@ -252,66 +250,128 @@ export default function ServiciosClient() {
 
   return (
     <main className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] dark:bg-[#09090b] dark:text-white">
-      <section className="relative overflow-hidden px-5 pb-20 pt-32 sm:px-8 lg:pb-24 lg:pt-40">
-        <div className="absolute inset-x-0 top-0 h-[620px] bg-[radial-gradient(circle_at_18%_12%,rgba(59,130,246,.2),transparent_32%),radial-gradient(circle_at_82%_22%,rgba(139,92,246,.16),transparent_28%)]" />
-        <div className="relative mx-auto max-w-7xl">
-          <nav
-            aria-label="Migas de pan"
-            className="flex items-center gap-2 text-sm text-[#6e6e73] dark:text-zinc-400"
-          >
-            <Link href="/" className="hover:text-[#1d1d1f] dark:hover:text-white">
-              Inicio
-            </Link>
-            <ChevronRight className="h-4 w-4" />
-            <span className="font-medium text-[#1d1d1f] dark:text-white">Servicios</span>
-          </nav>
-
+      <section className="relative overflow-hidden bg-[#06142f] px-5 pb-14 pt-28 text-white sm:px-8 lg:pb-16 lg:pt-32">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_20%,rgba(37,99,235,.45),transparent_32%),radial-gradient(circle_at_86%_18%,rgba(139,92,246,.30),transparent_30%),radial-gradient(circle_at_68%_88%,rgba(6,182,212,.20),transparent_28%)]" />
+        <div className="absolute inset-0 opacity-[.08] [background-image:linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] [background-size:44px_44px]" />
+        <div className="relative mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1fr_.9fr] lg:gap-14">
           <motion.div
-            initial={reduceMotion ? undefined : { opacity: 0, y: 20 }}
+            initial={reduceMotion ? undefined : { opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mt-12 grid gap-10 lg:grid-cols-[1fr_.68fr] lg:items-end"
+            transition={{ duration: 0.65, ease: 'easeOut' }}
           >
-            <div>
-              <span className="inline-flex items-center gap-2 rounded-full border border-black/[.07] bg-white/70 px-4 py-2 text-sm font-semibold shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/[.07]">
-                <Sparkles className="h-4 w-4 text-blue-600" /> Acompañamiento académico
+            <p className="flex items-center justify-center gap-2 text-sm font-semibold text-blue-200 lg:justify-start">
+              <Sparkles className="h-4 w-4 text-amber-300" /> Soluciones académicas para estudiantes
+              en Ecuador
+            </p>
+            <h1 className="mt-5 text-center text-5xl font-semibold leading-[.98] tracking-[-0.055em] sm:text-6xl lg:text-left lg:text-7xl">
+              Servicios académicos para{' '}
+              <span className="bg-gradient-to-r from-blue-300 via-violet-300 to-cyan-300 bg-clip-text text-transparent">
+                avanzar con seguridad.
               </span>
-              <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-6xl lg:text-7xl">
-                Encuentra la ayuda adecuada.{' '}
-                <span className="text-[#6e6e73] dark:text-zinc-400">Sin perder tiempo.</span>
-              </h1>
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-[#6e6e73] dark:text-zinc-300">
-                Explora todas las rutas de preparación y servicios de StudyDocu. Filtra por área o
-                busca exactamente lo que necesitas.
-              </p>
-            </div>
-
-            <div className="rounded-[1.75rem] border border-black/[.07] bg-white/75 p-6 shadow-sm backdrop-blur-2xl dark:border-white/10 dark:bg-white/[.06]">
-              <div className="flex items-start gap-4">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-emerald-50 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
-                  <ShieldCheck className="h-6 w-6" />
-                </span>
-                <div>
-                  <p className="font-semibold">¿No sabes cuál elegir?</p>
-                  <p className="mt-1 text-sm leading-6 text-[#6e6e73] dark:text-zinc-400">
-                    Cuéntanos tu objetivo y te indicaremos la opción adecuada.
-                  </p>
-                </div>
-              </div>
+            </h1>
+            <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-blue-100/80 lg:mx-0 lg:text-left">
+              Preparación para exámenes de admisión, asesoría de tesis, ensayos académicos, normas
+              APA y orientación universitaria en un solo lugar.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
+              <a
+                href="#catalogo-servicios"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-7 font-semibold text-[#06142f] shadow-xl transition hover:-translate-y-0.5 hover:bg-blue-50"
+              >
+                Explorar servicios <ArrowRight className="h-4 w-4" />
+              </a>
               <a
                 href={whatsappUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#0071e3] px-5 py-3 font-semibold text-white transition hover:bg-[#0077ed]"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 font-semibold text-white backdrop-blur-xl transition hover:bg-white/15"
               >
                 <MessageCircle className="h-5 w-5" /> Recibir orientación
               </a>
             </div>
+            <div className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-blue-100/85 lg:justify-start">
+              {['19 servicios disponibles', 'Atención personalizada', 'Enfoque responsable'].map(
+                (item) => (
+                  <span key={item} className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400" /> {item}
+                  </span>
+                )
+              )}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={reduceMotion ? undefined : { opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7, delay: 0.12 }}
+            className="relative mx-auto h-[390px] w-full max-w-[540px] sm:h-[430px]"
+            aria-label="Áreas de servicios académicos de StudyDocu"
+          >
+            <div className="absolute inset-[12%] rounded-full border border-white/10" />
+            <div className="absolute inset-[24%] rounded-full border border-dashed border-blue-300/20" />
+            <div className="absolute left-1/2 top-1/2 grid h-40 w-40 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[2rem] border border-white/15 bg-white/10 text-center shadow-2xl backdrop-blur-2xl sm:h-44 sm:w-44">
+              <div>
+                <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-white text-blue-700 shadow-lg">
+                  <GraduationCap className="h-7 w-7" />
+                </span>
+                <p className="mt-3 text-sm font-semibold text-blue-100">Tu objetivo</p>
+                <p className="text-xl font-bold">Nuestra ruta</p>
+              </div>
+            </div>
+
+            {[
+              {
+                label: 'Exámenes',
+                text: 'Preparación',
+                icon: Target,
+                className: 'left-0 top-8',
+                delay: 0,
+              },
+              {
+                label: 'Tesis',
+                text: 'Metodología',
+                icon: FileText,
+                className: 'right-0 top-16',
+                delay: 0.3,
+              },
+              {
+                label: 'Escritura',
+                text: 'APA y ensayos',
+                icon: BookOpen,
+                className: 'bottom-8 left-2',
+                delay: 0.6,
+              },
+              {
+                label: 'Asesorías',
+                text: 'Orientación',
+                icon: MessageCircle,
+                className: 'bottom-4 right-0',
+                delay: 0.9,
+              },
+            ].map(({ label, text, icon: Icon, className, delay }) => (
+              <motion.div
+                key={label}
+                animate={reduceMotion ? undefined : { y: [0, -8, 0] }}
+                transition={{ duration: 4, delay, repeat: Infinity, ease: 'easeInOut' }}
+                className={`absolute ${className} flex w-[145px] items-center gap-3 rounded-2xl border border-white/15 bg-white/10 p-3 shadow-xl backdrop-blur-xl sm:w-[165px]`}
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/15 text-cyan-200">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="font-semibold">{label}</p>
+                  <p className="text-xs text-blue-200/70">{text}</p>
+                </div>
+              </motion.div>
+            ))}
           </motion.div>
         </div>
       </section>
 
-      <section className="sticky top-16 z-30 border-y border-black/[.06] bg-[#f5f5f7]/85 px-5 py-4 backdrop-blur-2xl dark:border-white/[.08] dark:bg-[#09090b]/85 sm:px-8">
+      <section
+        id="catalogo-servicios"
+        className="sticky top-16 z-30 scroll-mt-24 border-y border-black/[.06] bg-[#f5f5f7]/90 px-5 py-4 backdrop-blur-2xl dark:border-white/[.08] dark:bg-[#09090b]/90 sm:px-8"
+      >
         <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center">
           <label className="relative block flex-1">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#86868b]" />

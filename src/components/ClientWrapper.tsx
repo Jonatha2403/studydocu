@@ -139,42 +139,62 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
         )}
 
         {!isAuthFlowRoute && (
-          <footer className="w-full border-t border-border bg-white/80 py-10 pb-[calc(5.5rem+env(safe-area-inset-bottom))] text-muted-foreground backdrop-blur-md md:pb-10 dark:bg-gray-900/80">
-            <div className="max-w-7xl mx-auto px-4 md:px-8 flex flex-col lg:flex-row items-center justify-between gap-6">
+          <footer className="w-full border-t border-black/[.06] bg-[#f5f5f7] py-7 pb-[calc(5.5rem+env(safe-area-inset-bottom))] text-[#6e6e73] md:pb-7 dark:border-white/[.08] dark:bg-[#09090b] dark:text-zinc-400">
+            <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 px-5 md:flex-row md:px-8">
               <div className="flex items-center gap-3">
                 <Image
                   src="/icon.png"
                   alt="Logo StudyDocu"
-                  width={40}
-                  height={40}
+                  width={34}
+                  height={34}
                   priority
-                  className="rounded-md shadow"
+                  className="rounded-xl border border-black/[.06] bg-white p-0.5 shadow-sm dark:border-white/10"
                 />
-                <span className="text-lg font-bold text-gray-800 dark:text-white">StudyDocu</span>
+                <div>
+                  <p className="font-semibold text-[#1d1d1f] dark:text-white">StudyDocu</p>
+                  <p className="text-xs">IA académica para estudiantes</p>
+                </div>
               </div>
 
-              <div className="flex flex-wrap justify-center gap-4 text-sm">
-                <Link href="/sobre-nosotros" className="hover:text-primary transition">
+              <nav
+                aria-label="Enlaces del pie"
+                className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm"
+              >
+                <Link
+                  href="/sobre-nosotros"
+                  className="transition hover:text-[#1d1d1f] dark:hover:text-white"
+                >
                   Sobre nosotros
                 </Link>
-                <Link href="/terminos" className="hover:text-primary transition">
+                <Link
+                  href="/servicios"
+                  className="transition hover:text-[#1d1d1f] dark:hover:text-white"
+                >
+                  Servicios
+                </Link>
+                <Link
+                  href="/terminos"
+                  className="transition hover:text-[#1d1d1f] dark:hover:text-white"
+                >
                   Términos
                 </Link>
-                <Link href="/privacidad" className="hover:text-primary transition">
+                <Link
+                  href="/privacidad"
+                  className="transition hover:text-[#1d1d1f] dark:hover:text-white"
+                >
                   Privacidad
                 </Link>
-                <Link href="/contacto" className="hover:text-primary transition">
+                <Link
+                  href="/contacto"
+                  className="transition hover:text-[#1d1d1f] dark:hover:text-white"
+                >
                   Contacto
                 </Link>
-              </div>
+              </nav>
 
-              <div className="text-xs text-gray-500 dark:text-gray-400 text-center lg:text-right">
-                <p>
-                  © {new Date().getFullYear()}{' '}
-                  <span className="font-semibold text-primary">StudyDocu</span>
-                </p>
-                <p>Hecho con 💙 por estudiantes para estudiantes</p>
-              </div>
+              <p className="text-center text-xs md:text-right">
+                © {new Date().getFullYear()} StudyDocu · Ecuador
+              </p>
             </div>
           </footer>
         )}

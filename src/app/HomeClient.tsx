@@ -24,7 +24,6 @@ import {
   WandSparkles,
 } from 'lucide-react'
 
-import Footer from '@/components/Footer'
 import { useUserContext } from '@/context/UserContext'
 
 const BRAND = {
@@ -178,32 +177,32 @@ export default function HomeClient() {
       />
 
       <main className="overflow-hidden bg-[#f5f5f7] text-[#1d1d1f] dark:bg-[#070709] dark:text-white">
-        <section className="relative px-5 pb-20 pt-36 sm:px-8 lg:pb-28 lg:pt-44">
-          <div className="absolute inset-x-0 top-0 h-[760px] bg-[radial-gradient(circle_at_50%_15%,rgba(93,138,255,.24),transparent_38%),radial-gradient(circle_at_28%_42%,rgba(191,125,255,.17),transparent_30%),radial-gradient(circle_at_75%_50%,rgba(65,215,255,.13),transparent_28%)] dark:opacity-70" />
-          <div className="relative mx-auto max-w-7xl">
+        <section className="relative px-5 pb-14 pt-28 sm:px-8 lg:pb-16 lg:pt-32">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_20%,rgba(59,130,246,.22),transparent_30%),radial-gradient(circle_at_82%_24%,rgba(139,92,246,.18),transparent_28%),radial-gradient(circle_at_60%_82%,rgba(34,211,238,.10),transparent_28%)] dark:opacity-70" />
+          <div className="relative mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[.9fr_1.1fr] lg:gap-12">
             <motion.div
               initial={reduceMotion ? undefined : { opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65, ease: 'easeOut' }}
-              className="mx-auto max-w-5xl text-center"
+              className="max-w-2xl text-center lg:text-left"
             >
               <div className="inline-flex items-center gap-2 rounded-full border border-black/[.07] bg-white/70 px-4 py-2 text-sm font-semibold shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/[.07]">
-                <Sparkles className="h-4 w-4 text-blue-600" /> IA académica creada para estudiantes
+                <Sparkles className="h-4 w-4 text-blue-600" /> StudyDocu · IA académica
               </div>
-              <h1 className="mx-auto mt-7 max-w-5xl text-5xl font-semibold leading-[.98] tracking-[-0.055em] sm:text-6xl md:text-7xl lg:text-[88px]">
-                Todo lo que estudias.{' '}
+              <h1 className="mt-6 text-5xl font-semibold leading-[.96] tracking-[-0.055em] sm:text-6xl lg:text-[72px]">
+                Estudia con claridad.{' '}
                 <span className="bg-gradient-to-r from-blue-600 via-violet-600 to-cyan-500 bg-clip-text text-transparent">
-                  Finalmente en orden.
+                  Avanza con inteligencia.
                 </span>
               </h1>
-              <p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-[#6e6e73] dark:text-zinc-300 sm:text-xl">
-                Organiza tus documentos universitarios, comprende lo importante con IA y convierte
-                cada materia en un plan claro.
+              <p className="mt-6 text-lg leading-8 text-[#6e6e73] dark:text-zinc-300 sm:text-xl">
+                Convierte documentos dispersos en resúmenes, una biblioteca organizada y un plan de
+                estudio que sí puedes seguir.
               </p>
-              <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row lg:justify-start">
                 <button
                   onClick={start}
-                  className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#0071e3] px-7 font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:bg-[#0077ed]"
+                  className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#0071e3] px-7 font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:-translate-y-0.5 hover:bg-[#0077ed]"
                 >
                   Empezar gratis{' '}
                   <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
@@ -215,19 +214,23 @@ export default function HomeClient() {
                   Explorar documentos
                 </Link>
               </div>
-              <p className="mt-4 text-sm text-[#6e6e73] dark:text-zinc-400">
-                Sin tarjeta · Registro rápido · Tú controlas tus documentos
-              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm font-medium text-[#6e6e73] dark:text-zinc-400 lg:justify-start">
+                {['Sin tarjeta', 'Registro rápido', 'Control de tus documentos'].map((item) => (
+                  <span key={item} className="inline-flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> {item}
+                  </span>
+                ))}
+              </div>
             </motion.div>
 
             <motion.div
               initial={reduceMotion ? undefined : { opacity: 0, y: 35, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.15, ease: 'easeOut' }}
-              className="relative mx-auto mt-16 max-w-6xl"
+              className="relative min-w-0"
             >
-              <div className="absolute -inset-8 rounded-[4rem] bg-gradient-to-r from-blue-400/20 via-violet-400/20 to-cyan-400/20 blur-3xl" />
-              <div className="relative overflow-hidden rounded-[2rem] border border-black/[.08] bg-white/80 p-2 shadow-[0_40px_100px_-40px_rgba(30,64,175,.35)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#151518]/85 sm:p-3">
+              <div className="absolute -inset-6 rounded-[3rem] bg-gradient-to-r from-blue-400/20 via-violet-400/20 to-cyan-400/20 blur-3xl" />
+              <div className="relative overflow-hidden rounded-[2rem] border border-black/[.08] bg-white/85 p-2 shadow-[0_32px_90px_-35px_rgba(30,64,175,.4)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#151518]/90 sm:p-3">
                 <div className="flex items-center justify-between px-4 py-3 sm:px-5">
                   <div className="flex gap-2">
                     <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
@@ -241,67 +244,65 @@ export default function HomeClient() {
                     En línea
                   </span>
                 </div>
-                <div className="rounded-[1.5rem] border border-black/[.06] bg-[#f5f5f7] p-4 dark:border-white/[.07] dark:bg-[#0d0d0f] sm:p-6 lg:p-8">
-                  <div className="grid gap-6 lg:grid-cols-[230px_1fr]">
-                    <div className="flex gap-2 overflow-x-auto lg:flex-col">
-                      {demoTabs.map(({ id, label, icon: Icon }) => (
-                        <button
-                          key={id}
-                          onClick={() => setActiveDemo(id)}
-                          className={`flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${activeDemo === id ? 'bg-white text-blue-600 shadow-sm dark:bg-white/10 dark:text-blue-300' : 'text-[#6e6e73] hover:bg-white/60 dark:text-zinc-400 dark:hover:bg-white/5'}`}
+                <div className="rounded-[1.5rem] border border-black/[.06] bg-[#f5f5f7] p-4 dark:border-white/[.07] dark:bg-[#0d0d0f] sm:p-5">
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {demoTabs.map(({ id, label, icon: Icon }) => (
+                      <button
+                        key={id}
+                        onClick={() => setActiveDemo(id)}
+                        className={`flex flex-1 shrink-0 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${activeDemo === id ? 'bg-white text-blue-600 shadow-sm dark:bg-white/10 dark:text-blue-300' : 'text-[#6e6e73] hover:bg-white/60 dark:text-zinc-400 dark:hover:bg-white/5'}`}
+                      >
+                        <Icon className="h-5 w-5" /> {label}
+                      </button>
+                    ))}
+                  </div>
+                  <motion.div
+                    key={activeDemo}
+                    initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-3 min-h-[330px] rounded-2xl bg-white p-5 shadow-sm dark:bg-[#19191c] sm:p-6"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[.16em] text-blue-600">
+                          {currentDemo.eyebrow}
+                        </p>
+                        <h2 className="mt-2 max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">
+                          {currentDemo.title}
+                        </h2>
+                      </div>
+                      <span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 dark:bg-blue-400/10 dark:text-blue-300">
+                        Vista interactiva
+                      </span>
+                    </div>
+                    <div className="mt-7 space-y-3">
+                      {currentDemo.items.map((item, index) => (
+                        <div
+                          key={item}
+                          className="flex items-start gap-3 rounded-xl border border-black/[.06] bg-[#fafafa] p-4 dark:border-white/[.07] dark:bg-white/[.035]"
                         >
-                          <Icon className="h-5 w-5" /> {label}
-                        </button>
+                          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-blue-600 text-xs font-bold text-white">
+                            {index + 1}
+                          </span>
+                          <p className="pt-0.5 text-sm leading-6 text-[#424245] dark:text-zinc-300">
+                            {item}
+                          </p>
+                        </div>
                       ))}
                     </div>
-                    <motion.div
-                      key={activeDemo}
-                      initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="min-h-[330px] rounded-2xl bg-white p-5 shadow-sm dark:bg-[#19191c] sm:p-7"
-                    >
-                      <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-[.16em] text-blue-600">
-                            {currentDemo.eyebrow}
-                          </p>
-                          <h2 className="mt-2 max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">
-                            {currentDemo.title}
-                          </h2>
-                        </div>
-                        <span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 dark:bg-blue-400/10 dark:text-blue-300">
-                          Vista interactiva
-                        </span>
-                      </div>
-                      <div className="mt-7 space-y-3">
-                        {currentDemo.items.map((item, index) => (
-                          <div
-                            key={item}
-                            className="flex items-start gap-3 rounded-xl border border-black/[.06] bg-[#fafafa] p-4 dark:border-white/[.07] dark:bg-white/[.035]"
-                          >
-                            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-blue-600 text-xs font-bold text-white">
-                              {index + 1}
-                            </span>
-                            <p className="pt-0.5 text-sm leading-6 text-[#424245] dark:text-zinc-300">
-                              {item}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-5 flex justify-end">
-                        <span className="inline-flex items-center gap-2 rounded-full bg-[#1d1d1f] px-5 py-2.5 text-sm font-semibold text-white dark:bg-white dark:text-black">
-                          {currentDemo.action} <ChevronRight className="h-4 w-4" />
-                        </span>
-                      </div>
-                    </motion.div>
-                  </div>
+                    <div className="mt-5 flex justify-end">
+                      <span className="inline-flex items-center gap-2 rounded-full bg-[#1d1d1f] px-5 py-2.5 text-sm font-semibold text-white dark:bg-white dark:text-black">
+                        {currentDemo.action} <ChevronRight className="h-4 w-4" />
+                      </span>
+                    </div>
+                  </motion.div>
                 </div>
               </div>
             </motion.div>
           </div>
         </section>
 
-        <section className="bg-white px-5 py-24 dark:bg-[#0d0d0f] sm:px-8 lg:py-32">
+        <section className="bg-white px-5 py-16 dark:bg-[#0d0d0f] sm:px-8 lg:py-20">
           <div className="mx-auto max-w-7xl">
             <motion.div
               {...reveal}
@@ -320,7 +321,7 @@ export default function HomeClient() {
                 archivo hasta el día de tu evaluación.
               </p>
             </motion.div>
-            <div className="mt-14 grid gap-5 md:grid-cols-3">
+            <div className="mt-10 grid gap-5 md:grid-cols-3">
               {benefits.map(({ icon: Icon, title, text }, index) => (
                 <motion.article
                   key={title}
@@ -340,7 +341,7 @@ export default function HomeClient() {
           </div>
         </section>
 
-        <section className="px-5 py-24 sm:px-8 lg:py-32">
+        <section className="px-5 py-16 sm:px-8 lg:py-20">
           <div className="mx-auto max-w-7xl">
             <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
               <div>
@@ -356,7 +357,7 @@ export default function HomeClient() {
                 Ver todos los servicios <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-            <div className="mt-12 grid gap-5 lg:grid-cols-3">
+            <div className="mt-10 grid gap-5 lg:grid-cols-3">
               {services.map(({ icon: Icon, label, title, text, href, color }, index) => (
                 <motion.div
                   key={title}
@@ -366,7 +367,7 @@ export default function HomeClient() {
                 >
                   <Link
                     href={href}
-                    className="group flex h-full min-h-[350px] flex-col overflow-hidden rounded-[1.75rem] bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:bg-white/[.06] sm:p-8"
+                    className="group flex h-full min-h-[300px] flex-col overflow-hidden rounded-[1.75rem] bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:bg-white/[.06] sm:p-8"
                   >
                     <div
                       className={`grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br ${color} text-white shadow-lg`}
@@ -389,7 +390,7 @@ export default function HomeClient() {
           </div>
         </section>
 
-        <section className="bg-[#1d1d1f] px-5 py-24 text-white sm:px-8 lg:py-28">
+        <section className="bg-[#1d1d1f] px-5 py-16 text-white sm:px-8 lg:py-20">
           <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1fr_.8fr] lg:items-center">
             <div>
               <div className="inline-flex items-center gap-2 text-sm font-semibold text-blue-300">
@@ -420,7 +421,7 @@ export default function HomeClient() {
           </div>
         </section>
 
-        <section className="bg-white px-5 py-24 text-center dark:bg-[#0d0d0f] sm:px-8 lg:py-32">
+        <section className="bg-white px-5 py-16 text-center dark:bg-[#0d0d0f] sm:px-8 lg:py-20">
           <div className="mx-auto max-w-3xl">
             <p className="text-sm font-semibold text-blue-600">Empieza hoy</p>
             <h2 className="mt-3 text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">
@@ -449,7 +450,6 @@ export default function HomeClient() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   )
 }
