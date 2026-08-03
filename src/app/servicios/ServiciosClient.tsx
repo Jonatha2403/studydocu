@@ -21,7 +21,6 @@ import {
   Palette,
   Presentation,
   Search,
-  Sparkles,
   Target,
   X,
 } from 'lucide-react'
@@ -250,30 +249,26 @@ export default function ServiciosClient() {
 
   return (
     <main className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] dark:bg-[#09090b] dark:text-white">
-      <section className="relative overflow-hidden bg-[#06142f] px-5 pb-14 pt-28 text-white sm:px-8 lg:pb-16 lg:pt-32">
+      <section className="relative overflow-hidden bg-[#06142f] px-5 pb-10 pt-20 text-white sm:px-8 sm:pb-12 sm:pt-24 lg:pb-16 lg:pt-28">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_20%,rgba(37,99,235,.45),transparent_32%),radial-gradient(circle_at_86%_18%,rgba(139,92,246,.30),transparent_30%),radial-gradient(circle_at_68%_88%,rgba(6,182,212,.20),transparent_28%)]" />
         <div className="absolute inset-0 opacity-[.08] [background-image:linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] [background-size:44px_44px]" />
-        <div className="relative mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1fr_.9fr] lg:gap-14">
+        <div className="relative mx-auto grid max-w-7xl items-center lg:grid-cols-[1fr_.9fr] lg:gap-14">
           <motion.div
             initial={reduceMotion ? undefined : { opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, ease: 'easeOut' }}
           >
-            <p className="flex items-center justify-center gap-2 text-sm font-semibold text-blue-200 lg:justify-start">
-              <Sparkles className="h-4 w-4 text-amber-300" /> Soluciones académicas para estudiantes
-              en Ecuador
-            </p>
-            <h1 className="mt-5 text-center text-5xl font-semibold leading-[.98] tracking-[-0.055em] sm:text-6xl lg:text-left lg:text-7xl">
+            <h1 className="text-center text-[44px] font-semibold leading-[.96] tracking-[-0.055em] sm:text-6xl lg:text-left lg:text-7xl">
               Servicios académicos para{' '}
               <span className="bg-gradient-to-r from-blue-300 via-violet-300 to-cyan-300 bg-clip-text text-transparent">
                 avanzar con seguridad.
               </span>
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-blue-100/80 lg:mx-0 lg:text-left">
+            <p className="mx-auto mt-5 max-w-2xl text-center text-base leading-7 text-blue-100/80 sm:text-lg sm:leading-8 lg:mx-0 lg:text-left">
               Preparación para exámenes de admisión, asesoría de tesis, ensayos académicos, normas
               APA y orientación universitaria en un solo lugar.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center lg:mt-8 lg:justify-start">
               <a
                 href="#catalogo-servicios"
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-7 font-semibold text-[#06142f] shadow-xl transition hover:-translate-y-0.5 hover:bg-blue-50"
@@ -289,7 +284,7 @@ export default function ServiciosClient() {
                 <MessageCircle className="h-5 w-5" /> Recibir orientación
               </a>
             </div>
-            <div className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-blue-100/85 lg:justify-start">
+            <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-blue-100/85 sm:text-sm lg:mt-7 lg:justify-start">
               {['19 servicios disponibles', 'Atención personalizada', 'Enfoque responsable'].map(
                 (item) => (
                   <span key={item} className="flex items-center gap-2">
@@ -298,13 +293,31 @@ export default function ServiciosClient() {
                 )
               )}
             </div>
+            <div className="mt-6 grid grid-cols-2 gap-2.5 lg:hidden">
+              {[
+                { label: 'Exámenes', icon: Target },
+                { label: 'Tesis', icon: FileText },
+                { label: 'Escritura', icon: BookOpen },
+                { label: 'Asesorías', icon: MessageCircle },
+              ].map(({ label, icon: Icon }) => (
+                <div
+                  key={label}
+                  className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-xl"
+                >
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/15 text-cyan-200">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="text-sm font-semibold">{label}</span>
+                </div>
+              ))}
+            </div>
           </motion.div>
 
           <motion.div
             initial={reduceMotion ? undefined : { opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.12 }}
-            className="relative mx-auto h-[390px] w-full max-w-[540px] sm:h-[430px]"
+            className="relative mx-auto hidden h-[430px] w-full max-w-[540px] lg:block"
             aria-label="Áreas de servicios académicos de StudyDocu"
           >
             <div className="absolute inset-[12%] rounded-full border border-white/10" />
@@ -370,7 +383,7 @@ export default function ServiciosClient() {
 
       <section
         id="catalogo-servicios"
-        className="sticky top-16 z-30 scroll-mt-24 border-y border-black/[.06] bg-[#f5f5f7]/90 px-5 py-4 backdrop-blur-2xl dark:border-white/[.08] dark:bg-[#09090b]/90 sm:px-8"
+        className="sticky top-16 z-30 scroll-mt-24 border-y border-black/[.06] bg-[#f5f5f7]/90 px-5 py-3 backdrop-blur-2xl dark:border-white/[.08] dark:bg-[#09090b]/90 sm:px-8 lg:py-4"
       >
         <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center">
           <label className="relative block flex-1">
@@ -406,7 +419,7 @@ export default function ServiciosClient() {
         </div>
       </section>
 
-      <section className="px-5 py-20 sm:px-8 lg:py-24">
+      <section className="px-5 py-10 sm:px-8 sm:py-14 lg:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
@@ -425,7 +438,7 @@ export default function ServiciosClient() {
           </div>
 
           {filteredRoutes.length > 0 && (
-            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:mt-10 lg:grid-cols-3 lg:gap-5">
               {filteredRoutes.map(
                 (
                   {
@@ -447,7 +460,7 @@ export default function ServiciosClient() {
                   >
                     <Link
                       href={href}
-                      className="group flex h-full min-h-[315px] flex-col overflow-hidden rounded-[1.75rem] border border-black/[.06] bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:border-white/[.08] dark:bg-white/[.055]"
+                      className="group flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-black/[.06] bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:border-white/[.08] dark:bg-white/[.055] lg:min-h-[315px] lg:rounded-[1.75rem] lg:p-7"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <span
@@ -480,12 +493,12 @@ export default function ServiciosClient() {
           )}
 
           {filteredSupport.length > 0 && (
-            <div className="mt-20">
+            <div className="mt-12 lg:mt-20">
               <p className="text-sm font-semibold text-violet-600">Catálogo de apoyo</p>
               <h2 className="mt-2 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
                 Servicios para necesidades específicas
               </h2>
-              <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:mt-9 lg:grid-cols-3">
                 {filteredSupport.map(
                   ({ slug, title, description, category: serviceCategory, icon: Icon }, index) => (
                     <motion.article
@@ -540,8 +553,8 @@ export default function ServiciosClient() {
         </div>
       </section>
 
-      <section className="bg-white px-5 py-20 dark:bg-[#0d0d0f] sm:px-8 lg:py-24">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_.75fr] lg:items-center">
+      <section className="bg-white px-5 py-12 dark:bg-[#0d0d0f] sm:px-8 sm:py-14 lg:py-20">
+        <div className="mx-auto grid max-w-7xl gap-7 lg:grid-cols-[1fr_.75fr] lg:items-center lg:gap-10">
           <div>
             <p className="text-sm font-semibold text-emerald-600">Proceso claro</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
@@ -572,8 +585,8 @@ export default function ServiciosClient() {
         </div>
       </section>
 
-      <section className="px-5 py-20 sm:px-8 lg:py-24">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 overflow-hidden rounded-[2rem] bg-[#1d1d1f] px-7 py-12 text-center text-white shadow-xl sm:px-12 lg:flex-row lg:text-left">
+      <section className="px-5 py-10 sm:px-8 sm:py-12 lg:py-16">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 overflow-hidden rounded-[1.75rem] bg-[#1d1d1f] px-6 py-9 text-center text-white shadow-xl sm:px-10 sm:py-10 lg:flex-row lg:rounded-[2rem] lg:px-12 lg:py-12 lg:text-left">
           <div>
             <div className="inline-flex items-center gap-2 text-sm font-semibold text-blue-300">
               <Check className="h-4 w-4" /> Orientación sin compromiso

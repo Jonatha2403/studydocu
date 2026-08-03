@@ -12,13 +12,12 @@ import {
   CalendarDays,
   Check,
   ChevronRight,
-  FolderKanban,
+  FileText,
   GraduationCap,
   LockKeyhole,
   MessageCircle,
   Search,
   ShieldCheck,
-  Sparkles,
   Target,
   Upload,
   WandSparkles,
@@ -34,9 +33,10 @@ const BRAND = {
 }
 
 const demoTabs = [
+  { id: 'documento', label: 'Documento', icon: FileText },
   { id: 'resumen', label: 'Resumen IA', icon: WandSparkles },
-  { id: 'organizacion', label: 'Organización', icon: FolderKanban },
-  { id: 'plan', label: 'Plan de estudio', icon: CalendarDays },
+  { id: 'preguntas', label: 'Preguntas', icon: BrainCircuit },
+  { id: 'plan', label: 'Plan', icon: CalendarDays },
 ] as const
 
 type DemoTab = (typeof demoTabs)[number]['id']
@@ -45,6 +45,16 @@ const demoContent: Record<
   DemoTab,
   { eyebrow: string; title: string; items: string[]; action: string }
 > = {
+  documento: {
+    eyebrow: 'Macroeconomía · Unidad 6.pdf',
+    title: 'Tu material entra organizado desde el inicio.',
+    items: [
+      'Universidad y carrera identificadas',
+      'Materia: Macroeconomía',
+      'Documento listo para analizar con IA',
+    ],
+    action: 'Analizar documento',
+  },
   resumen: {
     eyebrow: 'Macroeconomía · Unidad 6',
     title: 'Lo esencial de tu documento, en segundos.',
@@ -55,15 +65,15 @@ const demoContent: Record<
     ],
     action: 'Generar preguntas de práctica',
   },
-  organizacion: {
-    eyebrow: 'Biblioteca académica',
-    title: 'Cada archivo donde realmente pertenece.',
+  preguntas: {
+    eyebrow: 'Práctica generada con IA',
+    title: 'Comprueba lo que entendiste antes del examen.',
     items: [
-      'Universidad Técnica Particular de Loja',
-      'Administración de Empresas · Quinto ciclo',
-      'Macroeconomía · Apuntes y evaluaciones',
+      '¿Qué diferencia existe entre IPC e inflación?',
+      '¿Cómo se interpreta el deflactor del PIB?',
+      'Explica dos posibles sesgos de medición',
     ],
-    action: 'Abrir biblioteca',
+    action: 'Responder práctica',
   },
   plan: {
     eyebrow: 'Esta semana',
@@ -76,6 +86,47 @@ const demoContent: Record<
     action: 'Ver calendario',
   },
 }
+
+const personas = [
+  {
+    id: 'estudiante',
+    label: 'Soy estudiante',
+    icon: BookOpen,
+    eyebrow: 'Organiza, comprende y estudia mejor',
+    title: 'Convierte tus apuntes en una ruta clara.',
+    description:
+      'Sube documentos, obtén resúmenes con IA y organiza cada materia desde un solo lugar.',
+    cta: 'Empezar gratis',
+    href: '/registrarse',
+    demo: 'resumen' as DemoTab,
+  },
+  {
+    id: 'aspirante',
+    label: 'Preparo un examen',
+    icon: Target,
+    eyebrow: 'Preparación académica con dirección',
+    title: 'Llega a tu examen con práctica y seguridad.',
+    description:
+      'Refuerza áreas clave, practica con preguntas y conoce nuestros planes de preparación.',
+    cta: 'Preparar mi examen',
+    href: '/examen-admision-universidad',
+    demo: 'preguntas' as DemoTab,
+  },
+  {
+    id: 'tesista',
+    label: 'Desarrollo mi tesis',
+    icon: GraduationCap,
+    eyebrow: 'Acompañamiento para tu investigación',
+    title: 'Transforma una idea en un proyecto bien estructurado.',
+    description:
+      'Organiza fuentes, metodología y próximos pasos con orientación académica personalizada.',
+    cta: 'Explorar ayuda en tesis',
+    href: '/tesis-pregrado',
+    demo: 'plan' as DemoTab,
+  },
+] as const
+
+type PersonaId = (typeof personas)[number]['id']
 
 const benefits = [
   {
@@ -124,6 +175,7 @@ const services = [
 
 export default function HomeClient() {
   const [activeDemo, setActiveDemo] = useState<DemoTab>('resumen')
+  const [activePersona, setActivePersona] = useState<PersonaId>('estudiante')
   const { user } = useUserContext()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -164,6 +216,23 @@ export default function HomeClient() {
 
   const start = () => router.push(user ? '/dashboard' : '/registrarse')
   const currentDemo = demoContent[activeDemo]
+  const currentPersona = personas.find((persona) => persona.id === activePersona) ?? personas[0]
+  const selectPersona = (persona: (typeof personas)[number]) => {
+    setActivePersona(persona.id)
+    setActiveDemo(persona.demo)
+  }
+  const startPersonaJourney = () => {
+    if (activePersona === 'estudiante' && user) {
+      router.push('/dashboard')
+      return
+    }
+    router.push(currentPersona.href)
+  }
+  const advanceDemo = () => {
+    const currentIndex = demoTabs.findIndex((tab) => tab.id === activeDemo)
+    const nextTab = demoTabs[(currentIndex + 1) % demoTabs.length]
+    setActiveDemo(nextTab.id)
+  }
   const reveal = reduceMotion
     ? {}
     : { initial: { opacity: 0, y: 24 }, whileInView: { opacity: 1, y: 0 } }
@@ -186,32 +255,58 @@ export default function HomeClient() {
               transition={{ duration: 0.65, ease: 'easeOut' }}
               className="max-w-2xl text-center lg:text-left"
             >
-              <div className="inline-flex items-center gap-2 rounded-full border border-black/[.07] bg-white/70 px-4 py-2 text-sm font-semibold shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/[.07]">
-                <Sparkles className="h-4 w-4 text-blue-600" /> StudyDocu · IA académica
+              <div
+                role="tablist"
+                aria-label="Elige tu objetivo académico"
+                className="mx-auto flex max-w-max gap-1 rounded-2xl border border-black/[.07] bg-white/65 p-1.5 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/[.07] lg:mx-0"
+              >
+                {personas.map((persona) => {
+                  const Icon = persona.icon
+                  const active = activePersona === persona.id
+                  return (
+                    <button
+                      key={persona.id}
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => selectPersona(persona)}
+                      className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition sm:text-sm ${active ? 'bg-white text-blue-700 shadow-sm dark:bg-white dark:text-black' : 'text-[#6e6e73] hover:text-[#1d1d1f] dark:text-zinc-400 dark:hover:text-white'}`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="hidden sm:inline">{persona.label}</span>
+                      <span className="sm:hidden">{persona.label.split(' ').at(-1)}</span>
+                    </button>
+                  )
+                })}
               </div>
-              <h1 className="mt-6 text-5xl font-semibold leading-[.96] tracking-[-0.055em] sm:text-6xl lg:text-[72px]">
-                Estudia con claridad.{' '}
-                <span className="bg-gradient-to-r from-blue-600 via-violet-600 to-cyan-500 bg-clip-text text-transparent">
-                  Avanza con inteligencia.
-                </span>
-              </h1>
-              <p className="mt-6 text-lg leading-8 text-[#6e6e73] dark:text-zinc-300 sm:text-xl">
-                Convierte documentos dispersos en resúmenes, una biblioteca organizada y un plan de
-                estudio que sí puedes seguir.
-              </p>
+              <motion.div
+                key={activePersona}
+                initial={reduceMotion ? undefined : { opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+              >
+                <p className="mt-6 text-sm font-semibold text-blue-600 dark:text-blue-300">
+                  {currentPersona.eyebrow}
+                </p>
+                <h1 className="mt-3 text-5xl font-semibold leading-[.96] tracking-[-0.055em] sm:text-6xl lg:text-[68px]">
+                  {currentPersona.title}
+                </h1>
+                <p className="mt-6 text-lg leading-8 text-[#6e6e73] dark:text-zinc-300 sm:text-xl">
+                  {currentPersona.description}
+                </p>
+              </motion.div>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row lg:justify-start">
                 <button
-                  onClick={start}
+                  onClick={startPersonaJourney}
                   className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#0071e3] px-7 font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:-translate-y-0.5 hover:bg-[#0077ed]"
                 >
-                  Empezar gratis{' '}
+                  {currentPersona.cta}{' '}
                   <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
                 </button>
                 <Link
-                  href="/explorar"
+                  href={activePersona === 'estudiante' ? '/explorar' : '/servicios'}
                   className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-black/10 bg-white/65 px-7 font-semibold text-[#1d1d1f] backdrop-blur-xl transition hover:bg-white dark:border-white/15 dark:bg-white/10 dark:text-white dark:hover:bg-white/15"
                 >
-                  Explorar documentos
+                  {activePersona === 'estudiante' ? 'Explorar documentos' : 'Ver servicios'}
                 </Link>
               </div>
               <div className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm font-medium text-[#6e6e73] dark:text-zinc-400 lg:justify-start">
@@ -245,6 +340,14 @@ export default function HomeClient() {
                   </span>
                 </div>
                 <div className="rounded-[1.5rem] border border-black/[.06] bg-[#f5f5f7] p-4 dark:border-white/[.07] dark:bg-[#0d0d0f] sm:p-5">
+                  <div className="mb-3 flex items-center justify-between px-1">
+                    <p className="text-xs font-bold uppercase tracking-[.14em] text-[#86868b]">
+                      Transformación en vivo
+                    </p>
+                    <span className="text-xs text-[#86868b]">
+                      {demoTabs.findIndex((tab) => tab.id === activeDemo) + 1} / {demoTabs.length}
+                    </span>
+                  </div>
                   <div className="flex gap-2 overflow-x-auto pb-1">
                     {demoTabs.map(({ id, label, icon: Icon }) => (
                       <button
@@ -291,9 +394,12 @@ export default function HomeClient() {
                       ))}
                     </div>
                     <div className="mt-5 flex justify-end">
-                      <span className="inline-flex items-center gap-2 rounded-full bg-[#1d1d1f] px-5 py-2.5 text-sm font-semibold text-white dark:bg-white dark:text-black">
+                      <button
+                        onClick={advanceDemo}
+                        className="inline-flex items-center gap-2 rounded-full bg-[#1d1d1f] px-5 py-2.5 text-sm font-semibold text-white transition hover:scale-[1.02] dark:bg-white dark:text-black"
+                      >
                         {currentDemo.action} <ChevronRight className="h-4 w-4" />
-                      </span>
+                      </button>
                     </div>
                   </motion.div>
                 </div>
