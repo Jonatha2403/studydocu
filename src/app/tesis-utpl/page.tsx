@@ -34,12 +34,12 @@ export const metadata: Metadata = {
     'formato tesis UTPL',
     'normas APA UTPL',
   ],
-  alternates: { canonical: 'https://studydocu.ec/tesis-utpl' },
+  alternates: { canonical: 'https://www.studydocu.ec/tesis-utpl' },
   openGraph: {
     title: 'Tesis UTPL en Ecuador | Asesoría Académica Profesional – StudyDocu',
     description:
       'Acompañamiento académico para tesis UTPL: propuesta, marco teórico, metodología, APA y defensa. Pregrado, maestría y doctorado.',
-    url: 'https://studydocu.ec/tesis-utpl',
+    url: 'https://www.studydocu.ec/tesis-utpl',
     siteName: 'StudyDocu',
     locale: 'es_EC',
     type: 'website',

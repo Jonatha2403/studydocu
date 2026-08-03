@@ -31,12 +31,12 @@ export const metadata: Metadata = {
     'apoyo academico Ecuador',
     'preparacion examen parcial',
   ],
-  alternates: { canonical: 'https://studydocu.ec/examenes-bimestrales' },
+  alternates: { canonical: 'https://www.studydocu.ec/examenes-bimestrales' },
   openGraph: {
     title: 'Exámenes Bimestrales y Parciales en Ecuador | StudyDocu',
     description:
       'Apoyo académico para exámenes parciales, bimestrales, quices y recuperaciones: explicación paso a paso y práctica guiada.',
-    url: 'https://studydocu.ec/examenes-bimestrales',
+    url: 'https://www.studydocu.ec/examenes-bimestrales',
     siteName: 'StudyDocu',
     locale: 'es_EC',
     type: 'website',

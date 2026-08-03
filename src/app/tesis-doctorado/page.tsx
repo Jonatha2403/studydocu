@@ -33,12 +33,12 @@ export const metadata: Metadata = {
     'defensa tesis doctoral',
     'normas APA doctorado',
   ],
-  alternates: { canonical: 'https://studydocu.ec/tesis-doctorado' },
+  alternates: { canonical: 'https://www.studydocu.ec/tesis-doctorado' },
   openGraph: {
     title: 'Tesis de Doctorado en Ecuador | StudyDocu',
     description:
       'Acompañamiento doctoral: aporte original, validación metodológica, análisis y preparación para defensa.',
-    url: 'https://studydocu.ec/tesis-doctorado',
+    url: 'https://www.studydocu.ec/tesis-doctorado',
     siteName: 'StudyDocu',
     locale: 'es_EC',
     type: 'website',

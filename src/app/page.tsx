@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import HomeClient from './HomeClient'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://studydocu.ec'),
+  metadataBase: new URL('https://www.studydocu.ec'),
   title: 'StudyDocu | Plataforma académica con IA para estudiantes en Ecuador',
   description:
     'StudyDocu es una plataforma académica con IA en Ecuador: organiza documentos por universidad y materia, genera resúmenes y estudia más rápido.',

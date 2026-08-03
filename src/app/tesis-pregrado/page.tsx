@@ -33,12 +33,12 @@ export const metadata: Metadata = {
     'normas APA',
     'asesoría de tesis en Ecuador',
   ],
-  alternates: { canonical: 'https://studydocu.ec/tesis-pregrado' },
+  alternates: { canonical: 'https://www.studydocu.ec/tesis-pregrado' },
   openGraph: {
     title: 'Tesis de Pregrado en Ecuador | Asesoría Profesional – StudyDocu',
     description:
       'Acompañamiento académico para tesis de pregrado: propuesta, marco teórico, metodología, APA, análisis y defensa final.',
-    url: 'https://studydocu.ec/tesis-pregrado',
+    url: 'https://www.studydocu.ec/tesis-pregrado',
     siteName: 'StudyDocu',
     locale: 'es_EC',
     type: 'website',

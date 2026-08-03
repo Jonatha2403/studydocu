@@ -32,12 +32,12 @@ export const metadata: Metadata = {
     'simulacros examen validacion',
     'guia examen validacion',
   ],
-  alternates: { canonical: 'https://studydocu.ec/examenes-validacion' },
+  alternates: { canonical: 'https://www.studydocu.ec/examenes-validacion' },
   openGraph: {
     title: 'Exámenes de Validación en Ecuador | StudyDocu',
     description:
       'Preparación estratégica para exámenes de validación universitaria en Ecuador: repaso por áreas, simulacros y acompañamiento académico.',
-    url: 'https://studydocu.ec/examenes-validacion',
+    url: 'https://www.studydocu.ec/examenes-validacion',
     siteName: 'StudyDocu',
     locale: 'es_EC',
     type: 'website',

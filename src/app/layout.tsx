@@ -23,7 +23,7 @@ const sfPro = localFont({
 
 /* ---------------------- METADATOS ---------------------- */
 export const metadata: Metadata = {
-  metadataBase: new URL('https://studydocu.ec'),
+  metadataBase: new URL('https://www.studydocu.ec'),
   title: {
     default: 'StudyDocu | Plataforma académica con IA en Ecuador',
     template: '%s | StudyDocu',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     'UTPL',
     'estudiantes Ecuador',
   ],
-  authors: [{ name: 'StudyDocu', url: 'https://studydocu.ec' }],
+  authors: [{ name: 'StudyDocu', url: 'https://www.studydocu.ec' }],
   creator: 'StudyDocu',
   publisher: 'StudyDocu',
   category: 'education',
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'StudyDocu | Plataforma académica con IA en Ecuador',
     description: 'Sube, comparte y encuentra apuntes universitarios. Estudia mejor con IA.',
-    url: 'https://studydocu.ec',
+    url: 'https://www.studydocu.ec',
     siteName: 'StudyDocu',
     images: [
       {

@@ -12,7 +12,7 @@ interface PageProps {
       }>
 }
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://studydocu.ec'
+const SITE_URL = 'https://www.studydocu.ec'
 
 type DocSeoRow = {
   id: string

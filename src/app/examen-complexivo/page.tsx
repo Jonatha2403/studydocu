@@ -31,12 +31,12 @@ export const metadata: Metadata = {
     'simulacros complexivo',
     'guia examen complexivo',
   ],
-  alternates: { canonical: 'https://studydocu.ec/examen-complexivo' },
+  alternates: { canonical: 'https://www.studydocu.ec/examen-complexivo' },
   openGraph: {
     title: 'Examen Complexivo en Ecuador | StudyDocu',
     description:
       'Prepárate para el examen complexivo con repaso por áreas, simulacros tipo examen real y explicación paso a paso.',
-    url: 'https://studydocu.ec/examen-complexivo',
+    url: 'https://www.studydocu.ec/examen-complexivo',
     siteName: 'StudyDocu',
     locale: 'es_EC',
     type: 'website',

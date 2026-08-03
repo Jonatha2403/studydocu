@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://studydocu.ec'
+const SITE_URL = 'https://www.studydocu.ec'
 const DOCS_PER_SITEMAP = 20000
 
 const xml = (content: string) => `<?xml version="1.0" encoding="UTF-8"?>\n${content}`

@@ -34,12 +34,12 @@ export const metadata: Metadata = {
     'normas APA Ecuador',
     'trabajo de titulación Ecuador',
   ],
-  alternates: { canonical: 'https://studydocu.ec/ayuda-en-tesis-ecuador' },
+  alternates: { canonical: 'https://www.studydocu.ec/ayuda-en-tesis-ecuador' },
   openGraph: {
     title: 'Ayuda en Tesis en Ecuador | StudyDocu',
     description:
       'Asesoría académica profesional para tesis en Ecuador: propuesta, marco teórico, metodología, APA, análisis y defensa final.',
-    url: 'https://studydocu.ec/ayuda-en-tesis-ecuador',
+    url: 'https://www.studydocu.ec/ayuda-en-tesis-ecuador',
     siteName: 'StudyDocu',
     locale: 'es_EC',
     type: 'website',

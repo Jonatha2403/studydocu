@@ -18,7 +18,7 @@ import {
   Target,
 } from 'lucide-react'
 
-const PAGE_URL = 'https://studydocu.ec/examen-admision-universidad'
+const PAGE_URL = 'https://www.studydocu.ec/examen-admision-universidad'
 const DESCRIPTION =
   'Prepárate para tu examen de admisión universitaria en Ecuador con diagnóstico, plan de estudio, práctica guiada y simulacros. Solicita orientación por WhatsApp.'
 const WHATSAPP_NUMBER = '593958757302'
@@ -145,7 +145,7 @@ export default function ExamenAdmisionUniversidadPage() {
       description: DESCRIPTION,
       url: PAGE_URL,
       areaServed: { '@type': 'Country', name: 'Ecuador' },
-      provider: { '@type': 'Organization', name: 'StudyDocu', url: 'https://studydocu.ec' },
+      provider: { '@type': 'Organization', name: 'StudyDocu', url: 'https://www.studydocu.ec' },
       serviceType: 'Preparación académica para exámenes de ingreso universitario',
     },
     {
@@ -161,12 +161,12 @@ export default function ExamenAdmisionUniversidadPage() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://studydocu.ec' },
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://www.studydocu.ec' },
         {
           '@type': 'ListItem',
           position: 2,
           name: 'Servicios',
-          item: 'https://studydocu.ec/servicios',
+          item: 'https://www.studydocu.ec/servicios',
         },
         { '@type': 'ListItem', position: 3, name: 'Examen de admisión', item: PAGE_URL },
       ],

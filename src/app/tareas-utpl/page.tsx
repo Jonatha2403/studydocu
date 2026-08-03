@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description:
     'Apoyo en tareas UTPL: plataformas, ensayos, trabajos y actividades académicas con orientación profesional.',
   keywords: ['tareas UTPL', 'ayuda tareas UTPL', 'plataforma UTPL'],
-  alternates: { canonical: 'https://studydocu.ec/tareas-utpl' },
+  alternates: { canonical: 'https://www.studydocu.ec/tareas-utpl' },
 }
 
 export default function TareasUTPLPage() {

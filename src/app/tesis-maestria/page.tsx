@@ -33,12 +33,12 @@ export const metadata: Metadata = {
     'normas APA maestría',
     'defensa tesis maestría',
   ],
-  alternates: { canonical: 'https://studydocu.ec/tesis-maestria' },
+  alternates: { canonical: 'https://www.studydocu.ec/tesis-maestria' },
   openGraph: {
     title: 'Tesis de Maestría en Ecuador | StudyDocu',
     description:
       'Acompañamiento profesional para tesis de maestría: estado del arte, metodología rigurosa, análisis y APA.',
-    url: 'https://studydocu.ec/tesis-maestria',
+    url: 'https://www.studydocu.ec/tesis-maestria',
     siteName: 'StudyDocu',
     locale: 'es_EC',
     type: 'website',
