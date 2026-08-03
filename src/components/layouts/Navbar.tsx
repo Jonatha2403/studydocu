@@ -50,7 +50,7 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
         top: { y: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } },
         scrolled: { y: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } },
       }}
-      className="fixed top-0 z-50 w-full pt-2 sm:pt-3 lg:pt-0"
+      className="fixed top-0 z-50 w-full border-b border-black/[.06] bg-white/75 backdrop-blur-2xl dark:border-white/[.08] dark:bg-[#0d0d0f]/75"
     >
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="mx-auto h-[1px] w-full max-w-7xl bg-gradient-to-r from-transparent via-indigo-400/40 to-transparent" />
@@ -58,24 +58,24 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
 
       <div
         className={[
-          'mx-auto flex w-full max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8',
-          scrolled ? 'h-16 lg:h-16' : 'h-16 lg:h-20',
+          'mx-auto flex w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8',
+          'h-16',
         ].join(' ')}
       >
-        <div className="absolute left-0 right-0 -z-10 mx-3 sm:mx-6 lg:mx-8">
+        <div className="absolute left-0 right-0 -z-10">
           <div
             className={[
-              'rounded-2xl border transition-all',
+              'transition-all',
               scrolled
-                ? 'border-slate-200/90 bg-white/95 shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/90'
-                : 'border-slate-200/90 bg-white/95 shadow-[0_12px_30px_-18px_rgba(15,23,42,0.35)] backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/90',
+                ? 'bg-white/85 shadow-sm backdrop-blur-2xl dark:bg-[#0d0d0f]/90'
+                : 'bg-transparent',
             ].join(' ')}
-            style={{ height: scrolled ? 64 : 64 }}
+            style={{ height: 64 }}
           />
         </div>
 
         <Link href="/" className="relative z-10 flex items-center gap-2.5">
-          <span className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200/80 bg-white/90 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <span className="grid h-9 w-9 place-items-center rounded-xl border border-black/[.07] bg-white p-1 shadow-sm dark:border-white/10 dark:bg-white/10">
             <Image src="/icon.png" alt="StudyDocu" width={30} height={30} priority />
           </span>
           <span className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-xl">
@@ -84,7 +84,7 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
         </Link>
 
         <div className="relative z-10 hidden lg:flex items-center gap-6 text-[15px] font-medium">
-          <div className="relative flex items-center gap-6">
+          <div className="relative flex items-center gap-7">
             <AnimatePresence initial={false}>
               {navLinks.map((link) => {
                 const active = pathname === link.href
@@ -93,7 +93,7 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
                     {active && (
                       <motion.span
                         layoutId="active-pill"
-                        className="absolute -inset-x-2 -inset-y-1 rounded-full bg-indigo-500/10 ring-1 ring-indigo-400/30"
+                        className="absolute -inset-x-3 -inset-y-2 rounded-full bg-black/[.055] dark:bg-white/10"
                         transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                       />
                     )}
@@ -101,7 +101,9 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
                       href={link.href}
                       className={[
                         'relative px-2 py-1 transition-colors',
-                        active ? 'text-indigo-600 dark:text-indigo-400' : 'hover:text-indigo-500',
+                        active
+                          ? 'text-slate-950 dark:text-white'
+                          : 'text-slate-600 hover:text-slate-950 dark:text-zinc-300 dark:hover:text-white',
                       ].join(' ')}
                     >
                       {link.label}
@@ -114,10 +116,10 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
         </div>
 
         <div className="relative z-10 hidden lg:flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/80 bg-white/70 dark:border-slate-700 dark:bg-slate-800/70">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-black/[.07] bg-white/60 dark:border-white/10 dark:bg-white/10">
             <ThemeToggle />
           </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/80 bg-white/70 dark:border-slate-700 dark:bg-slate-800/70">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-black/[.07] bg-white/60 dark:border-white/10 dark:bg-white/10">
             <LanguageToggle />
           </div>
 
@@ -131,17 +133,14 @@ export default function Navbar({ userId, sessionLoading }: NavbarProps) {
             <>
               <Link
                 href="/iniciar-sesion"
-                className="text-sm font-medium text-indigo-600 hover:underline"
+                className="text-sm font-medium text-slate-700 hover:text-black dark:text-zinc-200 dark:hover:text-white"
               >
                 Iniciar sesion
               </Link>
 
               <Link href="/registrarse" className="relative inline-flex">
-                <span className="btn-glow text-sm">
-                  Registrate
-                  <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
-                    <span className="absolute -left-full top-0 h-full w-1/3 rotate-12 bg-white/30 blur-md transition-transform duration-700 group-hover:translate-x-[300%]" />
-                  </span>
+                <span className="rounded-full bg-[#0071e3] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0077ed]">
+                  Regístrate
                 </span>
               </Link>
             </>

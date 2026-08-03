@@ -1,311 +1,135 @@
 'use client'
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import Lottie from 'lottie-react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Script from 'next/script'
-import { toast } from 'sonner'
-import { motion, useMotionValue, useSpring, useTransform, useReducedMotion } from 'framer-motion'
-
-import HeroAI from '@/components/HeroAI'
-import Footer from '@/components/Footer'
-import AnimatedServices from '@/components/AnimatedServices'
-import AnimatedTestimonials from '@/components/AnimatedTestimonials'
-import AnimatedAsesores from '@/components/AnimatedAsesores'
-import { useUserContext } from '@/context/UserContext'
-import confettiAnimation from '@/assets/lotties/confetti.json'
-import { Button } from '@/components/ui/button'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { motion, useReducedMotion } from 'framer-motion'
 import {
-  CheckCircle2,
-  LayoutDashboard,
-  MessageSquare,
-  Brain,
-  CalendarDays,
-  Goal,
-  FileText,
-  CreditCard,
-  ShieldCheck,
-  Eye,
-  Gift,
-  UserCheck,
-  BookOpenCheck,
-  Sparkles,
   ArrowRight,
-  Wand2,
-  Lock,
+  BookOpen,
+  BrainCircuit,
+  CalendarDays,
+  Check,
+  ChevronRight,
+  FolderKanban,
+  GraduationCap,
+  LockKeyhole,
+  MessageCircle,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  Upload,
+  WandSparkles,
 } from 'lucide-react'
 
-/* -----------------------------
-   Datos
------------------------------- */
-const featureItems = [
-  { name: 'Tareas', icon: CheckCircle2, description: 'Organiza y gestiona tus pendientes.' },
-  { name: 'Documentos', icon: FileText, description: 'Centraliza tus apuntes y trabajos.' },
-  { name: 'Chat', icon: MessageSquare, description: 'Colabora en tiempo real con tu equipo.' },
-  {
-    name: 'IA Asistente',
-    icon: Brain,
-    description: 'Potencia tu estudio con respuestas inteligentes.',
-  },
-  {
-    name: 'Calendario',
-    icon: CalendarDays,
-    description: 'Visualiza entregas, exámenes y plazos clave.',
-  },
-  { name: 'Metas', icon: Goal, description: 'Define objetivos y mide tu avance.' },
-  {
-    name: 'Suscripciones',
-    icon: CreditCard,
-    description: 'Accede a funciones premium sin complicaciones.',
-  },
-  {
-    name: 'Dashboards',
-    icon: LayoutDashboard,
-    description: 'Monitorea tu progreso académico visualmente.',
-  },
-  {
-    name: 'Asesores verificados',
-    icon: UserCheck,
-    description: 'Recibe apoyo de profesionales validados.',
-  },
-  { name: 'Referidos', icon: Gift, description: 'Invita amigos y gana recompensas exclusivas.' },
-  {
-    name: 'Blog educativo',
-    icon: BookOpenCheck,
-    description: 'Tips, guías y buenas prácticas de estudio.',
-  },
-  {
-    name: 'Modo universidad segura',
-    icon: ShieldCheck,
-    description: 'Configurado según políticas institucionales.',
-  },
-]
+import Footer from '@/components/Footer'
+import { useUserContext } from '@/context/UserContext'
 
-const extraItems = [
-  {
-    name: 'Resumen automático',
-    icon: Wand2,
-    description: 'IA que resume tus documentos al subirlos.',
-  },
-  {
-    name: 'Vista previa inteligente',
-    icon: Eye,
-    description: 'Explora el contenido sin abrir cada archivo.',
-  },
-  {
-    name: 'Moderación automática',
-    icon: ShieldCheck,
-    description: 'IA que ayuda a revisar el contenido.',
-  },
-  {
-    name: 'Sistema de recompensas',
-    icon: Gift,
-    description: 'Gana puntos y beneficios por participar.',
-  },
-]
-
-// ✅ Schema config
 const BRAND = {
-  name: 'StudyDocu',
   url: 'https://www.studydocu.ec/',
   logo: 'https://www.studydocu.ec/logo.png',
-  ogImage: 'https://www.studydocu.ec/og-image.jpg',
   description:
-    'StudyDocu es una plataforma académica con IA para subir, organizar y resumir documentos universitarios, conectar con asesores verificados y mejorar el rendimiento de estudio en Ecuador.',
-  foundingDate: '2024',
-  phone: '+593958757302',
-  sameAs: ['https://www.facebook.com/StudyDocu', 'https://www.instagram.com/studydocu1'],
+    'StudyDocu es una plataforma académica con IA para organizar, comprender y compartir documentos universitarios en Ecuador.',
 }
 
-/* -----------------------------
-   Helpers UI
------------------------------- */
-function Badge({
-  icon,
-  label,
-  tone = 'indigo',
-}: {
-  icon: React.ReactNode
-  label: string
-  tone?: 'indigo' | 'fuchsia' | 'emerald' | 'amber'
-}) {
-  const tones: Record<string, string> = {
-    indigo:
-      'bg-indigo-50/70 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-200 border border-indigo-200/50 dark:border-indigo-300/10',
-    fuchsia:
-      'bg-fuchsia-50/70 dark:bg-fuchsia-900/20 text-fuchsia-700 dark:text-fuchsia-200 border border-fuchsia-200/50 dark:border-fuchsia-300/10',
-    emerald:
-      'bg-emerald-50/70 dark:bg-emerald-900/15 text-emerald-700 dark:text-emerald-200 border border-emerald-200/50 dark:border-emerald-300/10',
-    amber:
-      'bg-amber-50/70 dark:bg-amber-900/15 text-amber-800 dark:text-amber-200 border border-amber-200/50 dark:border-amber-300/10',
-  }
+const demoTabs = [
+  { id: 'resumen', label: 'Resumen IA', icon: WandSparkles },
+  { id: 'organizacion', label: 'Organización', icon: FolderKanban },
+  { id: 'plan', label: 'Plan de estudio', icon: CalendarDays },
+] as const
 
-  return (
-    <div
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.18em] ${tones[tone]} md:backdrop-blur`}
-    >
-      {icon}
-      {label}
-    </div>
-  )
+type DemoTab = (typeof demoTabs)[number]['id']
+
+const demoContent: Record<
+  DemoTab,
+  { eyebrow: string; title: string; items: string[]; action: string }
+> = {
+  resumen: {
+    eyebrow: 'Macroeconomía · Unidad 6',
+    title: 'Lo esencial de tu documento, en segundos.',
+    items: [
+      'El IPC mide la variación del costo de una canasta representativa.',
+      'La inflación compara el nivel general de precios entre periodos.',
+      'El deflactor del PIB refleja precios de la producción nacional.',
+    ],
+    action: 'Generar preguntas de práctica',
+  },
+  organizacion: {
+    eyebrow: 'Biblioteca académica',
+    title: 'Cada archivo donde realmente pertenece.',
+    items: [
+      'Universidad Técnica Particular de Loja',
+      'Administración de Empresas · Quinto ciclo',
+      'Macroeconomía · Apuntes y evaluaciones',
+    ],
+    action: 'Abrir biblioteca',
+  },
+  plan: {
+    eyebrow: 'Esta semana',
+    title: 'Avanza con prioridades claras.',
+    items: [
+      'Lunes · Repasar Unidad 6',
+      'Miércoles · Resolver preguntas de práctica',
+      'Viernes · Preparar evaluación',
+    ],
+    action: 'Ver calendario',
+  },
 }
 
-function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return (
-    <section className={`w-full max-w-7xl mx-auto px-4 sm:px-6 ${className}`}>{children}</section>
-  )
-}
+const benefits = [
+  {
+    icon: Upload,
+    title: 'Sube tus documentos',
+    text: 'Centraliza apuntes, guías y trabajos en una biblioteca fácil de consultar.',
+  },
+  {
+    icon: BrainCircuit,
+    title: 'Comprende con IA',
+    text: 'Obtén resúmenes y apoyo para transformar lectura extensa en estudio útil.',
+  },
+  {
+    icon: Target,
+    title: 'Estudia con dirección',
+    text: 'Organiza materias, fechas y próximos pasos sin perder el foco.',
+  },
+]
 
-function GradientCard({
-  children,
-  className = '',
-}: {
-  children: React.ReactNode
-  className?: string
-}) {
-  return (
-    <div
-      className={`rounded-3xl p-[1px] bg-gradient-to-r from-indigo-500/25 via-purple-500/20 to-fuchsia-500/25 ${className}`}
-    >
-      {/* ✅ glass más liviano en móvil, blur solo desktop */}
-      <div className="rounded-3xl bg-white/55 dark:bg-gray-950/22 border border-white/45 dark:border-white/10 md:backdrop-blur-xl shadow-[0_16px_60px_-40px_rgba(15,23,42,0.45)]">
-        {children}
-      </div>
-    </div>
-  )
-}
+const services = [
+  {
+    icon: GraduationCap,
+    label: 'Nuevo servicio',
+    title: 'Examen de admisión universitaria',
+    text: 'Diagnóstico, preparación por áreas y simulacros para tu prueba de ingreso.',
+    href: '/examen-admision-universidad',
+    color: 'from-blue-600 to-cyan-500',
+  },
+  {
+    icon: BookOpen,
+    label: 'Acompañamiento',
+    title: 'Servicios académicos',
+    text: 'Asesorías, preparación para exámenes y apoyo académico según tu necesidad.',
+    href: '/servicios',
+    color: 'from-violet-600 to-fuchsia-500',
+  },
+  {
+    icon: Search,
+    label: 'Biblioteca',
+    title: 'Explora documentos',
+    text: 'Encuentra materiales organizados por universidad, carrera y asignatura.',
+    href: '/explorar',
+    color: 'from-slate-700 to-slate-950',
+  },
+]
 
-/**
- * ✅ Spotlight optimizado:
- * - En móvil NO hace cálculos de mouse / overlay
- * - En desktop mantiene el efecto premium
- */
-function SpotlightCard({
-  children,
-  className = '',
-}: {
-  children: React.ReactNode
-  className?: string
-}) {
-  const ref = useRef<HTMLDivElement | null>(null)
-  const [enabled, setEnabled] = useState(false)
-
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)')
-    const sync = () => setEnabled(mq.matches)
-    sync()
-    mq.addEventListener?.('change', sync)
-    return () => mq.removeEventListener?.('change', sync)
-  }, [])
-
-  const mx = useMotionValue(0)
-  const my = useMotionValue(0)
-  const sx = useSpring(mx, { stiffness: 220, damping: 30 })
-  const sy = useSpring(my, { stiffness: 220, damping: 30 })
-
-  const bg = useTransform([sx, sy], ([x, y]) => {
-    return `radial-gradient(280px circle at ${x}px ${y}px, rgba(99,102,241,0.22), rgba(168,85,247,0.10), transparent 62%)`
-  })
-
-  return (
-    <div
-      ref={ref}
-      onMouseMove={(e) => {
-        if (!enabled) return
-        const rect = ref.current?.getBoundingClientRect()
-        if (!rect) return
-        mx.set(e.clientX - rect.left)
-        my.set(e.clientY - rect.top)
-      }}
-      className={[
-        'relative overflow-hidden rounded-2xl',
-        'border border-white/45 dark:border-white/10',
-        // ✅ glass más transparente para NO tapar el fondo
-        'bg-white/50 dark:bg-gray-900/22',
-        'shadow-sm md:hover:shadow-xl transition-all',
-        'md:backdrop-blur-md',
-        className,
-      ].join(' ')}
-    >
-      {enabled && (
-        <motion.div
-          aria-hidden
-          className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity"
-          style={{ background: bg }}
-        />
-      )}
-      <div className="relative">{children}</div>
-    </div>
-  )
-}
-
-/**
- * ✅ CountUp optimizado:
- * - En móvil NO anima
- * - En desktop sí anima
- */
-function CountUp({
-  to,
-  suffix = '',
-  durationMs = 1200,
-}: {
-  to: number
-  suffix?: string
-  durationMs?: number
-}) {
-  const [val, setVal] = useState(0)
-  const [enabled, setEnabled] = useState(false)
-
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)')
-    const sync = () => setEnabled(mq.matches)
-    sync()
-    mq.addEventListener?.('change', sync)
-    return () => mq.removeEventListener?.('change', sync)
-  }, [])
-
-  useEffect(() => {
-    if (!enabled) {
-      setVal(to)
-      return
-    }
-    let raf = 0
-    const start = performance.now()
-    const from = 0
-
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / durationMs)
-      const eased = 1 - Math.pow(1 - p, 3)
-      setVal(Math.round(from + (to - from) * eased))
-      if (p < 1) raf = requestAnimationFrame(tick)
-    }
-
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [to, durationMs, enabled])
-
-  return (
-    <span className="tabular-nums">
-      {val.toLocaleString('es-EC')}
-      {suffix}
-    </span>
-  )
-}
-
-/* -----------------------------
-   Component
------------------------------- */
 export default function HomeClient() {
-  const [showConfetti, setShowConfetti] = useState(false)
-  const [isMobile, setIsMobile] = useState(true)
-
+  const [activeDemo, setActiveDemo] = useState<DemoTab>('resumen')
   const { user } = useUserContext()
   const router = useRouter()
   const searchParams = useSearchParams()
   const reduceMotion = useReducedMotion()
 
-  // Fallback robusto: si OAuth regresa al root con ?code=..., enrutar al callback real.
   useEffect(() => {
     const code = searchParams?.get('code')
     if (!code) return
@@ -314,44 +138,6 @@ export default function HomeClient() {
     window.location.replace(`/auth/callback?${params.toString()}`)
   }, [searchParams])
 
-  // ✅ isMobile sin resize listener pesado (matchMedia)
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)')
-    const sync = () => setIsMobile(mq.matches)
-    sync()
-    mq.addEventListener?.('change', sync)
-    return () => mq.removeEventListener?.('change', sync)
-  }, [])
-
-  useEffect(() => {
-    // Mantengo tu lógica actual (ideal sería next-themes, pero no lo toco)
-    const isDark = localStorage.getItem('theme') === 'dark'
-    document.documentElement.classList.toggle('dark', isDark)
-
-    if (!localStorage.getItem('visited')) {
-      toast.success('🎉 ¡Logro desbloqueado! Primer ingreso a StudyDocu')
-
-      // ✅ Confetti solo en desktop y si no reduce motion
-      if (!isMobile && !reduceMotion) {
-        setShowConfetti(true)
-        setTimeout(() => setShowConfetti(false), 4500)
-      }
-
-      localStorage.setItem('visited', 'true')
-    }
-  }, [isMobile, reduceMotion])
-
-  const handleStart = () => router.push(user ? '/dashboard' : '/registrarse')
-
-  const handleWhatsApp = () => {
-    toast.success('Redirigiendo a WhatsApp...')
-    window.open(
-      'https://wa.me/593958757302?text=Hola%20StudyDocu,%20deseo%20conocer%20m%C3%A1s%20sobre%20la%20plataforma%20y%20sus%20servicios.',
-      '_blank'
-    )
-  }
-
-  // ✅ Schema Markup PRO
   const schemaGraph = useMemo(
     () => ({
       '@context': 'https://schema.org',
@@ -359,42 +145,17 @@ export default function HomeClient() {
         {
           '@type': 'Organization',
           '@id': `${BRAND.url}#organization`,
-          name: BRAND.name,
+          name: 'StudyDocu',
           url: BRAND.url,
-          logo: { '@type': 'ImageObject', url: BRAND.logo, width: 512, height: 512 },
-          image: BRAND.ogImage,
+          logo: BRAND.logo,
           description: BRAND.description,
-          foundingDate: BRAND.foundingDate,
-          contactPoint: [
-            {
-              '@type': 'ContactPoint',
-              contactType: 'customer support',
-              availableLanguage: ['es'],
-              telephone: BRAND.phone,
-            },
-          ],
-          sameAs: BRAND.sameAs,
         },
         {
           '@type': 'WebSite',
           '@id': `${BRAND.url}#website`,
           url: BRAND.url,
-          name: BRAND.name,
+          name: 'StudyDocu',
           publisher: { '@id': `${BRAND.url}#organization` },
-          inLanguage: 'es-EC',
-          potentialAction: {
-            '@type': 'SearchAction',
-            target: `${BRAND.url}explorar?q={search_term_string}`,
-            'query-input': 'required name=search_term_string',
-          },
-        },
-        {
-          '@type': 'WebPage',
-          '@id': `${BRAND.url}#homepage`,
-          url: BRAND.url,
-          name: 'StudyDocu | Plataforma académica con IA',
-          isPartOf: { '@id': `${BRAND.url}#website` },
-          about: { '@id': `${BRAND.url}#organization` },
           inLanguage: 'es-EC',
         },
       ],
@@ -402,627 +163,293 @@ export default function HomeClient() {
     []
   )
 
-  // ✅ Animaciones framer solo desktop y si no reduceMotion
-  const motionEnabled = !isMobile && !reduceMotion
-  const fadeFrom = motionEnabled ? { opacity: 0, y: 18 } : undefined
-  const fadeTo = motionEnabled ? { opacity: 1, y: 0 } : undefined
+  const start = () => router.push(user ? '/dashboard' : '/registrarse')
+  const currentDemo = demoContent[activeDemo]
+  const reveal = reduceMotion
+    ? {}
+    : { initial: { opacity: 0, y: 24 }, whileInView: { opacity: 1, y: 0 } }
 
   return (
     <>
       <Script
         id="studydocu-schema"
         type="application/ld+json"
-        strategy="afterInteractive"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
       />
 
-      <main className="relative z-10 w-full min-h-screen flex flex-col items-center bg-transparent">
-        {/* Fondo premium sutil */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_15%_20%,rgba(99,102,241,0.18),transparent_60%)] dark:bg-[radial-gradient(900px_500px_at_15%_20%,rgba(99,102,241,0.14),transparent_60%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_85%_25%,rgba(168,85,247,0.16),transparent_60%)] dark:bg-[radial-gradient(900px_500px_at_85%_25%,rgba(168,85,247,0.12),transparent_60%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(900px_600px_at_50%_90%,rgba(56,189,248,0.10),transparent_65%)] dark:bg-[radial-gradient(900px_600px_at_50%_90%,rgba(56,189,248,0.08),transparent_65%)]" />
-          <div className="absolute inset-0 opacity-70 dark:opacity-40 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.55),transparent_24%,transparent_76%,rgba(255,255,255,0.28))] dark:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.05),transparent_25%,transparent_75%,rgba(255,255,255,0.03))]" />
-        </div>
-
-        {/* Confetti (solo desktop) */}
-        {showConfetti && (
-          <div className="fixed inset-0 z-40 pointer-events-none">
-            <Lottie
-              animationData={confettiAnimation}
-              loop={false}
-              autoplay
-              className="w-full h-full"
-            />
-          </div>
-        )}
-
-        {/* HERO existente */}
-        <HeroAI />
-
-        {/* ¿Qué es StudyDocu? */}
-        <Section className="py-14 sm:py-16">
-          <GradientCard>
-            <div className="px-6 sm:px-10 py-10">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <Badge
-                  icon={<Sparkles className="w-4 h-4" />}
-                  label="Plataforma académica con IA"
-                  tone="indigo"
-                />
-                <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-100/80 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200 border border-emerald-200/50 dark:border-emerald-300/15 md:backdrop-blur">
-                  Ecuador · UTPL y más
+      <main className="overflow-hidden bg-[#f5f5f7] text-[#1d1d1f] dark:bg-[#070709] dark:text-white">
+        <section className="relative px-5 pb-20 pt-36 sm:px-8 lg:pb-28 lg:pt-44">
+          <div className="absolute inset-x-0 top-0 h-[760px] bg-[radial-gradient(circle_at_50%_15%,rgba(93,138,255,.24),transparent_38%),radial-gradient(circle_at_28%_42%,rgba(191,125,255,.17),transparent_30%),radial-gradient(circle_at_75%_50%,rgba(65,215,255,.13),transparent_28%)] dark:opacity-70" />
+          <div className="relative mx-auto max-w-7xl">
+            <motion.div
+              initial={reduceMotion ? undefined : { opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, ease: 'easeOut' }}
+              className="mx-auto max-w-5xl text-center"
+            >
+              <div className="inline-flex items-center gap-2 rounded-full border border-black/[.07] bg-white/70 px-4 py-2 text-sm font-semibold shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/[.07]">
+                <Sparkles className="h-4 w-4 text-blue-600" /> IA académica creada para estudiantes
+              </div>
+              <h1 className="mx-auto mt-7 max-w-5xl text-5xl font-semibold leading-[.98] tracking-[-0.055em] sm:text-6xl md:text-7xl lg:text-[88px]">
+                Todo lo que estudias.{' '}
+                <span className="bg-gradient-to-r from-blue-600 via-violet-600 to-cyan-500 bg-clip-text text-transparent">
+                  Finalmente en orden.
                 </span>
-              </div>
-
-              <h2 className="mt-5 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                ¿Qué es StudyDocu?
-              </h2>
-
-              <p className="mt-4 text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed">
-                <strong>StudyDocu</strong> es una plataforma académica con inteligencia artificial,
-                creada en Ecuador, que ayuda a estudiantes universitarios a organizar sus apuntes,
-                comprender mejor sus materias y estudiar de forma más eficiente.
+              </h1>
+              <p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-[#6e6e73] dark:text-zinc-300 sm:text-xl">
+                Organiza tus documentos universitarios, comprende lo importante con IA y convierte
+                cada materia en un plan claro.
               </p>
-
-              <p className="mt-3 text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed">
-                A diferencia de otras plataformas, StudyDocu combina organización académica,
-                herramientas inteligentes y acompañamiento educativo, con enfoque responsable en el
-                aprendizaje.
+              <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <button
+                  onClick={start}
+                  className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#0071e3] px-7 font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:bg-[#0077ed]"
+                >
+                  Empezar gratis{' '}
+                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                </button>
+                <Link
+                  href="/explorar"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-black/10 bg-white/65 px-7 font-semibold text-[#1d1d1f] backdrop-blur-xl transition hover:bg-white dark:border-white/15 dark:bg-white/10 dark:text-white dark:hover:bg-white/15"
+                >
+                  Explorar documentos
+                </Link>
+              </div>
+              <p className="mt-4 text-sm text-[#6e6e73] dark:text-zinc-400">
+                Sin tarjeta · Registro rápido · Tú controlas tus documentos
               </p>
+            </motion.div>
 
-              <div className="mt-7 flex flex-wrap gap-3">
-                <Link
-                  href="/que-es-studydocu"
-                  className="inline-flex items-center px-6 py-3 rounded-full bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
-                >
-                  Conoce más sobre StudyDocu <ArrowRight className="ml-2 w-4 h-4" />
-                </Link>
-
-                <Link
-                  href="/registrarse"
-                  className="inline-flex items-center px-6 py-3 rounded-full border border-gray-300/80 dark:border-white/15 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition"
-                >
-                  Crear cuenta gratis
-                </Link>
-              </div>
-            </div>
-          </GradientCard>
-        </Section>
-
-        {/* Fundador */}
-        <Section className="pb-14">
-          <GradientCard>
-            <div className="px-6 sm:px-10 py-8">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
-                  Conocer sobre el fundador
-                </h3>
-                <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-100/80 text-amber-800 dark:bg-amber-500/10 dark:text-amber-200 border border-amber-200/50 dark:border-amber-300/15 md:backdrop-blur">
-                  Transparencia · Confianza
-                </span>
-              </div>
-
-              <p className="mt-3 text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
-                StudyDocu fue creado por <strong>Jonathan Octavio Rosado Lopez</strong>, empresario
-                y emprendedor digital, con el objetivo de construir una plataforma académica
-                confiable, moderna y centrada en el aprendizaje real de los estudiantes
-                universitarios en Ecuador.
-              </p>
-
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Link
-                  href="/sobre-mi"
-                  className="inline-flex items-center px-5 py-2.5 rounded-full bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
-                >
-                  Conocer al fundador <ArrowRight className="ml-2 w-4 h-4" />
-                </Link>
-
-                <Link
-                  href="/sobre-mi#studydocu"
-                  className="inline-flex items-center px-5 py-2.5 rounded-full border border-gray-300/80 dark:border-white/15 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition"
-                >
-                  Ver misión de StudyDocu
-                </Link>
-              </div>
-            </div>
-          </GradientCard>
-        </Section>
-
-        {/* Producto/Demo */}
-        <Section className="-mt-4 md:-mt-10 pb-12">
-          <div
-            className={[
-              'rounded-3xl border border-white/45 dark:border-white/10',
-              // ✅ glass transparente (NO tapa el fondo)
-              'bg-white/40 dark:bg-gray-950/18',
-              'shadow-[0_12px_40px_-30px_rgba(15,23,42,0.45)] md:shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)]',
-              'md:backdrop-blur-xl',
-              'px-5 sm:px-8 py-8 sm:py-10',
-            ].join(' ')}
-          >
-            <div className="grid gap-10 lg:grid-cols-[1.2fr,0.8fr] items-start">
-              <div className="text-center lg:text-left">
-                <Badge
-                  icon={<Sparkles className="w-4 h-4" />}
-                  label="Todo en un solo lugar"
-                  tone="indigo"
-                />
-
-                <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
-                  Tu estudio, ordenado y potenciado con IA
-                  <span className="block text-indigo-600 dark:text-indigo-300">
-                    en segundos, no en horas.
+            <motion.div
+              initial={reduceMotion ? undefined : { opacity: 0, y: 35, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.15, ease: 'easeOut' }}
+              className="relative mx-auto mt-16 max-w-6xl"
+            >
+              <div className="absolute -inset-8 rounded-[4rem] bg-gradient-to-r from-blue-400/20 via-violet-400/20 to-cyan-400/20 blur-3xl" />
+              <div className="relative overflow-hidden rounded-[2rem] border border-black/[.08] bg-white/80 p-2 shadow-[0_40px_100px_-40px_rgba(30,64,175,.35)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#151518]/85 sm:p-3">
+                <div className="flex items-center justify-between px-4 py-3 sm:px-5">
+                  <div className="flex gap-2">
+                    <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
+                    <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
+                    <span className="h-3 w-3 rounded-full bg-[#28c840]" />
+                  </div>
+                  <div className="hidden items-center gap-2 text-xs font-medium text-[#6e6e73] sm:flex">
+                    <LockKeyhole className="h-3.5 w-3.5" /> Espacio de estudio privado
+                  </div>
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
+                    En línea
                   </span>
+                </div>
+                <div className="rounded-[1.5rem] border border-black/[.06] bg-[#f5f5f7] p-4 dark:border-white/[.07] dark:bg-[#0d0d0f] sm:p-6 lg:p-8">
+                  <div className="grid gap-6 lg:grid-cols-[230px_1fr]">
+                    <div className="flex gap-2 overflow-x-auto lg:flex-col">
+                      {demoTabs.map(({ id, label, icon: Icon }) => (
+                        <button
+                          key={id}
+                          onClick={() => setActiveDemo(id)}
+                          className={`flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${activeDemo === id ? 'bg-white text-blue-600 shadow-sm dark:bg-white/10 dark:text-blue-300' : 'text-[#6e6e73] hover:bg-white/60 dark:text-zinc-400 dark:hover:bg-white/5'}`}
+                        >
+                          <Icon className="h-5 w-5" /> {label}
+                        </button>
+                      ))}
+                    </div>
+                    <motion.div
+                      key={activeDemo}
+                      initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="min-h-[330px] rounded-2xl bg-white p-5 shadow-sm dark:bg-[#19191c] sm:p-7"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-[.16em] text-blue-600">
+                            {currentDemo.eyebrow}
+                          </p>
+                          <h2 className="mt-2 max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">
+                            {currentDemo.title}
+                          </h2>
+                        </div>
+                        <span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 dark:bg-blue-400/10 dark:text-blue-300">
+                          Vista interactiva
+                        </span>
+                      </div>
+                      <div className="mt-7 space-y-3">
+                        {currentDemo.items.map((item, index) => (
+                          <div
+                            key={item}
+                            className="flex items-start gap-3 rounded-xl border border-black/[.06] bg-[#fafafa] p-4 dark:border-white/[.07] dark:bg-white/[.035]"
+                          >
+                            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-blue-600 text-xs font-bold text-white">
+                              {index + 1}
+                            </span>
+                            <p className="pt-0.5 text-sm leading-6 text-[#424245] dark:text-zinc-300">
+                              {item}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-5 flex justify-end">
+                        <span className="inline-flex items-center gap-2 rounded-full bg-[#1d1d1f] px-5 py-2.5 text-sm font-semibold text-white dark:bg-white dark:text-black">
+                          {currentDemo.action} <ChevronRight className="h-4 w-4" />
+                        </span>
+                      </div>
+                    </motion.div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        <section className="bg-white px-5 py-24 dark:bg-[#0d0d0f] sm:px-8 lg:py-32">
+          <div className="mx-auto max-w-7xl">
+            <motion.div
+              {...reveal}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55 }}
+              className="mx-auto max-w-3xl text-center"
+            >
+              <p className="text-sm font-semibold text-blue-600">
+                Diseñado alrededor de tu forma de estudiar
+              </p>
+              <h2 className="mt-3 text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">
+                Menos ruido. Más comprensión.
+              </h2>
+              <p className="mt-5 text-lg leading-8 text-[#6e6e73] dark:text-zinc-400">
+                StudyDocu reúne las herramientas esenciales en un flujo sencillo, desde el primer
+                archivo hasta el día de tu evaluación.
+              </p>
+            </motion.div>
+            <div className="mt-14 grid gap-5 md:grid-cols-3">
+              {benefits.map(({ icon: Icon, title, text }, index) => (
+                <motion.article
+                  key={title}
+                  {...reveal}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.08 }}
+                  className="group rounded-[1.75rem] bg-[#f5f5f7] p-7 transition hover:-translate-y-1 hover:shadow-xl dark:bg-white/[.055] sm:p-8"
+                >
+                  <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-blue-600 shadow-sm dark:bg-white/10">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-7 text-2xl font-semibold tracking-tight">{title}</h3>
+                  <p className="mt-3 leading-7 text-[#6e6e73] dark:text-zinc-400">{text}</p>
+                </motion.article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="px-5 py-24 sm:px-8 lg:py-32">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+              <div>
+                <p className="text-sm font-semibold text-violet-600">Más formas de avanzar</p>
+                <h2 className="mt-3 max-w-3xl text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">
+                  La ayuda correcta, cuando la necesitas.
                 </h2>
-
-                <p className="mt-3 text-sm sm:text-base text-gray-700 dark:text-gray-300 max-w-2xl">
-                  Sube documentos, organiza tus materias y obtén resúmenes, ideas y apoyo de
-                  asesores verificados. Diseñado para estudiantes de Ecuador (UTPL y más).
-                </p>
-
-                <div className="mt-6 flex flex-wrap gap-3 justify-center lg:justify-start">
-                  <Button
-                    onClick={handleStart}
-                    className="px-7 py-5 rounded-2xl text-sm sm:text-base bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 text-white shadow-xl hover:shadow-2xl md:hover:scale-[1.02] transition-all"
-                  >
-                    🚀 Empezar gratis <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-
-                  <Button
-                    onClick={handleWhatsApp}
-                    variant="outline"
-                    className="px-7 py-5 rounded-2xl text-sm sm:text-base bg-white/55 dark:bg-gray-900/20 md:backdrop-blur-md border border-white/45 dark:border-white/10 hover:bg-white/80 dark:hover:bg-white/5"
-                  >
-                    Hablar por WhatsApp
-                  </Button>
-                </div>
-
-                <div className="mt-5 flex flex-wrap gap-3 justify-center lg:justify-start text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                  <span className="inline-flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-emerald-500" /> Seguro y privado
-                  </span>
-                  <span className="inline-flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-indigo-500" /> IA + organización
-                  </span>
-                  <span className="inline-flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 text-amber-500" /> Asesores verificados
-                  </span>
-                </div>
               </div>
-
-              {/* ✅ Demo mock (glass real, blur solo desktop) */}
-              <motion.div
-                initial={fadeFrom}
-                whileInView={fadeTo}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className={[
-                  'rounded-3xl overflow-hidden border border-white/45 dark:border-white/10',
-                  'bg-white/25 dark:bg-gray-950/12',
-                  'shadow-lg',
-                  'md:backdrop-blur-xl',
-                ].join(' ')}
+              <Link
+                href="/servicios"
+                className="inline-flex items-center gap-2 font-semibold text-blue-600 hover:underline"
               >
-                <div className="p-4 border-b border-white/35 dark:border-white/10 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                  </div>
-                  <span className="text-xs text-gray-700 dark:text-gray-200">
-                    Vista previa · Resumen IA
-                  </span>
-                </div>
-
-                <div className="p-5 grid gap-4">
-                  <div className="rounded-2xl bg-white/45 dark:bg-gray-900/18 border border-white/35 dark:border-white/10 p-4 md:backdrop-blur-md">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-                      <FileText className="w-4 h-4 text-indigo-500" />
-                      Macroeconomía · Unidad 6.pdf
-                    </div>
-                    <p className="mt-2 text-xs text-gray-700 dark:text-gray-200">
-                      IA detectó: IPC, inflación, deflactor del PIB, tasa de inflación, sesgos de
-                      medición.
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl bg-gradient-to-br from-indigo-500/10 via-purple-500/08 to-cyan-500/08 border border-white/35 dark:border-white/10 p-4 md:backdrop-blur-md">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-200">
-                        Resumen automático (preview)
-                      </span>
-                      <span className="text-[11px] text-gray-700 dark:text-gray-200">~ 12s</span>
-                    </div>
-
-                    <ul className="mt-3 space-y-2 text-xs text-gray-900 dark:text-gray-100">
-                      <li className="flex gap-2">
-                        <span className="mt-1 w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                        El IPC mide el costo de una canasta de bienes/servicios en el tiempo.
-                      </li>
-                      <li className="flex gap-2">
-                        <span className="mt-1 w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                        Inflación = variación porcentual del IPC; deflactor ajusta precios del PIB.
-                      </li>
-                      <li className="flex gap-2">
-                        <span className="mt-1 w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                        Sesgos: sustitución, nuevos bienes, calidad y canasta fija.
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="rounded-2xl bg-white/45 dark:bg-gray-900/18 border border-white/35 dark:border-white/10 p-3 text-center md:backdrop-blur-md">
-                      <p className="text-[11px] text-gray-700 dark:text-gray-200">Tareas hoy</p>
-                      <p className="text-lg font-bold text-gray-900 dark:text-white">3</p>
-                    </div>
-                    <div className="rounded-2xl bg-white/45 dark:bg-gray-900/18 border border-white/35 dark:border-white/10 p-3 text-center md:backdrop-blur-md">
-                      <p className="text-[11px] text-gray-700 dark:text-gray-200">Exámenes</p>
-                      <p className="text-lg font-bold text-gray-900 dark:text-white">1</p>
-                    </div>
-                    <div className="rounded-2xl bg-white/45 dark:bg-gray-900/18 border border-white/35 dark:border-white/10 p-3 text-center md:backdrop-blur-md">
-                      <p className="text-[11px] text-gray-700 dark:text-gray-200">Progreso</p>
-                      <p className="text-lg font-bold text-gray-900 dark:text-white">72%</p>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-
-            {/* ✅ En móvil NO montamos AnimatedServices (pesado) */}
-            {!isMobile && (
-              <div className="mt-10">
-                <AnimatedServices />
-              </div>
-            )}
-          </div>
-        </Section>
-
-        {/* Antes vs Después */}
-        <Section className="pb-12">
-          <motion.div
-            initial={fadeFrom}
-            whileInView={fadeTo}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className={[
-              'rounded-3xl border border-white/45 dark:border-white/10',
-              'bg-white/40 dark:bg-gray-950/18',
-              'md:backdrop-blur-xl',
-              'shadow-[0_12px_40px_-30px_rgba(15,23,42,0.45)] md:shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)]',
-              'px-5 sm:px-8 py-10',
-            ].join(' ')}
-          >
-            <div className="text-center mb-8">
-              <Badge
-                icon={<Sparkles className="w-4 h-4" />}
-                label="Impacto inmediato"
-                tone="fuchsia"
-              />
-              <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                Antes vs Después de StudyDocu
-              </h2>
-              <p className="mt-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
-                Menos caos, más claridad. No solo guardas archivos: los conviertes en estudio
-                accionable.
-              </p>
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-2">
-              <SpotlightCard className="p-6">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
-                    Antes
-                  </span>
-                  <span className="text-[11px] px-2 py-1 rounded-full bg-gray-100/80 dark:bg-white/5 border border-gray-200/60 dark:border-white/10 text-gray-700 dark:text-gray-200">
-                    Caos
-                  </span>
-                </div>
-
-                <ul className="mt-4 space-y-3 text-sm text-gray-700 dark:text-gray-200">
-                  <li className="flex gap-2">
-                    <span className="mt-2 w-1.5 h-1.5 rounded-full bg-gray-500" />
-                    PDFs dispersos en WhatsApp/Drive y no encuentras nada.
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="mt-2 w-1.5 h-1.5 rounded-full bg-gray-500" />
-                    Te demoras horas leyendo y no sabes qué es lo importante.
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="mt-2 w-1.5 h-1.5 rounded-full bg-gray-500" />
-                    Exámenes encima y todo se vuelve estrés.
-                  </li>
-                </ul>
-              </SpotlightCard>
-
-              <SpotlightCard className="p-6">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
-                    Después
-                  </span>
-                  <span className="text-[11px] px-2 py-1 rounded-full bg-indigo-50/70 dark:bg-indigo-500/10 border border-indigo-200/50 dark:border-indigo-300/10 text-indigo-700 dark:text-indigo-200">
-                    Control + IA
-                  </span>
-                </div>
-
-                <ul className="mt-4 space-y-3 text-sm text-gray-700 dark:text-gray-200">
-                  <li className="flex gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5" />
-                    Todo organizado por universidad/carrera/materia.
-                  </li>
-                  <li className="flex gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5" />
-                    Resúmenes automáticos + vista previa inteligente.
-                  </li>
-                  <li className="flex gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5" />
-                    Planificación con tareas, metas y calendario.
-                  </li>
-                </ul>
-              </SpotlightCard>
-            </div>
-          </motion.div>
-        </Section>
-
-        {/* Métricas */}
-        <Section className="pb-10">
-          <div className="grid gap-4 md:grid-cols-4">
-            <SpotlightCard className="p-5 text-center">
-              <p className="text-xs text-gray-600 dark:text-gray-300">Documentos organizados</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
-                <CountUp to={12800} suffix="+" />
-              </p>
-            </SpotlightCard>
-
-            <SpotlightCard className="p-5 text-center">
-              <p className="text-xs text-gray-600 dark:text-gray-300">Resúmenes generados</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
-                <CountUp to={40200} suffix="+" />
-              </p>
-            </SpotlightCard>
-
-            <SpotlightCard className="p-5 text-center">
-              <p className="text-xs text-gray-600 dark:text-gray-300">Tiempo ahorrado</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
-                <CountUp to={3200} suffix="h+" />
-              </p>
-            </SpotlightCard>
-
-            <SpotlightCard className="p-5 text-center">
-              <p className="text-xs text-gray-600 dark:text-gray-300">Satisfacción</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
-                <CountUp to={98} suffix="%" />
-              </p>
-            </SpotlightCard>
-          </div>
-
-          <p className="mt-3 text-center text-[11px] text-gray-500 dark:text-gray-400">
-            *Ajusta estos valores a datos reales cuando tengas métricas internas.
-          </p>
-        </Section>
-
-        {/* ✅ Testimonios y Asesores SOLO desktop (móvil lite) */}
-        {!isMobile && (
-          <>
-            <Section className="pb-12">
-              <motion.div
-                initial={fadeFrom}
-                whileInView={fadeTo}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className={[
-                  'rounded-3xl border border-white/45 dark:border-white/10',
-                  'bg-white/40 dark:bg-gray-950/18',
-                  'md:backdrop-blur-xl',
-                  'shadow-[0_12px_40px_-30px_rgba(15,23,42,0.45)] md:shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)]',
-                  'px-5 sm:px-8 py-10',
-                ].join(' ')}
-              >
-                <div className="text-center">
-                  <Badge
-                    icon={<Sparkles className="w-4 h-4" />}
-                    label="Confianza real"
-                    tone="emerald"
-                  />
-                  <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                    Lo que dicen nuestros usuarios
-                  </h2>
-                  <p className="mt-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-                    Estudiantes de distintas carreras ya usan StudyDocu para estudiar mejor,
-                    organizar sus trabajos y avanzar con más tranquilidad.
-                  </p>
-                </div>
-
-                <AnimatedTestimonials />
-              </motion.div>
-            </Section>
-
-            <Section className="pb-10">
-              <AnimatedAsesores />
-            </Section>
-          </>
-        )}
-
-        {/* Funcionalidades */}
-        <Section className="py-10">
-          <motion.div
-            id="funcionalidades"
-            initial={fadeFrom}
-            whileInView={fadeTo}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="text-center mb-8">
-              <Badge
-                icon={<LayoutDashboard className="w-4 h-4" />}
-                label="Herramientas para tu día"
-                tone="indigo"
-              />
-              <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                Funcionalidades que organizan tu vida académica
-              </h2>
-              <p className="mt-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
-                Productividad + IA + comunidad. Todo con una interfaz moderna y profesional.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-              {featureItems.map((item, i) => (
-                <motion.div
-                  key={item.name}
-                  initial={motionEnabled ? { opacity: 0, y: 14 } : undefined}
-                  whileInView={motionEnabled ? { opacity: 1, y: 0 } : undefined}
-                  viewport={{ once: true }}
-                  transition={{ delay: motionEnabled ? i * 0.03 : 0 }}
-                >
-                  <SpotlightCard className="p-6 text-center">
-                    <div className="flex items-center justify-center mb-4">
-                      <div className="h-12 w-12 rounded-2xl bg-indigo-50/70 dark:bg-indigo-500/10 border border-indigo-200/50 dark:border-indigo-300/10 flex items-center justify-center md:backdrop-blur">
-                        <item.icon
-                          className="w-6 h-6 text-indigo-600 dark:text-indigo-200"
-                          strokeWidth={1.5}
-                        />
-                      </div>
-                    </div>
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-                      {item.name}
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                      {item.description}
-                    </p>
-                  </SpotlightCard>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </Section>
-
-        {/* CTA principal */}
-        <Section className="py-12">
-          <div className="text-center">
-            <Badge icon={<Sparkles className="w-4 h-4" />} label="Empieza hoy" tone="fuchsia" />
-
-            <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-              ¿Listo para comenzar?
-            </h2>
-
-            <p className="mt-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
-              Crea tu cuenta en minutos, sube tus primeros apuntes y descubre cómo StudyDocu puede
-              transformar tu manera de estudiar.
-            </p>
-
-            <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Button
-                onClick={handleStart}
-                className="px-10 py-5 text-base sm:text-lg bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 text-white rounded-2xl shadow-xl hover:shadow-2xl md:hover:scale-[1.02] transition-all"
-              >
-                🚀 Empezar gratis <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-
-              <Button
-                onClick={() => router.push('/explorar')}
-                variant="outline"
-                className="px-10 py-5 text-base sm:text-lg rounded-2xl bg-white/55 dark:bg-gray-900/20 md:backdrop-blur-md border border-white/45 dark:border-white/10 hover:bg-white/80 dark:hover:bg-white/5"
-              >
-                Explorar documentos
-              </Button>
-            </div>
-
-            <p className="mt-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-              Sin tarjetas. Solo necesitas tu correo universitario o personal.
-            </p>
-          </div>
-        </Section>
-
-        {/* Más herramientas */}
-        <Section className="pb-16">
-          <motion.div
-            initial={fadeFrom}
-            whileInView={fadeTo}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className={[
-              'rounded-3xl border border-white/45 dark:border-white/10',
-              'bg-white/40 dark:bg-gray-950/18',
-              'md:backdrop-blur-xl',
-              'shadow-[0_12px_40px_-30px_rgba(15,23,42,0.45)] md:shadow-[0_30px_90px_-55px_rgba(15,23,42,0.65)]',
-              'px-5 sm:px-8 py-10',
-            ].join(' ')}
-          >
-            <div className="text-center mb-8">
-              <Badge
-                icon={<Brain className="w-4 h-4" />}
-                label="Potenciado por IA"
-                tone="fuchsia"
-              />
-              <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                Más herramientas útiles para tu estudio
-              </h2>
-              <p className="mt-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
-                No solo subes documentos. StudyDocu analiza, resume y te da una vista más clara de
-                tu carga académica.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-              {extraItems.map((item, i) => (
-                <motion.div
-                  key={item.name}
-                  initial={motionEnabled ? { opacity: 0, y: 12 } : undefined}
-                  whileInView={motionEnabled ? { opacity: 1, y: 0 } : undefined}
-                  viewport={{ once: true }}
-                  transition={{ delay: motionEnabled ? i * 0.04 : 0 }}
-                >
-                  <SpotlightCard className="p-6 text-center">
-                    <div className="flex items-center justify-center mb-4">
-                      <div className="h-12 w-12 rounded-2xl bg-fuchsia-50/70 dark:bg-fuchsia-500/10 border border-fuchsia-200/50 dark:border-fuchsia-300/10 flex items-center justify-center md:backdrop-blur">
-                        <item.icon
-                          className="w-6 h-6 text-fuchsia-600 dark:text-fuchsia-200"
-                          strokeWidth={1.5}
-                        />
-                      </div>
-                    </div>
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-                      {item.name}
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                      {item.description}
-                    </p>
-                  </SpotlightCard>
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="mt-12 flex justify-center">
-              <Link href="/herramientas">
-                <Button className="text-sm sm:text-base bg-white/55 dark:bg-gray-900/20 md:backdrop-blur-md border border-white/45 dark:border-white/10 text-gray-900 dark:text-white font-medium px-8 py-3 rounded-full shadow-sm hover:bg-white/80 dark:hover:bg-white/5 transition-all">
-                  Ver todas las herramientas <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
+                Ver todos los servicios <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-          </motion.div>
-        </Section>
-
-        <Footer />
-
-        {/* CTA flotante */}
-        <div className="fixed bottom-0 left-0 right-0 z-30 translate-y-2 pointer-events-none sm:translate-y-1">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex justify-center">
-            <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/45 dark:border-white/10 bg-white/55 dark:bg-gray-950/18 md:backdrop-blur-md shadow-[0_20px_60px_-35px_rgba(15,23,42,0.6)] px-3 py-2">
-              <Button onClick={handleStart} className="rounded-full px-4 py-2 h-auto">
-                Empezar <ArrowRight className="ml-1 w-4 h-4" />
-              </Button>
-              <Button
-                onClick={handleWhatsApp}
-                variant="outline"
-                className="rounded-full px-4 py-2 h-auto bg-white/55 dark:bg-gray-900/20 border border-white/45 dark:border-white/10 hover:bg-white/80 dark:hover:bg-white/5"
-              >
-                WhatsApp
-              </Button>
+            <div className="mt-12 grid gap-5 lg:grid-cols-3">
+              {services.map(({ icon: Icon, label, title, text, href, color }, index) => (
+                <motion.div
+                  key={title}
+                  {...reveal}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.08 }}
+                >
+                  <Link
+                    href={href}
+                    className="group flex h-full min-h-[350px] flex-col overflow-hidden rounded-[1.75rem] bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:bg-white/[.06] sm:p-8"
+                  >
+                    <div
+                      className={`grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br ${color} text-white shadow-lg`}
+                    >
+                      <Icon className="h-7 w-7" />
+                    </div>
+                    <p className="mt-8 text-sm font-semibold text-blue-600 dark:text-blue-300">
+                      {label}
+                    </p>
+                    <h3 className="mt-2 text-3xl font-semibold tracking-tight">{title}</h3>
+                    <p className="mt-4 leading-7 text-[#6e6e73] dark:text-zinc-400">{text}</p>
+                    <span className="mt-auto inline-flex items-center gap-2 pt-8 font-semibold text-blue-600">
+                      Conocer más{' '}
+                      <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                    </span>
+                  </Link>
+                </motion.div>
+              ))}
             </div>
           </div>
-        </div>
+        </section>
+
+        <section className="bg-[#1d1d1f] px-5 py-24 text-white sm:px-8 lg:py-28">
+          <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1fr_.8fr] lg:items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 text-sm font-semibold text-blue-300">
+                <ShieldCheck className="h-5 w-5" /> Privacidad y control
+              </div>
+              <h2 className="mt-5 max-w-3xl text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">
+                Tus documentos son parte de tu historia académica. Trátalos así.
+              </h2>
+              <p className="mt-5 max-w-2xl text-lg leading-8 text-zinc-300">
+                Organiza tu contenido desde una cuenta personal y decide qué subir, consultar o
+                compartir.
+              </p>
+            </div>
+            <div className="space-y-3">
+              {[
+                'Acceso desde tu cuenta',
+                'Organización privada por materias',
+                'Control sobre tus archivos',
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-3 rounded-2xl bg-white/[.07] p-4">
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-emerald-400/15 text-emerald-300">
+                    <Check className="h-4 w-4" />
+                  </span>
+                  <span className="font-medium">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-white px-5 py-24 text-center dark:bg-[#0d0d0f] sm:px-8 lg:py-32">
+          <div className="mx-auto max-w-3xl">
+            <p className="text-sm font-semibold text-blue-600">Empieza hoy</p>
+            <h2 className="mt-3 text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">
+              Tu próxima sesión de estudio puede sentirse diferente.
+            </h2>
+            <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-[#6e6e73] dark:text-zinc-400">
+              Crea tu cuenta, encuentra documentos de tu carrera y descubre una forma más clara de
+              avanzar.
+            </p>
+            <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+              <button
+                onClick={start}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#0071e3] px-7 font-semibold text-white hover:bg-[#0077ed]"
+              >
+                Crear cuenta gratis <ArrowRight className="h-4 w-4" />
+              </button>
+              <a
+                href="https://wa.me/593958757302?text=Hola%20StudyDocu,%20deseo%20conocer%20m%C3%A1s%20sobre%20la%20plataforma."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-black/10 px-7 font-semibold dark:border-white/15"
+              >
+                <MessageCircle className="h-4 w-4" /> Hablar por WhatsApp
+              </a>
+            </div>
+          </div>
+        </section>
       </main>
+      <Footer />
     </>
   )
 }

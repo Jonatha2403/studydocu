@@ -504,6 +504,52 @@ export default function ServiciosClient() {
         </Card>
       </motion.section>
 
+      {/* Acceso destacado: preparación para admisión */}
+      <motion.section
+        className="relative mb-10 overflow-hidden rounded-[1.75rem] border border-blue-200/70 bg-[#071a3d] p-6 text-white shadow-xl sm:p-8 lg:mb-12"
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.45 }}
+      >
+        <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-blue-500/30 blur-3xl" />
+        <div className="absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-violet-500/20 blur-3xl" />
+        <div className="relative grid gap-7 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-blue-100">
+              <GraduationCap size={16} /> Nuevo servicio
+            </span>
+            <h2 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">
+              Preparación para examen de admisión universitaria
+            </h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-blue-100 sm:text-base">
+              Diagnóstico inicial, plan de estudio, práctica por áreas y simulacros para prepararte
+              para tu prueba de ingreso en Ecuador.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-blue-50">
+              <span className="flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-emerald-400" /> Razonamiento lógico
+              </span>
+              <span className="flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-emerald-400" /> Práctica guiada
+              </span>
+              <span className="flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-emerald-400" /> Simulacros
+              </span>
+            </div>
+          </div>
+          <Button
+            asChild
+            size="lg"
+            className="w-full rounded-xl bg-amber-400 font-bold text-[#071a3d] shadow-lg hover:bg-amber-300 lg:w-auto"
+          >
+            <Link href="/examen-admision-universidad">
+              Ver preparación <ArrowRight size={17} className="ml-2" />
+            </Link>
+          </Button>
+        </div>
+      </motion.section>
+
       {/* OTROS SERVICIOS (Tesis) */}
       <motion.section
         className="mb-10 lg:mb-12"

@@ -57,20 +57,5 @@ export const metadata: Metadata = {
 }
 
 export default function Page() {
-  return (
-    <>
-      {/* ✅ H1 “seguro” para SEO (no rompe el diseño) */}
-      <h1 className="sr-only">
-        StudyDocu: Plataforma académica con IA para estudiantes en Ecuador
-      </h1>
-
-      {/* ✅ Micro-copy invisible para apoyar SEO sin afectar UI */}
-      <p className="sr-only">
-        Sube documentos, organiza por universidad, carrera y materia, crea resúmenes automáticos y
-        estudia con herramientas inteligentes.
-      </p>
-
-      <HomeClient />
-    </>
-  )
+  return <HomeClient />
 }
