@@ -93,7 +93,8 @@ const personas = [
     label: 'Soy estudiante',
     icon: BookOpen,
     eyebrow: 'Organiza, comprende y estudia mejor',
-    title: 'Convierte tus apuntes en una ruta clara.',
+    title: 'Convierte tus apuntes en',
+    highlight: 'una ruta clara.',
     description:
       'Sube documentos, obtén resúmenes con IA y organiza cada materia desde un solo lugar.',
     cta: 'Empezar gratis',
@@ -105,7 +106,8 @@ const personas = [
     label: 'Preparo un examen',
     icon: Target,
     eyebrow: 'Preparación académica con dirección',
-    title: 'Llega a tu examen con práctica y seguridad.',
+    title: 'Llega a tu examen con',
+    highlight: 'práctica y seguridad.',
     description:
       'Refuerza áreas clave, practica con preguntas y conoce nuestros planes de preparación.',
     cta: 'Preparar mi examen',
@@ -117,7 +119,8 @@ const personas = [
     label: 'Desarrollo mi tesis',
     icon: GraduationCap,
     eyebrow: 'Acompañamiento para tu investigación',
-    title: 'Transforma una idea en un proyecto bien estructurado.',
+    title: 'Transforma una idea en',
+    highlight: 'un proyecto bien estructurado.',
     description:
       'Organiza fuentes, metodología y próximos pasos con orientación académica personalizada.',
     cta: 'Explorar ayuda en tesis',
@@ -246,8 +249,28 @@ export default function HomeClient() {
       />
 
       <main className="overflow-hidden bg-[#f5f5f7] text-[#1d1d1f] dark:bg-[#070709] dark:text-white">
-        <section className="relative px-5 pb-14 pt-28 sm:px-8 lg:pb-16 lg:pt-32">
+        <section className="relative px-5 pb-7 pt-20 sm:px-8 sm:pb-10 sm:pt-24 lg:pb-16 lg:pt-32">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_20%,rgba(59,130,246,.22),transparent_30%),radial-gradient(circle_at_82%_24%,rgba(139,92,246,.18),transparent_28%),radial-gradient(circle_at_60%_82%,rgba(34,211,238,.10),transparent_28%)] dark:opacity-70" />
+          <motion.div
+            aria-hidden
+            animate={
+              reduceMotion
+                ? undefined
+                : { x: [0, 34, -12, 0], y: [0, -22, 18, 0], scale: [1, 1.12, 0.96, 1] }
+            }
+            transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+            className="pointer-events-none absolute -left-20 top-20 h-72 w-72 rounded-full bg-blue-400/20 blur-3xl sm:h-96 sm:w-96"
+          />
+          <motion.div
+            aria-hidden
+            animate={
+              reduceMotion
+                ? undefined
+                : { x: [0, -28, 16, 0], y: [0, 26, -12, 0], scale: [1, 0.94, 1.1, 1] }
+            }
+            transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+            className="pointer-events-none absolute -right-20 top-12 h-64 w-64 rounded-full bg-violet-400/20 blur-3xl sm:h-96 sm:w-96"
+          />
           <div className="relative mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[.9fr_1.1fr] lg:gap-12">
             <motion.div
               initial={reduceMotion ? undefined : { opacity: 0, y: 18 }}
@@ -288,7 +311,8 @@ export default function HomeClient() {
                   {currentPersona.eyebrow}
                 </p>
                 <h1 className="mt-3 text-5xl font-semibold leading-[.96] tracking-[-0.055em] sm:text-6xl lg:text-[68px]">
-                  {currentPersona.title}
+                  {currentPersona.title}{' '}
+                  <span className="hero-text-gradient">{currentPersona.highlight}</span>
                 </h1>
                 <p className="mt-6 text-lg leading-8 text-[#6e6e73] dark:text-zinc-300 sm:text-xl">
                   {currentPersona.description}
@@ -408,7 +432,7 @@ export default function HomeClient() {
           </div>
         </section>
 
-        <section className="bg-white px-5 py-16 dark:bg-[#0d0d0f] sm:px-8 lg:py-20">
+        <section className="bg-white px-5 py-8 dark:bg-[#0d0d0f] sm:px-8 sm:py-12 lg:py-20">
           <div className="mx-auto max-w-7xl">
             <motion.div
               {...reveal}
@@ -447,7 +471,7 @@ export default function HomeClient() {
           </div>
         </section>
 
-        <section className="px-5 py-16 sm:px-8 lg:py-20">
+        <section className="px-5 py-8 sm:px-8 sm:py-12 lg:py-20">
           <div className="mx-auto max-w-7xl">
             <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
               <div>
@@ -496,7 +520,7 @@ export default function HomeClient() {
           </div>
         </section>
 
-        <section className="bg-[#1d1d1f] px-5 py-16 text-white sm:px-8 lg:py-20">
+        <section className="bg-[#1d1d1f] px-5 py-12 text-white sm:px-8 sm:py-14 lg:py-20">
           <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1fr_.8fr] lg:items-center">
             <div>
               <div className="inline-flex items-center gap-2 text-sm font-semibold text-blue-300">
@@ -527,7 +551,7 @@ export default function HomeClient() {
           </div>
         </section>
 
-        <section className="bg-white px-5 py-16 text-center dark:bg-[#0d0d0f] sm:px-8 lg:py-20">
+        <section className="bg-white px-5 py-12 text-center dark:bg-[#0d0d0f] sm:px-8 sm:py-14 lg:py-20">
           <div className="mx-auto max-w-3xl">
             <p className="text-sm font-semibold text-blue-600">Empieza hoy</p>
             <h2 className="mt-3 text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">
